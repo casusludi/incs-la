@@ -8,8 +8,8 @@ export function Investigate(sources) {
 
     const newValue$ = domSource
         .select('.js-investigate')
-        .events('click').debug()
-        .map(ev =>{ console.log(ev); return  ev.currentTarget.value});
+        .events('click')
+        .mapTo(true);
 
     const state$ = props$
         .map(props => newValue$
