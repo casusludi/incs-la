@@ -1,0 +1,5 @@
+{
+  	"browserify": true,
+   	"esversion": 6,
+   	"devel":true
+}
