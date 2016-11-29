@@ -43,7 +43,7 @@ function browserified(source){
 		cache: {},
 	    packageCache: {},
 		entries: source,
-		debug:false,
+		debug:true,
 		transform:[
 			[stringify,{extensions: ['.html']}]
 		]

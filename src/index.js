@@ -15,11 +15,15 @@ function main(sources) {
     }
   });
   const investigate$ = Investigate({DOM:sources.DOM,props:investigateProps$});
+
   const sinks = {
-    DOM: investigate$.DOM.map(
-      function(InvestigateDom){
-          return <div>{InvestigateDom}</div>;
-      }
+   /* DOM: investigate$.DOM.map(
+      InvestigateDom =>
+        <div>{InvestigateDom}</div>
+    )*/
+    DOM: xs.combine(investigate$.value,investigate$.DOM).map(
+      ([InvestigateValue,InvestigateDom]) =>
+        <div>{InvestigateValue}{InvestigateDom}</div>
     )
   };
   return sinks;

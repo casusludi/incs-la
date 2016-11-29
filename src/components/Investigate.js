@@ -1,18 +1,18 @@
 import xs from 'xstream';
 import { run } from '@cycle/xstream-run';
+import isolate from '@cycle/isolate';
 import { html } from 'snabbdom-jsx';
 
-export function Investigate(sources) {
-    const domSource = sources.DOM;
-    const props$ = sources.props;
-
-    const newValue$ = domSource
+function intent(DOM){
+    return DOM
         .select('.js-investigate')
         .events('click')
         .mapTo(true);
+}
 
-    const state$ = props$
-        .map(props => newValue$
+function model(action$,props$){
+    return props$
+        .map(props => action$
             .map(val => ({
                 name: props.name,
                 image: props.image,
@@ -24,11 +24,13 @@ export function Investigate(sources) {
         )
         .flatten()
         .remember();
+}
 
-    const vdom$ = state$
+function view(state$){
+    return state$
         .map(state =>
-           <section selector=".place-item">
-           { state.showResult ?
+            <section selector=".place-item">
+            { state.showResult ?
                 <figure>
                     <img src={state.image} />
                     <figcaption>
@@ -43,15 +45,25 @@ export function Investigate(sources) {
                         }
                     </figcaption>
                 </figure>
-           :
+            :
                 <button selector=".js-investigate" type="button" >{state.name}</button>
-           }
+            }
             </section>
         );
+}
+
+function _Investigate(sources) {
+
+    const action$ = intent(sources.DOM);
+    const state$ = model(action$,sources.props);
+    const vdom$ = view(state$);
 
     const sinks = {
         DOM: vdom$,
-        value: state$.map(state => state.value)
+        value: state$.map(state => !!state.showResult)
     };
+
     return sinks;
 }
+
+export function Investigate(sources){ return isolate(_Investigate)(sources) };
