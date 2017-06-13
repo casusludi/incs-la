@@ -7,12 +7,12 @@ import {Investigate} from './components/Investigate.js';
 
 function main(sources) {
   // Test lecture fichier de data JSON
-  let request$ = xs.of({
+  const request$ = xs.of({
     url: 'http://localhost:1984/assets/data.json', // GET method by default
     category: 'data',
   });
 
-  let response$ = sources.HTTP
+  const response$ = sources.HTTP
     .select('data')
     .flatten();
 
@@ -24,17 +24,17 @@ function main(sources) {
   //   },
   // });
 
-  let click$ = sources.DOM.select('.link').events('click');
+  const click$ = sources.DOM.select('.link').events('click').debug();
   
-  let curCity = $click.map(click => click.target.innerHTML).startWith('nantes');
+  const curCity$ = click$.map(click => click.target.innerHTML).startWith('nantes');
 
-  let links$ = response$.map(response =>
+  const links$ = response$.map(response =>
     curCity$.map(curCity =>
       response.body.cities[curCity].links
     )
   ).flatten();
 
-  let nextLocation$ = response$.map(response =>
+  const nextLocation$ = response$.map(response =>
     curCity$.map(curCity =>
       response.body.path[curCity].links
     )
