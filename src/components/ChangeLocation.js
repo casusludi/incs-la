@@ -11,11 +11,6 @@ function intent(sources){
         .mapTo(true)
         .debug("click");
 
-    const changeLocation$ = xs.merge(
-        click$.mapTo(true),
-        sources.newLocation$.mapTo(false),
-    ).startWith(false).debug("test");
-
     return click$;
 }
 
@@ -36,7 +31,7 @@ function model(newLocation$){
 function view(state$){
     return state$
         .map(state =>
-            <button selector=".js-change-location" type="button" >{state.location}</button>
+            <button selector=".js-change-location" type="button" >{state}</button>
         );
 }
 
@@ -48,12 +43,13 @@ function _ChangeLocation(sources) {
 
     const sinks = {
         DOM: vdom$,
-        newLocation: xs.of(state$.map(state =>
+        newLocation$: state$.map(state =>
             action$.map(action =>
                 state
             )
-        ).flatten())
+        ).flatten()
         .debug("newLocation"),
+        destroy$: sources.destroy$
         // {
         //     location$: state$.map(state => state.location),
         //     moveTo$: action$,
