@@ -21,7 +21,7 @@
     },
     "path":[
         {
-            "city":"nantes",
+            "location":"nantes",
             "clues":{
 
                 "temoin-1":{
@@ -36,7 +36,7 @@
             }
         },
         {
-            "city":"chateaubriant",
+            "location":"chateaubriant",
             "clues":{
                 "temoin-1":{
                     "text":"Il avait rendez-vous avec un [paludier](https://fr.wikipedia.org/wiki/Saunier)."
@@ -50,7 +50,7 @@
             }
         },
         {
-            "city":"guerande",
+            "location":"guerande",
             "clues":{
                 "temoin-1":{
                     "text":"Il voulait peut-être faire du ski, parce qu'il a parlé de mont Blanc."
@@ -64,7 +64,7 @@
             }
         },
         {
-            "city":"guemene",
+            "location":"guemene",
             "clues":{
                 "temoin-1":{
                     "text":"J'ai entendu le suspect dire qu'il se rendait à la frontière du département."
@@ -78,7 +78,7 @@
             }
         },
         {
-            "city":"ancenis",
+            "location":"ancenis",
             "clues":{
                 "temoin-1":{
                     "text":"Il était tout content parce qu'il allait prendre le [bac](http://data.loire-atlantique.fr/donnees/detail/embarcaderes-des-bacs-de-loire-en-loire-atlantique/?tx_icsoddatastore_pi1[page]=5) pour la première fois."
@@ -92,7 +92,7 @@
             }
         },
         {
-            "city":"coueron",
+            "location":"coueron",
             "clues":{
                 "temoin-1":{
                     "text":"Il devait se rendre à proximité d'[éoliennes](http://data.loire-atlantique.fr/donnees/detail/localisation-des-projets-eoliens/?tx_icsoddatastore_pi1[page]=6)."
@@ -106,7 +106,7 @@
             }
         },
         {
-            "city":"la-boissiere-du-dore",
+            "location":"la-boissiere-du-dore",
             "clues":{
                 "temoin-1":{
                     "text":"Il a parlé de prendre de la hauteur sur un [pont](http://data.loire-atlantique.fr/donnees/?keywords=pont&sort_search=date)."
@@ -120,7 +120,7 @@
             }
         },
 		{
-            "city":"saint-nazaire",
+            "location":"saint-nazaire",
             "clues":{
                 "temoin-1":{
                     "text":"Je l'ai entendu dire un truc étrange : il a dit que Goldorak était un [pinacle](https://fr.wikipedia.org/wiki/Pinacle)."
@@ -134,7 +134,7 @@
             }
         },
 		{
-            "city":"saint-jean-de-boiseau",
+            "location":"saint-jean-de-boiseau",
             "clues":{
                 "temoin-1":{
                     "text":"Je crois qu'il se rendait dans une ville dont le nom n'est pas composé, mais je peux avoir mal entendu."
@@ -148,7 +148,7 @@
             }
         },
 		{
-            "city":"vallet",
+            "location":"vallet",
             "clues":{
                 "temoin-1":{
                     "text":"Il voulait se rendre là où se tiennent des fêtes d'enfer, mais je n'ai pas su le renseigner."
@@ -162,7 +162,7 @@
             }
         },
 		{
-            "city":"clisson",
+            "location":"clisson",
             "clues":{
                 "temoin-1":{
                     "text":"Je crois qu'il a dit avoir été au [collège](http://data.loire-atlantique.fr/donnees/detail/colleges-publics-en-loire-atlantique/?visualization=3) avec Jules Verne (ce qui serait surprenant). J'ai du mal comprendre."
@@ -176,7 +176,7 @@
             }
         },
 		{
-            "city":"la-baule",
+            "location":"la-baule",
             "clues":{
                 "temoin-1":{
                     "text":"Indice 1"
@@ -190,7 +190,7 @@
             }
         }
     ],
-    "cities":{
+    "locations":{
         "nantes":{
             "name":"Nantes",
             "image":"assets/images/Nantes.jpg",

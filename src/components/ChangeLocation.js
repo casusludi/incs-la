@@ -7,25 +7,13 @@ function intent(sources){
 
     const click$ = sources.DOM
         .select('.js-change-location')
-        .events('click')
-        .mapTo(true)
-        .debug("click");
+        .events('click');
 
     return click$;
 }
 
 function model(newLocation$){
-    
-    // return props$
-    //     .map(props => newLocation$
-    //         /*.map(newLocation => ({
-    //             location: newLocation,
-    //         }))*/
-    //         .startWith(props)
-    //     )
-    //     .flatten()
-    //     .remember();
-    return newLocation$;//.remember();
+    return newLocation$;
 }
 
 function view(state$){
@@ -36,7 +24,6 @@ function view(state$){
 }
 
 function _ChangeLocation(sources) {
-    // console.log(sources);
     const action$ = intent(sources);
     const state$ = model(sources.newLocation$);
     const vdom$ = view(state$);
@@ -47,13 +34,8 @@ function _ChangeLocation(sources) {
             action$.map(action =>
                 state
             )
-        ).flatten()
-        .debug("newLocation"),
-        destroy$: sources.destroy$
-        // {
-        //     location$: state$.map(state => state.location),
-        //     moveTo$: action$,
-        // },
+        ).flatten(),
+        destroy$: sources.destroy$,
     };
 
     return sinks;

@@ -5,7 +5,6 @@ import {makeHTTPDriver} from '@cycle/http';
 import Collection from '@cycle/collection';
 import dropRepeats from 'xstream/extra/dropRepeats'
 import delay from 'xstream/extra/delay'
-import fromDiagram from 'xstream/extra/fromDiagram'
 import {html} from 'snabbdom-jsx';
 import {Investigate} from './components/Investigate.js'; 
 import {ChangeLocation} from './components/ChangeLocation.js'; 
@@ -14,151 +13,68 @@ import {JSONReader} from './components/JSONReader.js';
 function main(sources) {
 
   const jsonSinks = JSONReader({HTTP: sources.HTTP});
+  const jsonRequest$ = jsonSinks.request;
+  const jsonResponse$ = jsonSinks.JSON;
 
-  const request$ = jsonSinks.request;
-  const json$ = jsonSinks.JSON;
-
-  const click$ = sources.DOM.select('.link').events('click');
-
-  const proxyCurCity$ = xs.create().debug("proxyCurCity");
-  // const proxyCurCity$ = click$.map(click => click.target.innerHTML).startWith('nantes');
-  // const curCity$ = click$.map(click => click.target.innerHTML).startWith('nantes');
-
-  const links$ = json$.map(json =>
-    proxyCurCity$.map(curCity => {
-        console.log(curCity);
-        return json.cities[curCity].links
+  const proxyChangeLocation$ = xs.create(); 
+  
+  const locationLinks$ = jsonResponse$.map(jsonResponse =>
+    proxyChangeLocation$.map(currentLocation => {
+        return jsonResponse.locations[currentLocation].links
       } 
     )
-  ).flatten()
-  .debug("links");
+  ).flatten().debug();
 
-  // const nextLocation$ = json$.map(json =>
-  //   curCity$.map(curCity =>
-  //     json.body.path[curCity].links
-  //   )
-  // ).flatten();
+  const progression$ = locationLinks$.mapTo(1).fold((acc, x) => acc + x, 0);
 
-  // response$.addListener({
-  //   next: json => {
-  //     console.log("COUCOU");
-  //   },
-  // });
-
-  const progression$ = links$.mapTo(1).fold((acc, x) => acc + x, 0);
-
-  /*
-  const investigateProps$ = xs.of({
-    name: 'Marcel',
-    image:'assets/images/personnages/data.png',
-    dialog:'Pouet',
-    clue: {
-      text: 'lol'
-    }
-  });
-  const investigate$ = Investigate({DOM: sources.DOM, props: investigateProps$});
-  */
-
-  const add$ = links$.map(links =>
-    links.map(link => 
+  const add$ = locationLinks$.map(locationLinks =>
+    locationLinks.map(link => 
       ({
-        newLocation$: xs.of(
-          link
-          /*{
-          location: link,
-        }*/),/* fromDiagram('----a----b--c--|', {
-          values: {a: "location1", b: "location2", c: "location3"},
-          timeUnit: 1000,
-        }),*/
+        newLocation$: xs.of(link),
       })
     )
-  ).debug("add");
-  // const test$ = links$.map(links => links.map(link => ({props: link}))).debug();
-  // test$.addListener({
-  //   next: test => {
-  //     console.log("COUCOU");
-  //   },
-  // });
-  const locations$ = Collection(ChangeLocation, {DOM: sources.DOM, destroy$: proxyCurCity$.mapTo(null)}, add$.compose(delay(1)), item => item.destroy$).debug('locations');
-  //const locations$ = Collection(ChangeLocation, {DOM: sources.DOM}, xs.of([{props: 'link'},{props: 'link'},{props: 'link'},{props: 'link'}])).debug();
-  
-  // const locations$ = links$.map(link => ChangeLocation({DOM: sources.DOM, props: {location: link}})).flatten();
-  const locationsVTree$ = Collection.pluck(locations$, item => item.DOM).debug("locationsVTree");
-  console.log("coucou", locationsVTree$);
+  );
 
-  const newLocationInfo$ = Collection.merge(locations$, item => item.newLocation$).debug("newLocationInfo");
-  // nextLocationInfo$.addListener({
-  //   next: test => {
-  //     console.log("COUCOU");
-  //   },
-  // });
-  // console.log(newLocationInfo$);
+  const locations$ = Collection(
+    ChangeLocation,
+    {DOM: sources.DOM, destroy$: proxyChangeLocation$.mapTo(null)},
+    add$.compose(delay(1)),
+    item => item.destroy$
+  );
 
-  // const test$ = newLocationInfo$
-  //   .map(newLocationInfo => 
-  //     xs.merge(...newLocationInfo)
-  //   ).flatten().debug("zboub");
-  
-  // const curCity$ = newLocationInfo$
-  //   .map(newLocationInfo => 
-  //     xs.merge(...newLocationInfo)
-  //   ).flatten()
-  //   .map(item => item.location)
-  //   .startWith('nantes')
-  //   .debug("curCity");
-  const curCity$ = newLocationInfo$
-    .startWith('nantes')
-    .debug("curCity");
-  // console.log("curCity", curCity$);
+  const locationsVTree$ = Collection.pluck(locations$, item => item.DOM);
+  const newLocationInfo$ = Collection.merge(locations$, item => item.newLocation$);
 
-  //proxyCurCity$.imitate(curCity$.compose(dropRepeats()));
-  proxyCurCity$.imitate(curCity$.compose(dropRepeats()));
-  // console.log(proxyCurCity$);
+  const changeLocation$ = xs.merge(
+    xs.of('la-baule'),
+    newLocationInfo$,
+  );
 
-  const DOMSink$ = xs.combine(/*investigate$.value, investigate$.DOM, */curCity$, links$, progression$, locationsVTree$).map(
-      ([/*InvestigateValue, InvestigateDom, */curCity, links, progression, locationsVTree]) =>
-        // div([
-        //   InvestigateValue + ' ' + InvestigateDom,
-        //   p([
-        //     'Progression : ' + progression,
-        //   ]),
-        //   h1([
-        //     curCity,
-        //   ]),
-        //   links.map(link =>
-        //     p([
-        //       a('.link', [
-        //         link,
-        //       ]),
-        //     ])
-        //   ),
-        // ])onst sinks = {
-        
+  const currentLocation$ = changeLocation$.remember();
 
+  // proxyChangeLocation$.imitate(newLocationInfo$.compose(dropRepeats));
+
+  // const currentLocation$ = newLocationInfo$
+  //   .startWith('la-baule');
+    
+  proxyChangeLocation$.imitate(currentLocation$.compose(dropRepeats()));
+
+  const DOMSink$ = xs.combine(currentLocation$, locationLinks$, progression$, locationsVTree$).map(
+      ([currentLocation, locationLinks, progression, locationsVTree]) =>
         <div>
-          {/*{InvestigateValue}{InvestigateDom}*/}
           <p>
             Progression : {progression}
           </p>
-          <h1>{curCity}</h1>
-          {/*{links.map(link =>
-            <p>
-              <a selector=".link" value={link} href="#">{link}</a>
-            </p>)}*/}
+          <h1>{currentLocation}</h1>
           <div selector=".items">
             {locationsVTree}
           </div>
         </div>
     );
-    console.log("DOMSink", DOMSink$);
 
   const sinks = {
-   /* DOM: investigate$.DOM.map(
-      InvestigateDom =>
-        <div>{InvestigateDom}</div>
-    )*/
     DOM: DOMSink$,
-    HTTP: request$,
+    HTTP: jsonRequest$,
   };
   return sinks;
 }
