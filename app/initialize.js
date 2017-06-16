@@ -3,6 +3,7 @@ import {run} from '@cycle/run';
 import {makeDOMDriver} from '@cycle/dom';
 import {makeHTTPDriver} from '@cycle/http';
 import Collection from '@cycle/collection';
+import fromDiagram from 'xstream/extra/fromDiagram'
 import dropRepeats from 'xstream/extra/dropRepeats'
 import delay from 'xstream/extra/delay'
 import {html} from 'snabbdom-jsx';
@@ -99,10 +100,33 @@ function main(sources) {
       currentLocation$.map(currentLocation =>
           jsonResponse.locations[currentLocation].links
       )
-  ).flatten();
+  ).flatten()
+  .debug("currentLocationLinks");
 
-  const DOMSink$ = xs.combine(currentLocation$, currentLocationLinks$, progression$, clickedLocation$/*, locationsVTree$*/).map(
-    ([currentLocation, currentLocationLinks, progression, clickedLocation/*, locationsVTree*/]) =>
+  const changeLocationButtons$ = currentLocationLinks$.compose(dropRepeats()).debug("dropRepeats").map(currentLocationLinks =>
+      currentLocationLinks.map(currentLocationLink => 
+        ChangeLocation({ newLocation$: xs.of(currentLocationLink)})
+      )
+  ).debug("changeLocationButtons");
+
+  (changeLocationButtons$).addListener({
+    next: (value) => {
+      console.log('The Stream gave me a value: ', value);
+    },
+  });
+
+  // const newLocation$ = changeLocationButtons$.map(changeLocationButtons =>
+  //   xs.merge(...(changeLocationButtons.map(changeLocationButton => changeLocationButton.newLocation$)))
+  // ).flatten();
+
+  (changeLocationButtons$).addListener({
+    next: (value) => {
+      console.log('The Stream gave me a value: ', value);
+    },
+  });
+
+  const DOMSink$ = xs.combine(currentLocation$, currentLocationLinks$, progression$, clickedLocation$/*, changeLocationButtons$//*, newLocation$*//*, locationsVTree$*/).map(
+    ([currentLocation, currentLocationLinks, progression, clickedLocation/*, changeLocationButtons*//*, newLocation*//*, locationsVTree*/]) =>
       <div>
         <p>Progression : {progression}</p>
         <p>Clicked location : {clickedLocation}</p>
@@ -112,6 +136,12 @@ function main(sources) {
               <button selector=".js-change-location" type="button" value={currentLocationLink} >{currentLocationLink}</button>
           )}
         </p>
+        {/*<p>
+          {changeLocationButtons}
+        </p>*/}
+        {/*<p>
+          {newLocation}
+        </p>*/}
       </div>
   );
   ///////////////////////////

@@ -13,7 +13,7 @@ function intent(sources){
 }
 
 function model(newLocation$){
-    return newLocation$;
+    return newLocation$.remember();
 }
 
 function view(state$){
@@ -30,12 +30,12 @@ function _ChangeLocation(sources) {
 
     const sinks = {
         DOM: vdom$,
-        newLocation$: state$.map(state =>
-            action$.map(action =>
+        newLocation$: action$.map(action =>
+            state$.map(state =>
                 state
             )
         ).flatten(),
-        destroy$: sources.destroy$,
+        test$: xs.fromDiagram('--a--b---c-d--|', {timeUnit: 1000}),
     };
 
     return sinks;

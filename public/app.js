@@ -177,7 +177,7 @@ function intent(sources) {
 }
 
 function model(newLocation$) {
-    return newLocation$;
+    return newLocation$.remember();
 }
 
 function view(state$) {
@@ -197,12 +197,12 @@ function _ChangeLocation(sources) {
 
     var sinks = {
         DOM: vdom$,
-        newLocation$: state$.map(function (state) {
-            return action$.map(function (action) {
+        newLocation$: action$.map(function (action) {
+            return state$.map(function (state) {
                 return state;
             });
         }).flatten(),
-        destroy$: sources.destroy$
+        test$: _xstream2.default.fromDiagram('--a--b---c-d--|', { timeUnit: 1000 })
     };
 
     return sinks;
@@ -369,6 +369,10 @@ var _collection = require('@cycle/collection');
 
 var _collection2 = _interopRequireDefault(_collection);
 
+var _fromDiagram = require('xstream/extra/fromDiagram');
+
+var _fromDiagram2 = _interopRequireDefault(_fromDiagram);
+
 var _dropRepeats = require('xstream/extra/dropRepeats');
 
 var _dropRepeats2 = _interopRequireDefault(_dropRepeats);
@@ -466,14 +470,36 @@ function main(sources) {
     return currentLocation$.map(function (currentLocation) {
       return jsonResponse.locations[currentLocation].links;
     });
-  }).flatten();
+  }).flatten().debug("currentLocationLinks");
 
-  var DOMSink$ = _xstream2.default.combine(currentLocation$, currentLocationLinks$, progression$, clickedLocation$ /*, locationsVTree$*/).map(function (_ref) {
+  var changeLocationButtons$ = currentLocationLinks$.compose((0, _dropRepeats2.default)()).debug("dropRepeats").map(function (currentLocationLinks) {
+    return currentLocationLinks.map(function (currentLocationLink) {
+      return (0, _ChangeLocation.ChangeLocation)({ newLocation$: _xstream2.default.of(currentLocationLink) });
+    });
+  }).debug("changeLocationButtons");
+
+  changeLocationButtons$.addListener({
+    next: function next(value) {
+      console.log('The Stream gave me a value: ', value);
+    }
+  });
+
+  // const newLocation$ = changeLocationButtons$.map(changeLocationButtons =>
+  //   xs.merge(...(changeLocationButtons.map(changeLocationButton => changeLocationButton.newLocation$)))
+  // ).flatten();
+
+  changeLocationButtons$.addListener({
+    next: function next(value) {
+      console.log('The Stream gave me a value: ', value);
+    }
+  });
+
+  var DOMSink$ = _xstream2.default.combine(currentLocation$, currentLocationLinks$, progression$, clickedLocation$ /*, changeLocationButtons$//*, newLocation$*/ /*, locationsVTree$*/).map(function (_ref) {
     var _ref2 = _slicedToArray(_ref, 4),
         currentLocation = _ref2[0],
         currentLocationLinks = _ref2[1],
         progression = _ref2[2],
-        clickedLocation /*, locationsVTree*/ = _ref2[3];
+        clickedLocation /*, changeLocationButtons*/ /*, newLocation*/ /*, locationsVTree*/ = _ref2[3];
 
     return (0, _snabbdomJsx.html)(
       'div',
