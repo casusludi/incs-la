@@ -169,40 +169,40 @@ var _snabbdomJsx = require('snabbdom-jsx');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function intent(sources) {
+function intent(DOM) {
 
-    var click$ = sources.DOM.select('.js-change-location').events('click');
+    var click$ = DOM.select('.js-change-location').events('click').mapTo(true);
 
     return click$;
 }
 
-function model(newLocation$) {
-    return newLocation$;
+function model(props$, action$) {
+    return action$.map(function (action) {
+        return props$;
+    }).flatten().remember();
 }
 
-function view(state$) {
-    return state$.map(function (state) {
+function view(props$) {
+    return props$.map(function (props) {
         return (0, _snabbdomJsx.html)(
             'button',
             { selector: '.js-change-location', type: 'button' },
-            state
+            props.id
         );
     });
 }
 
 function _ChangeLocation(sources) {
-    var action$ = intent(sources);
-    var state$ = model(sources.newLocation$);
-    var vdom$ = view(state$);
+    var props$ = sources.props$,
+        DOM = sources.DOM;
+
+    var action$ = intent(DOM);
+    var value$ = model(props$, action$);
+    var vdom$ = view(props$);
 
     var sinks = {
         DOM: vdom$,
-        newLocation$: state$.map(function (state) {
-            return action$.map(function (action) {
-                return state;
-            });
-        }).flatten(),
-        destroy$: sources.destroy$
+        value$: value$
     };
 
     return sinks;
@@ -387,64 +387,53 @@ var _JSONReader = require('./components/JSONReader.js');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 function main(sources) {
+  var HTTP = sources.HTTP,
+      DOM = sources.DOM;
+
 
   var jsonSinks = (0, _JSONReader.JSONReader)({ HTTP: sources.HTTP });
   var jsonRequest$ = jsonSinks.request;
   var jsonResponse$ = jsonSinks.JSON;
 
-  var proxyChangeLocation$ = _xstream2.default.create();
+  var changeLocationProxy$ = _xstream2.default.create();
+  //const changeLocationProxy$ = xs.of({id:"nantes"}); 
 
-  // const locationLinks$ = proxyChangeLocation$.map(currentLocation =>
-  //     jsonResponse$.map(jsonResponse =>
-  //         jsonResponse.locations[currentLocation].links.map(link => ({
-  //             newLocation$: xs.of(link),
-  //         }))
-  //     )
-  // ).flatten();
-
-  var add$ = jsonResponse$.map(function (jsonResponse) {
-    return proxyChangeLocation$.map(function (currentLocation) {
-      return jsonResponse.locations[currentLocation].links.map(function (link) {
-        return {
-          newLocation$: _xstream2.default.of(link)
-        };
-      });
+  var currentLocation$ = jsonResponse$.map(function (jsonResponse) {
+    return changeLocationProxy$.map(function (node) {
+      return jsonResponse.locations[node.id];
     });
   }).flatten();
 
-  var progression$ = add$.mapTo(1).fold(function (acc, x) {
-    return acc + x;
-  }, 0);
-
-  var locations$ = (0, _collection2.default)(_ChangeLocation.ChangeLocation, { DOM: sources.DOM, destroy$: proxyChangeLocation$.mapTo(null) }, add$.compose((0, _delay2.default)(1)), function (item) {
-    return item.destroy$;
+  //const progression$ = add$.mapTo(1).fold((acc, x) => acc + x, 0);
+  var links$ = currentLocation$.map(function (node) {
+    return node.links.map(function (link) {
+      return (0, _ChangeLocation.ChangeLocation)({ DOM: DOM, props$: _xstream2.default.of({ id: link }) });
+    });
   });
 
-  var locationsVTree$ = _collection2.default.pluck(locations$, function (item) {
-    return item.DOM;
-  });
-  var newLocationInfo$ = _collection2.default.merge(locations$, function (item) {
-    return item.newLocation$;
-  });
+  var linksVtree$ = links$.map(function (links) {
+    return _xstream2.default.combine.apply(_xstream2.default, _toConsumableArray(links.map(function (link) {
+      return link.DOM;
+    })));
+  }).flatten();
+  var changeLocation$ = links$.map(function (links) {
+    return _xstream2.default.merge.apply(_xstream2.default, _toConsumableArray(links.map(function (link) {
+      return link.value$;
+    })));
+  }).flatten().startWith({ id: "nantes" });
 
-  var changeLocation$ = _xstream2.default.merge(_xstream2.default.of('la-baule'), newLocationInfo$);
+  var test$ = _xstream2.default.merge(_xstream2.default.of({ id: "nantes" }, changeLocation$));
 
-  var currentLocation$ = changeLocation$.remember();
+  //changeLocationProxy$.imitate(test$);
+  changeLocationProxy$.imitate(changeLocation$.compose((0, _dropRepeats2.default)()));
 
-  // proxyChangeLocation$.imitate(newLocationInfo$.compose(dropRepeats));
-
-  // const currentLocation$ = newLocationInfo$
-  //   .startWith('la-baule');
-
-  proxyChangeLocation$.imitate(currentLocation$.compose((0, _dropRepeats2.default)()));
-
-  var DOMSink$ = _xstream2.default.combine(currentLocation$, add$, progression$, locationsVTree$).map(function (_ref) {
-    var _ref2 = _slicedToArray(_ref, 4),
-        currentLocation = _ref2[0],
-        add = _ref2[1],
-        progression = _ref2[2],
-        locationsVTree = _ref2[3];
+  var DOMSink$ = _xstream2.default.combine(linksVtree$, changeLocation$).map(function (_ref) {
+    var _ref2 = _slicedToArray(_ref, 2),
+        linksVtree = _ref2[0],
+        changeLocation = _ref2[1];
 
     return (0, _snabbdomJsx.html)(
       'div',
@@ -452,18 +441,14 @@ function main(sources) {
       (0, _snabbdomJsx.html)(
         'p',
         null,
-        'Progression : ',
-        progression
+        'Current : ',
+        changeLocation ? changeLocation.id : ''
       ),
-      (0, _snabbdomJsx.html)(
-        'h1',
-        null,
-        currentLocation
-      ),
+      (0, _snabbdomJsx.html)('h1', null),
       (0, _snabbdomJsx.html)(
         'div',
         { selector: '.items' },
-        locationsVTree
+        linksVtree
       )
     );
   });
@@ -484,7 +469,7 @@ var drivers = {
 
 });
 
-require.register("___globals___", function(exports, require, module) {
+require.alias("node-browser-modules/node_modules/buffer/index.js", "buffer");require.register("___globals___", function(exports, require, module) {
   
 });})();require('___globals___');
 
