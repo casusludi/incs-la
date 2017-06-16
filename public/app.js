@@ -393,8 +393,12 @@ function main(sources) {
   var jsonRequest$ = jsonSinks.request;
   var jsonResponse$ = jsonSinks.JSON;
 
-  var proxyChangeLocation$ = _xstream2.default.create();
-
+  /////////////////////////////
+  // OLD (use of Collection) //
+  /////////////////////////////
+  /* 
+  const proxyChangeLocation$ = xs.create(); 
+  
   // const locationLinks$ = proxyChangeLocation$.map(currentLocation =>
   //     jsonResponse$.map(jsonResponse =>
   //         jsonResponse.locations[currentLocation].links.map(link => ({
@@ -402,49 +406,74 @@ function main(sources) {
   //         }))
   //     )
   // ).flatten();
+  
+  const add$ = jsonResponse$.map(jsonResponse =>
+      proxyChangeLocation$.map(currentLocation =>
+          jsonResponse.locations[currentLocation].links.map(link => ({
+              newLocation$: xs.of(link),
+          }))
+      )
+  ).flatten();
+    const progression$ = add$.mapTo(1).fold((acc, x) => acc + x, 0);
+    const locations$ = Collection(
+    ChangeLocation,
+    {DOM: sources.DOM, destroy$: proxyChangeLocation$.mapTo(null)},
+    add$.compose(delay(1)),
+    item => item.destroy$
+  );
+    const locationsVTree$ = Collection.pluck(locations$, item => item.DOM);
+  const newLocationInfo$ = Collection.merge(locations$, item => item.newLocation$);
+    const changeLocation$ = xs.merge(
+    xs.of('la-baule'),
+    newLocationInfo$,
+  );
+    const currentLocation$ = changeLocation$.remember();
+    // proxyChangeLocation$.imitate(newLocationInfo$.compose(dropRepeats));
+    // const currentLocation$ = newLocationInfo$
+  //   .startWith('la-baule');
+    
+  proxyChangeLocation$.imitate(currentLocation$.compose(dropRepeats()));
+    const DOMSink$ = xs.combine(currentLocation$, progression$, locationsVTree$).map(
+      ([currentLocation, progression, locationsVTree]) =>
+        <div>
+          <p>
+            Progression : {progression}
+          </p>
+          <h1>{currentLocation}</h1>
+          <div selector=".items">
+            {locationsVTree}
+          </div>
+        </div>
+    );
+  */
 
-  var add$ = jsonResponse$.map(function (jsonResponse) {
-    return proxyChangeLocation$.map(function (currentLocation) {
-      return jsonResponse.locations[currentLocation].links.map(function (link) {
-        return {
-          newLocation$: _xstream2.default.of(link)
-        };
-      });
-    });
-  }).flatten();
+  ///// SANS COLLECTION /////
+  var action$ = sources.DOM.select('.js-change-location').events('click');
 
-  var progression$ = add$.mapTo(1).fold(function (acc, x) {
+  var clickedLocation$ = _xstream2.default.merge(action$.map(function (action) {
+    return action.target.value;
+  }), _xstream2.default.of("None"));
+
+  var progression$ = action$.mapTo(1).fold(function (acc, x) {
     return acc + x;
   }, 0);
 
-  var locations$ = (0, _collection2.default)(_ChangeLocation.ChangeLocation, { DOM: sources.DOM, destroy$: proxyChangeLocation$.mapTo(null) }, add$.compose((0, _delay2.default)(1)), function (item) {
-    return item.destroy$;
-  });
+  var currentLocation$ = action$.map(function (action) {
+    return clickedLocation$;
+  }).flatten().startWith("nantes");
 
-  var locationsVTree$ = _collection2.default.pluck(locations$, function (item) {
-    return item.DOM;
-  });
-  var newLocationInfo$ = _collection2.default.merge(locations$, function (item) {
-    return item.newLocation$;
-  });
+  var currentLocationLinks$ = jsonResponse$.map(function (jsonResponse) {
+    return currentLocation$.map(function (currentLocation) {
+      return jsonResponse.locations[currentLocation].links;
+    });
+  }).flatten();
 
-  var changeLocation$ = _xstream2.default.merge(_xstream2.default.of('la-baule'), newLocationInfo$);
-
-  var currentLocation$ = changeLocation$.remember();
-
-  // proxyChangeLocation$.imitate(newLocationInfo$.compose(dropRepeats));
-
-  // const currentLocation$ = newLocationInfo$
-  //   .startWith('la-baule');
-
-  proxyChangeLocation$.imitate(currentLocation$.compose((0, _dropRepeats2.default)()));
-
-  var DOMSink$ = _xstream2.default.combine(currentLocation$, add$, progression$, locationsVTree$).map(function (_ref) {
+  var DOMSink$ = _xstream2.default.combine(currentLocation$, currentLocationLinks$, progression$, clickedLocation$ /*, locationsVTree$*/).map(function (_ref) {
     var _ref2 = _slicedToArray(_ref, 4),
         currentLocation = _ref2[0],
-        add = _ref2[1],
+        currentLocationLinks = _ref2[1],
         progression = _ref2[2],
-        locationsVTree = _ref2[3];
+        clickedLocation /*, locationsVTree*/ = _ref2[3];
 
     return (0, _snabbdomJsx.html)(
       'div',
@@ -456,17 +485,30 @@ function main(sources) {
         progression
       ),
       (0, _snabbdomJsx.html)(
+        'p',
+        null,
+        'Clicked location : ',
+        clickedLocation
+      ),
+      (0, _snabbdomJsx.html)(
         'h1',
         null,
         currentLocation
       ),
       (0, _snabbdomJsx.html)(
-        'div',
-        { selector: '.items' },
-        locationsVTree
+        'p',
+        null,
+        currentLocationLinks.map(function (currentLocationLink) {
+          return (0, _snabbdomJsx.html)(
+            'button',
+            { selector: '.js-change-location', type: 'button', value: currentLocationLink },
+            currentLocationLink
+          );
+        })
       )
     );
   });
+  ///////////////////////////
 
   var sinks = {
     DOM: DOMSink$,

@@ -83,16 +83,20 @@ function main(sources) {
     .select('.js-change-location')
     .events('click');
 
-  const clickedLocation$ = action$.map(action => action.target.value).startWith("None");
+  const clickedLocation$ = xs.merge(
+    action$.map(action => action.target.value),
+    xs.of("None"),
+  );
     
   const progression$ = action$.mapTo(1).fold((acc, x) => acc + x, 0);
 
   const currentLocation$ = action$.map(action =>
     clickedLocation$
-  ).startWith("nantes");
-
-  const currentLocationLinks$ = currentLocation$.map(currentLocation =>
-      jsonResponse$.map(jsonResponse =>
+  ).flatten()
+  .startWith("nantes");
+  
+  const currentLocationLinks$ = jsonResponse$.map(jsonResponse =>
+      currentLocation$.map(currentLocation =>
           jsonResponse.locations[currentLocation].links
       )
   ).flatten();
