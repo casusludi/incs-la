@@ -18,22 +18,23 @@ function main(sources) {
 
   const proxyChangeLocation$ = xs.create(); 
   
-  const locationLinks$ = jsonResponse$.map(jsonResponse =>
-    proxyChangeLocation$.map(currentLocation => {
-        return jsonResponse.locations[currentLocation].links
-      } 
-    )
-  ).flatten().debug();
+  // const locationLinks$ = proxyChangeLocation$.map(currentLocation =>
+  //     jsonResponse$.map(jsonResponse =>
+  //         jsonResponse.locations[currentLocation].links.map(link => ({
+  //             newLocation$: xs.of(link),
+  //         }))
+  //     )
+  // ).flatten();
+  
+  const add$ = jsonResponse$.map(jsonResponse =>
+      proxyChangeLocation$.map(currentLocation =>
+          jsonResponse.locations[currentLocation].links.map(link => ({
+              newLocation$: xs.of(link),
+          }))
+      )
+  ).flatten();
 
-  const progression$ = locationLinks$.mapTo(1).fold((acc, x) => acc + x, 0);
-
-  const add$ = locationLinks$.map(locationLinks =>
-    locationLinks.map(link => 
-      ({
-        newLocation$: xs.of(link),
-      })
-    )
-  );
+  const progression$ = add$.mapTo(1).fold((acc, x) => acc + x, 0);
 
   const locations$ = Collection(
     ChangeLocation,
@@ -57,10 +58,10 @@ function main(sources) {
   // const currentLocation$ = newLocationInfo$
   //   .startWith('la-baule');
     
-  proxyChangeLocation$.imitate(currentLocation$.compose(dropRepeats()));
+  proxyChangeLocation$.imitate(changeLocation$);
 
-  const DOMSink$ = xs.combine(currentLocation$, locationLinks$, progression$, locationsVTree$).map(
-      ([currentLocation, locationLinks, progression, locationsVTree]) =>
+  const DOMSink$ = xs.combine(currentLocation$, add$, progression$, locationsVTree$).map(
+      ([currentLocation, add, progression, locationsVTree]) =>
         <div>
           <p>
             Progression : {progression}
