@@ -1,5 +1,5 @@
 import xs from 'xstream';
-import {run} from '@cycle/xstream-run';
+import {run} from '@cycle/run';
 import {makeDOMDriver} from '@cycle/dom';
 import {makeHTTPDriver} from '@cycle/http';
 import Collection from '@cycle/collection';
