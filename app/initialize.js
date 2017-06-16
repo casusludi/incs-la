@@ -13,138 +13,47 @@ import {JSONReader} from './components/JSONReader.js';
 
 function main(sources) {
 
+  const {HTTP,DOM} = sources;
+
   const jsonSinks = JSONReader({HTTP: sources.HTTP});
   const jsonRequest$ = jsonSinks.request;
   const jsonResponse$ = jsonSinks.JSON;
 
-  /////////////////////////////
-  // OLD (use of Collection) //
-  /////////////////////////////
-  /* 
-  const proxyChangeLocation$ = xs.create(); 
+  const changeLocationProxy$ = xs.create(); 
+  //const changeLocationProxy$ = xs.of({id:"nantes"});
   
-  // const locationLinks$ = proxyChangeLocation$.map(currentLocation =>
-  //     jsonResponse$.map(jsonResponse =>
-  //         jsonResponse.locations[currentLocation].links.map(link => ({
-  //             newLocation$: xs.of(link),
-  //         }))
-  //     )
-  // ).flatten();
-  
-  const add$ = jsonResponse$.map(jsonResponse =>
-      proxyChangeLocation$.map(currentLocation =>
-          jsonResponse.locations[currentLocation].links.map(link => ({
-              newLocation$: xs.of(link),
-          }))
-      )
+  const currentLocation$ = jsonResponse$.map(jsonResponse =>
+      changeLocationProxy$.map( node => jsonResponse.locations[node.id])
   ).flatten();
 
-  const progression$ = add$.mapTo(1).fold((acc, x) => acc + x, 0);
+  //const progression$ = add$.mapTo(1).fold((acc, x) => acc + x, 0);
+  const links$ = currentLocation$.map( node => node.links.map(
+    link => ChangeLocation({DOM,props$:xs.of({id:link})})
+  ));
 
-  const locations$ = Collection(
-    ChangeLocation,
-    {DOM: sources.DOM, destroy$: proxyChangeLocation$.mapTo(null)},
-    add$.compose(delay(1)),
-    item => item.destroy$
-  );
+  const linksVtree$ = links$.map( links => xs.combine(...links.map( link => link.DOM))).flatten();
+  const changeLocation$ = links$.map( 
+      links => xs.merge(...links.map( link => link.value$))
+  ).flatten()
+  .startWith({id:"nantes"});
 
-  const locationsVTree$ = Collection.pluck(locations$, item => item.DOM);
-  const newLocationInfo$ = Collection.merge(locations$, item => item.newLocation$);
+  const test$ = xs.merge(xs.of({id:"nantes"},changeLocation$));
 
-  const changeLocation$ = xs.merge(
-    xs.of('la-baule'),
-    newLocationInfo$,
-  );
+  //changeLocationProxy$.imitate(test$);
+  changeLocationProxy$.imitate(changeLocation$.compose(dropRepeats()));
 
-  const currentLocation$ = changeLocation$.remember();
-
-  // proxyChangeLocation$.imitate(newLocationInfo$.compose(dropRepeats));
-
-  // const currentLocation$ = newLocationInfo$
-  //   .startWith('la-baule');
-    
-  proxyChangeLocation$.imitate(currentLocation$.compose(dropRepeats()));
-
-  const DOMSink$ = xs.combine(currentLocation$, progression$, locationsVTree$).map(
-      ([currentLocation, progression, locationsVTree]) =>
+  const DOMSink$ = xs.combine(linksVtree$,changeLocation$).map(
+      ([linksVtree,changeLocation]) =>
         <div>
           <p>
-            Progression : {progression}
+            Current : {changeLocation?changeLocation.id:''}
           </p>
-          <h1>{currentLocation}</h1>
+          <h1></h1>
           <div selector=".items">
-            {locationsVTree}
+            {linksVtree}
           </div>
         </div>
     );
-  */
-
-  ///// SANS COLLECTION /////
-  const action$ = sources.DOM
-    .select('.js-change-location')
-    .events('click');
-
-  const clickedLocation$ = xs.merge(
-    action$.map(action => action.target.value),
-    xs.of("None"),
-  );
-    
-  const progression$ = action$.mapTo(1).fold((acc, x) => acc + x, 0);
-
-  const currentLocation$ = action$.map(action =>
-    clickedLocation$
-  ).flatten()
-  .startWith("nantes");
-  
-  const currentLocationLinks$ = jsonResponse$.map(jsonResponse =>
-      currentLocation$.map(currentLocation =>
-          jsonResponse.locations[currentLocation].links
-      )
-  ).flatten()
-  .debug("currentLocationLinks");
-
-  const changeLocationButtons$ = currentLocationLinks$.compose(dropRepeats()).debug("dropRepeats").map(currentLocationLinks =>
-      currentLocationLinks.map(currentLocationLink => 
-        ChangeLocation({ newLocation$: xs.of(currentLocationLink)})
-      )
-  ).debug("changeLocationButtons");
-
-  (changeLocationButtons$).addListener({
-    next: (value) => {
-      console.log('The Stream gave me a value: ', value);
-    },
-  });
-
-  // const newLocation$ = changeLocationButtons$.map(changeLocationButtons =>
-  //   xs.merge(...(changeLocationButtons.map(changeLocationButton => changeLocationButton.newLocation$)))
-  // ).flatten();
-
-  (changeLocationButtons$).addListener({
-    next: (value) => {
-      console.log('The Stream gave me a value: ', value);
-    },
-  });
-
-  const DOMSink$ = xs.combine(currentLocation$, currentLocationLinks$, progression$, clickedLocation$/*, changeLocationButtons$//*, newLocation$*//*, locationsVTree$*/).map(
-    ([currentLocation, currentLocationLinks, progression, clickedLocation/*, changeLocationButtons*//*, newLocation*//*, locationsVTree*/]) =>
-      <div>
-        <p>Progression : {progression}</p>
-        <p>Clicked location : {clickedLocation}</p>
-        <h1>{currentLocation}</h1>
-        <p>
-          {currentLocationLinks.map(currentLocationLink => 
-              <button selector=".js-change-location" type="button" value={currentLocationLink} >{currentLocationLink}</button>
-          )}
-        </p>
-        {/*<p>
-          {changeLocationButtons}
-        </p>*/}
-        {/*<p>
-          {newLocation}
-        </p>*/}
-      </div>
-  );
-  ///////////////////////////
 
   const sinks = {
     DOM: DOMSink$,

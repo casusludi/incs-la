@@ -169,40 +169,40 @@ var _snabbdomJsx = require('snabbdom-jsx');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function intent(sources) {
+function intent(DOM) {
 
-    var click$ = sources.DOM.select('.js-change-location').events('click');
+    var click$ = DOM.select('.js-change-location').events('click').mapTo(true);
 
     return click$;
 }
 
-function model(newLocation$) {
-    return newLocation$.remember();
+function model(props$, action$) {
+    return action$.map(function (action) {
+        return props$;
+    }).flatten().remember();
 }
 
-function view(state$) {
-    return state$.map(function (state) {
+function view(props$) {
+    return props$.map(function (props) {
         return (0, _snabbdomJsx.html)(
             'button',
             { selector: '.js-change-location', type: 'button' },
-            state
+            props.id
         );
     });
 }
 
 function _ChangeLocation(sources) {
-    var action$ = intent(sources);
-    var state$ = model(sources.newLocation$);
-    var vdom$ = view(state$);
+    var props$ = sources.props$,
+        DOM = sources.DOM;
+
+    var action$ = intent(DOM);
+    var value$ = model(props$, action$);
+    var vdom$ = view(props$);
 
     var sinks = {
         DOM: vdom$,
-        newLocation$: action$.map(function (action) {
-            return state$.map(function (state) {
-                return state;
-            });
-        }).flatten(),
-        test$: _xstream2.default.fromDiagram('--a--b---c-d--|', { timeUnit: 1000 })
+        value$: value$
     };
 
     return sinks;
@@ -391,115 +391,53 @@ var _JSONReader = require('./components/JSONReader.js');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 function main(sources) {
+  var HTTP = sources.HTTP,
+      DOM = sources.DOM;
+
 
   var jsonSinks = (0, _JSONReader.JSONReader)({ HTTP: sources.HTTP });
   var jsonRequest$ = jsonSinks.request;
   var jsonResponse$ = jsonSinks.JSON;
 
-  /////////////////////////////
-  // OLD (use of Collection) //
-  /////////////////////////////
-  /* 
-  const proxyChangeLocation$ = xs.create(); 
-  
-  // const locationLinks$ = proxyChangeLocation$.map(currentLocation =>
-  //     jsonResponse$.map(jsonResponse =>
-  //         jsonResponse.locations[currentLocation].links.map(link => ({
-  //             newLocation$: xs.of(link),
-  //         }))
-  //     )
-  // ).flatten();
-  
-  const add$ = jsonResponse$.map(jsonResponse =>
-      proxyChangeLocation$.map(currentLocation =>
-          jsonResponse.locations[currentLocation].links.map(link => ({
-              newLocation$: xs.of(link),
-          }))
-      )
-  ).flatten();
-    const progression$ = add$.mapTo(1).fold((acc, x) => acc + x, 0);
-    const locations$ = Collection(
-    ChangeLocation,
-    {DOM: sources.DOM, destroy$: proxyChangeLocation$.mapTo(null)},
-    add$.compose(delay(1)),
-    item => item.destroy$
-  );
-    const locationsVTree$ = Collection.pluck(locations$, item => item.DOM);
-  const newLocationInfo$ = Collection.merge(locations$, item => item.newLocation$);
-    const changeLocation$ = xs.merge(
-    xs.of('la-baule'),
-    newLocationInfo$,
-  );
-    const currentLocation$ = changeLocation$.remember();
-    // proxyChangeLocation$.imitate(newLocationInfo$.compose(dropRepeats));
-    // const currentLocation$ = newLocationInfo$
-  //   .startWith('la-baule');
-    
-  proxyChangeLocation$.imitate(currentLocation$.compose(dropRepeats()));
-    const DOMSink$ = xs.combine(currentLocation$, progression$, locationsVTree$).map(
-      ([currentLocation, progression, locationsVTree]) =>
-        <div>
-          <p>
-            Progression : {progression}
-          </p>
-          <h1>{currentLocation}</h1>
-          <div selector=".items">
-            {locationsVTree}
-          </div>
-        </div>
-    );
-  */
+  var changeLocationProxy$ = _xstream2.default.create();
+  //const changeLocationProxy$ = xs.of({id:"nantes"});
 
-  ///// SANS COLLECTION /////
-  var action$ = sources.DOM.select('.js-change-location').events('click');
-
-  var clickedLocation$ = _xstream2.default.merge(action$.map(function (action) {
-    return action.target.value;
-  }), _xstream2.default.of("None"));
-
-  var progression$ = action$.mapTo(1).fold(function (acc, x) {
-    return acc + x;
-  }, 0);
-
-  var currentLocation$ = action$.map(function (action) {
-    return clickedLocation$;
-  }).flatten().startWith("nantes");
-
-  var currentLocationLinks$ = jsonResponse$.map(function (jsonResponse) {
-    return currentLocation$.map(function (currentLocation) {
-      return jsonResponse.locations[currentLocation].links;
+  var currentLocation$ = jsonResponse$.map(function (jsonResponse) {
+    return changeLocationProxy$.map(function (node) {
+      return jsonResponse.locations[node.id];
     });
-  }).flatten().debug("currentLocationLinks");
+  }).flatten();
 
-  var changeLocationButtons$ = currentLocationLinks$.compose((0, _dropRepeats2.default)()).debug("dropRepeats").map(function (currentLocationLinks) {
-    return currentLocationLinks.map(function (currentLocationLink) {
-      return (0, _ChangeLocation.ChangeLocation)({ newLocation$: _xstream2.default.of(currentLocationLink) });
+  //const progression$ = add$.mapTo(1).fold((acc, x) => acc + x, 0);
+  var links$ = currentLocation$.map(function (node) {
+    return node.links.map(function (link) {
+      return (0, _ChangeLocation.ChangeLocation)({ DOM: DOM, props$: _xstream2.default.of({ id: link }) });
     });
-  }).debug("changeLocationButtons");
-
-  changeLocationButtons$.addListener({
-    next: function next(value) {
-      console.log('The Stream gave me a value: ', value);
-    }
   });
 
-  // const newLocation$ = changeLocationButtons$.map(changeLocationButtons =>
-  //   xs.merge(...(changeLocationButtons.map(changeLocationButton => changeLocationButton.newLocation$)))
-  // ).flatten();
+  var linksVtree$ = links$.map(function (links) {
+    return _xstream2.default.combine.apply(_xstream2.default, _toConsumableArray(links.map(function (link) {
+      return link.DOM;
+    })));
+  }).flatten();
+  var changeLocation$ = links$.map(function (links) {
+    return _xstream2.default.merge.apply(_xstream2.default, _toConsumableArray(links.map(function (link) {
+      return link.value$;
+    })));
+  }).flatten().startWith({ id: "nantes" });
 
-  changeLocationButtons$.addListener({
-    next: function next(value) {
-      console.log('The Stream gave me a value: ', value);
-    }
-  });
+  var test$ = _xstream2.default.merge(_xstream2.default.of({ id: "nantes" }, changeLocation$));
 
-  var DOMSink$ = _xstream2.default.combine(currentLocation$, currentLocationLinks$, progression$, clickedLocation$ /*, changeLocationButtons$//*, newLocation$*/ /*, locationsVTree$*/).map(function (_ref) {
-    var _ref2 = _slicedToArray(_ref, 4),
-        currentLocation = _ref2[0],
-        currentLocationLinks = _ref2[1],
-        progression = _ref2[2],
-        clickedLocation /*, changeLocationButtons*/ /*, newLocation*/ /*, locationsVTree*/ = _ref2[3];
+  //changeLocationProxy$.imitate(test$);
+  changeLocationProxy$.imitate(changeLocation$.compose((0, _dropRepeats2.default)()));
+
+  var DOMSink$ = _xstream2.default.combine(linksVtree$, changeLocation$).map(function (_ref) {
+    var _ref2 = _slicedToArray(_ref, 2),
+        linksVtree = _ref2[0],
+        changeLocation = _ref2[1];
 
     return (0, _snabbdomJsx.html)(
       'div',
@@ -507,34 +445,17 @@ function main(sources) {
       (0, _snabbdomJsx.html)(
         'p',
         null,
-        'Progression : ',
-        progression
+        'Current : ',
+        changeLocation ? changeLocation.id : ''
       ),
+      (0, _snabbdomJsx.html)('h1', null),
       (0, _snabbdomJsx.html)(
-        'p',
-        null,
-        'Clicked location : ',
-        clickedLocation
-      ),
-      (0, _snabbdomJsx.html)(
-        'h1',
-        null,
-        currentLocation
-      ),
-      (0, _snabbdomJsx.html)(
-        'p',
-        null,
-        currentLocationLinks.map(function (currentLocationLink) {
-          return (0, _snabbdomJsx.html)(
-            'button',
-            { selector: '.js-change-location', type: 'button', value: currentLocationLink },
-            currentLocationLink
-          );
-        })
+        'div',
+        { selector: '.items' },
+        linksVtree
       )
     );
   });
-  ///////////////////////////
 
   var sinks = {
     DOM: DOMSink$,
