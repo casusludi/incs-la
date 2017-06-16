@@ -398,16 +398,24 @@ function main(sources) {
   var jsonRequest$ = jsonSinks.request;
   var jsonResponse$ = jsonSinks.JSON;
 
+  var locations$ = jsonResponse$.map(function (jsonResponse) {
+    return jsonResponse.locations;
+  });
+  var path$ = jsonResponse$.map(function (jsonResponse) {
+    return jsonResponse.path;
+  });
+
   var changeLocationProxy$ = _xstream2.default.create();
 
-  var currentLocation$ = jsonResponse$.map(function (jsonResponse) {
+  var currentLocation$ = locations$.map(function (locations) {
     return changeLocationProxy$.map(function (node) {
-      return jsonResponse.locations[node.id];
+      return locations[node.id];
     });
   }).flatten();
 
-  //const path$ = jsonResponse$.map(jsonResponse => xs.fromArray(jsonResponse.path));
-  var pathInit$ = jsonResponse$.mapTo({ id: "nantes" });
+  var pathInit$ = path$.map(function (path) {
+    return { id: path[0].location };
+  });
 
   //const progression$ = add$.mapTo(1).fold((acc, x) => acc + x, 0);
   var links$ = currentLocation$.map(function (node) {

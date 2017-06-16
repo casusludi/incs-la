@@ -18,14 +18,16 @@ function main(sources) {
   const jsonRequest$ = jsonSinks.request;
   const jsonResponse$ = jsonSinks.JSON;
 
+  const locations$ = jsonResponse$.map( jsonResponse => jsonResponse.locations);
+  const path$ = jsonResponse$.map(jsonResponse => jsonResponse.path);
+
   const changeLocationProxy$ = xs.create();  
-  
-  const currentLocation$ = jsonResponse$.map(jsonResponse =>
-      changeLocationProxy$.map( node => jsonResponse.locations[node.id])
+
+  const currentLocation$ = locations$.map(locations =>
+      changeLocationProxy$.map( node => locations[node.id])
   ).flatten();
 
-  //const path$ = jsonResponse$.map(jsonResponse => xs.fromArray(jsonResponse.path));
-  const pathInit$ = jsonResponse$.mapTo({id:"nantes"});
+  const pathInit$ = path$.map( path => ({id:path[0].location}));
 
   //const progression$ = add$.mapTo(1).fold((acc, x) => acc + x, 0);
   const links$ = currentLocation$.map( node => node.links.map(
