@@ -179,7 +179,7 @@ function intent(DOM) {
 function model(props$, action$) {
     return action$.map(function (action) {
         return props$;
-    }).flatten().remember();
+    }).flatten(); //.remember();
 }
 
 function view(props$) {
@@ -350,7 +350,89 @@ function JSONReader(sources) {
 
 });
 
-;require.register("initialize.js", function(exports, require, module) {
+;require.register("components/Witness.js", function(exports, require, module) {
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.Witness = Witness;
+
+var _xstream = require('xstream');
+
+var _xstream2 = _interopRequireDefault(_xstream);
+
+var _run = require('@cycle/run');
+
+var _isolate = require('@cycle/isolate');
+
+var _isolate2 = _interopRequireDefault(_isolate);
+
+var _snabbdomJsx = require('snabbdom-jsx');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function intent(DOM) {
+
+    var click$ = DOM.select('.js-question-witness').events('click').mapTo(true);
+
+    return click$;
+}
+
+function model(props$, action$) {
+    return props$.map(function (props) {
+        return action$.map(function (action) {
+            return Object.assign(props, { showResult: action });
+        }).startWith(props);
+    }).flatten().remember();
+}
+
+function view(value$) {
+    return value$.map(function (value) {
+        return (0, _snabbdomJsx.html)(
+            'div',
+            { style: 'background: red;' },
+            value.showResult ? (0, _snabbdomJsx.html)(
+                'div',
+                null,
+                (0, _snabbdomJsx.html)('img', { src: value.image }),
+                (0, _snabbdomJsx.html)(
+                    'p',
+                    null,
+                    value.dialogs[0]
+                )
+            ) : (0, _snabbdomJsx.html)(
+                'button',
+                { selector: '.js-question-witness', type: 'button' },
+                value.name
+            )
+        );
+    });
+}
+
+function _Witness(sources) {
+    var props$ = sources.props$,
+        DOM = sources.DOM;
+
+    var action$ = intent(DOM);
+    var value$ = model(props$, action$);
+    var vdom$ = view(value$);
+
+    var sinks = {
+        DOM: vdom$,
+        questionned$: action$.mapTo(null)
+    };
+
+    return sinks;
+}
+
+function Witness(sources) {
+    return (0, _isolate2.default)(_Witness)(sources);
+};
+
+});
+
+require.register("initialize.js", function(exports, require, module) {
 'use strict';
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
@@ -387,6 +469,8 @@ var _Investigate = require('./components/Investigate.js');
 
 var _ChangeLocation = require('./components/ChangeLocation.js');
 
+var _Witness = require('./components/Witness.js');
+
 var _JSONReader = require('./components/JSONReader.js');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -409,7 +493,7 @@ function main(sources) {
     return changeLocationProxy$.map(function (node) {
       return jsonResponse.locations[node.id];
     });
-  }).flatten();
+  }).flatten().debug("currentLocation");
 
   //const progression$ = add$.mapTo(1).fold((acc, x) => acc + x, 0);
   var links$ = currentLocation$.map(function (node) {
@@ -418,41 +502,75 @@ function main(sources) {
     });
   });
 
-  var linksVtree$ = links$.map(function (links) {
-    return _xstream2.default.combine.apply(_xstream2.default, _toConsumableArray(links.map(function (link) {
-      return link.DOM;
-    })));
-  }).flatten();
   var changeLocation$ = links$.map(function (links) {
     return _xstream2.default.merge.apply(_xstream2.default, _toConsumableArray(links.map(function (link) {
       return link.value$;
     })));
   }).flatten().startWith({ id: "nantes" });
 
-  var test$ = _xstream2.default.merge(_xstream2.default.of({ id: "nantes" }, changeLocation$));
+  var test$ = _xstream2.default.merge(_xstream2.default.of({ id: "nantes" }, changeLocation$)).remember();
 
   //changeLocationProxy$.imitate(test$);
   changeLocationProxy$.imitate(changeLocation$.compose((0, _dropRepeats2.default)()));
 
-  var DOMSink$ = _xstream2.default.combine(linksVtree$, changeLocation$).map(function (_ref) {
-    var _ref2 = _slicedToArray(_ref, 2),
+  var linksVtree$ = links$.map(function (links) {
+    return _xstream2.default.combine.apply(_xstream2.default, _toConsumableArray(links.map(function (link) {
+      return link.DOM;
+    })));
+  }).flatten();
+
+  var witnessesData$ = currentLocation$.map(function (currentLocation) {
+    return currentLocation.places;
+  }).debug("witnessesData");
+
+  var witnesses$ = witnessesData$.map(function (witnessesData) {
+    return Object.keys(witnessesData).map(function (key, value) {
+      return (0, _Witness.Witness)({
+        DOM: sources.DOM,
+        props$: _xstream2.default.of(witnessesData[key])
+      });
+    });
+  }).debug("witnesses");
+
+  var witnessesVTree$ = witnesses$.map(function (witnesses) {
+    return _xstream2.default.combine.apply(_xstream2.default, _toConsumableArray(witnesses.map(function (witness) {
+      return witness.DOM;
+    })));
+  }).flatten();
+
+  var DOMSink$ = _xstream2.default.combine(linksVtree$, changeLocation$, witnessesVTree$).map(function (_ref) {
+    var _ref2 = _slicedToArray(_ref, 3),
         linksVtree = _ref2[0],
-        changeLocation = _ref2[1];
+        changeLocation = _ref2[1],
+        witnessesVTree = _ref2[2];
 
     return (0, _snabbdomJsx.html)(
       'div',
       null,
       (0, _snabbdomJsx.html)(
-        'p',
-        null,
-        'Current : ',
-        changeLocation ? changeLocation.id : ''
-      ),
-      (0, _snabbdomJsx.html)('h1', null),
-      (0, _snabbdomJsx.html)(
         'div',
-        { selector: '.items' },
-        linksVtree
+        null,
+        witnessesVTree
+      ),
+      (0, _snabbdomJsx.html)(
+        'footer',
+        null,
+        (0, _snabbdomJsx.html)(
+          'div',
+          { 'class': 'travel-panel' },
+          (0, _snabbdomJsx.html)(
+            'p',
+            null,
+            'Current : ',
+            changeLocation ? changeLocation.id : ''
+          ),
+          (0, _snabbdomJsx.html)('h1', null),
+          (0, _snabbdomJsx.html)(
+            'div',
+            { selector: '.items' },
+            linksVtree
+          )
+        )
       )
     );
   });

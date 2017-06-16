@@ -14,7 +14,7 @@ function intent(DOM){
 }
 
 function model(props$,action$){
-    return action$.map(action => props$).flatten().remember();
+    return action$.map(action => props$).flatten(); //.remember();
 }
 
 function view(props$){
