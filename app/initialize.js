@@ -31,7 +31,21 @@ function main(sources) {
 
   const pathInit$ = path$.map( path => ({id:path[0].location}));
 
-  //const progression$ = add$.mapTo(1).fold((acc, x) => acc + x, 0);
+  /// ça pourrait fonctionner si les noms avaient partout la même convention d'écriture. chercher autre alternative ///
+  const progressionProxy$ = xs.create();
+  const correctLocation$ = jsonResponse$.map(jsonResponse =>
+    currentLocation$.map(currentLocation =>
+      progressionProxy$.filter(progression => {
+        console.log(currentLocation);
+        return currentLocation.name === jsonResponse.path[progression+1].location
+      }
+      )
+    ).flatten()
+  ).flatten();
+  const progression$ = correctLocation$.mapTo(1).fold((acc, x) => acc + x, 0);
+  progressionProxy$.imitate(progression$);
+  /////////////////////////////////////////////////
+
   const links$ = currentLocation$.map( node => node.links.map(
     link => ChangeLocation({DOM, props$: xs.of({id:link})})
   ));
@@ -46,7 +60,7 @@ function main(sources) {
 
   const linksVtree$ = links$.map( links => xs.combine(...links.map( link => link.DOM))).flatten();
   
-  const witnessesData$ = currentLocation$.map(currentLocation => currentLocation.places).debug("witnessesData");
+  const witnessesData$ = currentLocation$.map(currentLocation => currentLocation.places);
 
   const witnesses$ = witnessesData$.map(witnessesData =>
     Object.keys(witnessesData).map((key, value) =>
@@ -55,15 +69,16 @@ function main(sources) {
         props$: xs.of(witnessesData[key]),
       })
     )
-  ).debug("witnesses");
+  );
 
   const witnessesVTree$ = witnesses$.map(witnesses =>
     xs.combine(...witnesses.map(witness => witness.DOM))
   ).flatten();
   
-  const DOMSink$ = xs.combine(linksVtree$, changeLocation$, witnessesVTree$).map(
-      ([linksVtree, changeLocation, witnessesVTree]) =>
+  const DOMSink$ = xs.combine(linksVtree$, changeLocation$, witnessesVTree$, progression$).map(
+      ([linksVtree, changeLocation, witnessesVTree, progression]) =>
         <div>
+          <h1>{progression}</h1>
           <div>
             {witnessesVTree}
           </div>

@@ -27,23 +27,23 @@ function model(props$, action$){
 
 function view(value$){
     return value$
-        .map(value => {
-            return <div style="background: red;">
+        .map(value =>
+            <section style="background: red;">
                 {value.showResult 
                     ?
-                    <div> 
+                    <figure> 
                         <img src={value.image} />
-                        <p>
-                            {value.dialogs[0]}
-                        </p>
-                    </div>
+                        <figcaption>
+                            {value.clue ? value.clue : value.dialogs[0]}
+                        </figcaption>
+                    </figure>
                     : 
                     <button selector=".js-question-witness" type="button" >
                         {value.name}
                     </button>
                 }
-            </div>
-        });
+            </section>
+        );
 }
 
 function _Witness(sources) {

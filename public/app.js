@@ -390,16 +390,16 @@ function model(props$, action$) {
 function view(value$) {
     return value$.map(function (value) {
         return (0, _snabbdomJsx.html)(
-            'div',
+            'section',
             { style: 'background: red;' },
             value.showResult ? (0, _snabbdomJsx.html)(
-                'div',
+                'figure',
                 null,
                 (0, _snabbdomJsx.html)('img', { src: value.image }),
                 (0, _snabbdomJsx.html)(
-                    'p',
+                    'figcaption',
                     null,
-                    value.dialogs[0]
+                    value.clue ? value.clue : value.dialogs[0]
                 )
             ) : (0, _snabbdomJsx.html)(
                 'button',
@@ -505,7 +505,22 @@ function main(sources) {
     return { id: path[0].location };
   });
 
-  //const progression$ = add$.mapTo(1).fold((acc, x) => acc + x, 0);
+  /// ça pourrait fonctionner si les noms avaient partout la même convention d'écriture. chercher autre alternative ///
+  var progressionProxy$ = _xstream2.default.create();
+  var correctLocation$ = jsonResponse$.map(function (jsonResponse) {
+    return currentLocation$.map(function (currentLocation) {
+      return progressionProxy$.filter(function (progression) {
+        console.log(currentLocation);
+        return currentLocation.name === jsonResponse.path[progression + 1].location;
+      });
+    }).flatten();
+  }).flatten();
+  var progression$ = correctLocation$.mapTo(1).fold(function (acc, x) {
+    return acc + x;
+  }, 0);
+  progressionProxy$.imitate(progression$);
+  /////////////////////////////////////////////////
+
   var links$ = currentLocation$.map(function (node) {
     return node.links.map(function (link) {
       return (0, _ChangeLocation.ChangeLocation)({ DOM: DOM, props$: _xstream2.default.of({ id: link }) });
@@ -528,7 +543,7 @@ function main(sources) {
 
   var witnessesData$ = currentLocation$.map(function (currentLocation) {
     return currentLocation.places;
-  }).debug("witnessesData");
+  });
 
   var witnesses$ = witnessesData$.map(function (witnessesData) {
     return Object.keys(witnessesData).map(function (key, value) {
@@ -537,7 +552,7 @@ function main(sources) {
         props$: _xstream2.default.of(witnessesData[key])
       });
     });
-  }).debug("witnesses");
+  });
 
   var witnessesVTree$ = witnesses$.map(function (witnesses) {
     return _xstream2.default.combine.apply(_xstream2.default, _toConsumableArray(witnesses.map(function (witness) {
@@ -545,15 +560,21 @@ function main(sources) {
     })));
   }).flatten();
 
-  var DOMSink$ = _xstream2.default.combine(linksVtree$, changeLocation$, witnessesVTree$).map(function (_ref) {
-    var _ref2 = _slicedToArray(_ref, 3),
+  var DOMSink$ = _xstream2.default.combine(linksVtree$, changeLocation$, witnessesVTree$, progression$).map(function (_ref) {
+    var _ref2 = _slicedToArray(_ref, 4),
         linksVtree = _ref2[0],
         changeLocation = _ref2[1],
-        witnessesVTree = _ref2[2];
+        witnessesVTree = _ref2[2],
+        progression = _ref2[3];
 
     return (0, _snabbdomJsx.html)(
       'div',
       null,
+      (0, _snabbdomJsx.html)(
+        'h1',
+        null,
+        progression
+      ),
       (0, _snabbdomJsx.html)(
         'div',
         null,
