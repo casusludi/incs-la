@@ -58,7 +58,7 @@ function main(sources) {
   // const currentLocation$ = newLocationInfo$
   //   .startWith('la-baule');
     
-  proxyChangeLocation$.imitate(changeLocation$);
+  proxyChangeLocation$.imitate(currentLocation$.compose(dropRepeats()));
 
   const DOMSink$ = xs.combine(currentLocation$, add$, progression$, locationsVTree$).map(
       ([currentLocation, add, progression, locationsVTree]) =>
