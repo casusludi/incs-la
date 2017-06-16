@@ -20,12 +20,16 @@ function main(sources) {
   const jsonRequest$ = jsonSinks.request;
   const jsonResponse$ = jsonSinks.JSON;
 
-  const changeLocationProxy$ = xs.create(); 
-  //const changeLocationProxy$ = xs.of({id:"nantes"});
-  
-  const currentLocation$ = jsonResponse$.map(jsonResponse =>
-      changeLocationProxy$.map(node => jsonResponse.locations[node.id])
-  ).flatten().debug("currentLocation");
+  const locations$ = jsonResponse$.map( jsonResponse => jsonResponse.locations);
+  const path$ = jsonResponse$.map(jsonResponse => jsonResponse.path);
+
+  const changeLocationProxy$ = xs.create();  
+
+  const currentLocation$ = locations$.map(locations =>
+      changeLocationProxy$.map( node => locations[node.id])
+  ).flatten();
+
+  const pathInit$ = path$.map( path => ({id:path[0].location}));
 
   //const progression$ = add$.mapTo(1).fold((acc, x) => acc + x, 0);
   const links$ = currentLocation$.map( node => node.links.map(
@@ -34,13 +38,11 @@ function main(sources) {
 
   const changeLocation$ = links$.map( 
       links => xs.merge(...links.map( link => link.value$))
-  ).flatten()
-  .startWith({id:"nantes"});
+  )
+  .startWith(pathInit$)
+  .flatten();
 
-  const test$ = xs.merge(xs.of({id:"nantes"}, changeLocation$)).remember();
-
-  //changeLocationProxy$.imitate(test$);
-  changeLocationProxy$.imitate(changeLocation$.compose(dropRepeats()));
+  changeLocationProxy$.imitate(changeLocation$);
 
   const linksVtree$ = links$.map( links => xs.combine(...links.map( link => link.DOM))).flatten();
   

@@ -189,7 +189,7 @@ function view(props$) {
             { selector: '.js-change-location', type: 'button' },
             props.id
         );
-    });
+    }).remember();
 }
 
 function _ChangeLocation(sources) {
@@ -486,14 +486,24 @@ function main(sources) {
   var jsonRequest$ = jsonSinks.request;
   var jsonResponse$ = jsonSinks.JSON;
 
-  var changeLocationProxy$ = _xstream2.default.create();
-  //const changeLocationProxy$ = xs.of({id:"nantes"});
+  var locations$ = jsonResponse$.map(function (jsonResponse) {
+    return jsonResponse.locations;
+  });
+  var path$ = jsonResponse$.map(function (jsonResponse) {
+    return jsonResponse.path;
+  });
 
-  var currentLocation$ = jsonResponse$.map(function (jsonResponse) {
+  var changeLocationProxy$ = _xstream2.default.create();
+
+  var currentLocation$ = locations$.map(function (locations) {
     return changeLocationProxy$.map(function (node) {
-      return jsonResponse.locations[node.id];
+      return locations[node.id];
     });
-  }).flatten().debug("currentLocation");
+  }).flatten();
+
+  var pathInit$ = path$.map(function (path) {
+    return { id: path[0].location };
+  });
 
   //const progression$ = add$.mapTo(1).fold((acc, x) => acc + x, 0);
   var links$ = currentLocation$.map(function (node) {
@@ -506,12 +516,9 @@ function main(sources) {
     return _xstream2.default.merge.apply(_xstream2.default, _toConsumableArray(links.map(function (link) {
       return link.value$;
     })));
-  }).flatten().startWith({ id: "nantes" });
+  }).startWith(pathInit$).flatten();
 
-  var test$ = _xstream2.default.merge(_xstream2.default.of({ id: "nantes" }, changeLocation$)).remember();
-
-  //changeLocationProxy$.imitate(test$);
-  changeLocationProxy$.imitate(changeLocation$.compose((0, _dropRepeats2.default)()));
+  changeLocationProxy$.imitate(changeLocation$);
 
   var linksVtree$ = links$.map(function (links) {
     return _xstream2.default.combine.apply(_xstream2.default, _toConsumableArray(links.map(function (link) {
