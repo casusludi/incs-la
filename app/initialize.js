@@ -22,19 +22,22 @@ function main(sources) {
   
   const currentLocation$ = jsonResponse$.map(jsonResponse =>
       changeLocationProxy$.map( node => jsonResponse.locations[node.id])
-  ).flatten().debug();
+  ).flatten();
+
+  //const path$ = jsonResponse$.map(jsonResponse => xs.fromArray(jsonResponse.path));
+  const pathInit$ = jsonResponse$.mapTo({id:"nantes"});
 
   //const progression$ = add$.mapTo(1).fold((acc, x) => acc + x, 0);
   const links$ = currentLocation$.map( node => node.links.map(
     link => ChangeLocation({DOM,props$:xs.of({id:link})})
-  )).debug();
+  ));
 
   const linksVtree$ = links$.map( links => xs.combine(...links.map( link => link.DOM))).flatten();
-  const changeLocation$ = xs.merge(
-      xs.of({id:"nantes"}).compose(delay(1)),
-      links$.map( 
+  const changeLocation$ = links$.map( 
       links => xs.merge(...links.map( link => link.value$))
-  ).flatten())
+  )
+  .startWith(pathInit$)
+  .flatten()
 
   changeLocationProxy$.imitate(changeLocation$);
 
