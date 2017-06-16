@@ -51,3 +51,4 @@ IOS/www/
 
 dist/
 node_modules/
+public/

@@ -1,5 +1,5 @@
 import xs from 'xstream';
-import { run } from '@cycle/xstream-run';
+import { run } from '@cycle/run';
 import isolate from '@cycle/isolate';
 import { html } from 'snabbdom-jsx';
 

@@ -159,7 +159,7 @@ var _xstream = require('xstream');
 
 var _xstream2 = _interopRequireDefault(_xstream);
 
-var _xstreamRun = require('@cycle/xstream-run');
+var _run = require('@cycle/run');
 
 var _isolate = require('@cycle/isolate');
 
@@ -226,7 +226,7 @@ var _xstream = require('xstream');
 
 var _xstream2 = _interopRequireDefault(_xstream);
 
-var _xstreamRun = require('@cycle/xstream-run');
+var _run = require('@cycle/run');
 
 var _isolate = require('@cycle/isolate');
 
@@ -319,7 +319,7 @@ var _xstream = require('xstream');
 
 var _xstream2 = _interopRequireDefault(_xstream);
 
-var _xstreamRun = require('@cycle/xstream-run');
+var _run = require('@cycle/run');
 
 var _isolate = require('@cycle/isolate');
 
@@ -484,7 +484,7 @@ var drivers = {
 
 });
 
-require.alias("node-browser-modules/node_modules/buffer/index.js", "buffer");require.register("___globals___", function(exports, require, module) {
+require.register("___globals___", function(exports, require, module) {
   
 });})();require('___globals___');
 
