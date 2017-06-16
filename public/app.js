@@ -189,7 +189,7 @@ function view(props$) {
             { selector: '.js-change-location', type: 'button' },
             props.id
         );
-    });
+    }).remember();
 }
 
 function _ChangeLocation(sources) {
@@ -399,36 +399,32 @@ function main(sources) {
   var jsonResponse$ = jsonSinks.JSON;
 
   var changeLocationProxy$ = _xstream2.default.create();
-  //const changeLocationProxy$ = xs.of({id:"nantes"}); 
 
   var currentLocation$ = jsonResponse$.map(function (jsonResponse) {
     return changeLocationProxy$.map(function (node) {
       return jsonResponse.locations[node.id];
     });
-  }).flatten();
+  }).flatten().debug();
 
   //const progression$ = add$.mapTo(1).fold((acc, x) => acc + x, 0);
   var links$ = currentLocation$.map(function (node) {
     return node.links.map(function (link) {
       return (0, _ChangeLocation.ChangeLocation)({ DOM: DOM, props$: _xstream2.default.of({ id: link }) });
     });
-  });
+  }).debug();
 
   var linksVtree$ = links$.map(function (links) {
     return _xstream2.default.combine.apply(_xstream2.default, _toConsumableArray(links.map(function (link) {
       return link.DOM;
     })));
   }).flatten();
-  var changeLocation$ = links$.map(function (links) {
+  var changeLocation$ = _xstream2.default.merge(_xstream2.default.of({ id: "nantes" }).compose((0, _delay2.default)(1)), links$.map(function (links) {
     return _xstream2.default.merge.apply(_xstream2.default, _toConsumableArray(links.map(function (link) {
       return link.value$;
     })));
-  }).flatten().startWith({ id: "nantes" });
+  }).flatten());
 
-  var test$ = _xstream2.default.merge(_xstream2.default.of({ id: "nantes" }, changeLocation$));
-
-  //changeLocationProxy$.imitate(test$);
-  changeLocationProxy$.imitate(changeLocation$.compose((0, _dropRepeats2.default)()));
+  changeLocationProxy$.imitate(changeLocation$);
 
   var DOMSink$ = _xstream2.default.combine(linksVtree$, changeLocation$).map(function (_ref) {
     var _ref2 = _slicedToArray(_ref, 2),

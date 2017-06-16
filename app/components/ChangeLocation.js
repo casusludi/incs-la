@@ -21,7 +21,7 @@ function view(props$){
     return props$
         .map(props =>
             <button selector=".js-change-location" type="button" >{props.id}</button>
-        );
+        ).remember();
 }
 
 function _ChangeLocation(sources) {
