@@ -16,6 +16,10 @@ function main(sources) {
   const jsonRequest$ = jsonSinks.request;
   const jsonResponse$ = jsonSinks.JSON;
 
+  /////////////////////////////
+  // OLD (use of Collection) //
+  /////////////////////////////
+  /* 
   const proxyChangeLocation$ = xs.create(); 
   
   // const locationLinks$ = proxyChangeLocation$.map(currentLocation =>
@@ -60,8 +64,8 @@ function main(sources) {
     
   proxyChangeLocation$.imitate(currentLocation$.compose(dropRepeats()));
 
-  const DOMSink$ = xs.combine(currentLocation$, add$, progression$, locationsVTree$).map(
-      ([currentLocation, add, progression, locationsVTree]) =>
+  const DOMSink$ = xs.combine(currentLocation$, progression$, locationsVTree$).map(
+      ([currentLocation, progression, locationsVTree]) =>
         <div>
           <p>
             Progression : {progression}
@@ -72,6 +76,41 @@ function main(sources) {
           </div>
         </div>
     );
+  */
+
+  ///// SANS COLLECTION /////
+  const action$ = sources.DOM
+    .select('.js-change-location')
+    .events('click');
+
+  const clickedLocation$ = action$.map(action => action.target.value).startWith("None");
+    
+  const progression$ = action$.mapTo(1).fold((acc, x) => acc + x, 0);
+
+  const currentLocation$ = action$.map(action =>
+    clickedLocation$
+  ).startWith("nantes");
+
+  const currentLocationLinks$ = currentLocation$.map(currentLocation =>
+      jsonResponse$.map(jsonResponse =>
+          jsonResponse.locations[currentLocation].links
+      )
+  ).flatten();
+
+  const DOMSink$ = xs.combine(currentLocation$, currentLocationLinks$, progression$, clickedLocation$/*, locationsVTree$*/).map(
+    ([currentLocation, currentLocationLinks, progression, clickedLocation/*, locationsVTree*/]) =>
+      <div>
+        <p>Progression : {progression}</p>
+        <p>Clicked location : {clickedLocation}</p>
+        <h1>{currentLocation}</h1>
+        <p>
+          {currentLocationLinks.map(currentLocationLink => 
+              <button selector=".js-change-location" type="button" value={currentLocationLink} >{currentLocationLink}</button>
+          )}
+        </p>
+      </div>
+  );
+  ///////////////////////////
 
   const sinks = {
     DOM: DOMSink$,
