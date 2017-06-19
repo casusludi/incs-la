@@ -16,7 +16,7 @@ function intent(DOM){
 function model(props$, action$){
     return props$
         .map(props => action$
-            .map(action =>
+            .map(action => 
               Object.assign(
                 props,
                 {showResult: action,}
@@ -28,6 +28,8 @@ function model(props$, action$){
 }
 
 function view(value$){
+    //const RE = /\[([^\]]*)\]\(([^)]*)\)/g;
+
     return value$
         .map(value =>
             <section style="background: red;">
@@ -36,7 +38,8 @@ function view(value$){
                     <figure> 
                         <img src={value.image} />
                         <figcaption>
-                            {value.clue ? value.clue : value.dialogs[0]}
+                            {/*{value.clue ? value.clue.text.replace(RE, '<a href="$2" target="_blank">$1</a>') : value.dialogs[0]}*/}
+                            {value.clue ? value.clue.text : value.dialogs[0]}
                         </figcaption>
                     </figure>
                     : 

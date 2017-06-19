@@ -454,6 +454,8 @@ function model(props$, action$) {
 }
 
 function view(value$) {
+    //const RE = /\[([^\]]*)\]\(([^)]*)\)/g;
+
     return value$.map(function (value) {
         return (0, _snabbdomJsx.html)(
             'section',
@@ -465,7 +467,7 @@ function view(value$) {
                 (0, _snabbdomJsx.html)(
                     'figcaption',
                     null,
-                    value.clue ? value.clue : value.dialogs[0]
+                    value.clue ? value.clue.text : value.dialogs[0]
                 )
             ) : (0, _snabbdomJsx.html)(
                 'button',
@@ -599,14 +601,12 @@ function main(sources) {
   });
 
   var currentLocationLinks$ = _xstream2.default.combine(nextCorrectLocationProxy$, currentLocation$, lastLocation$, locations$).map(function (_ref3) {
-    var _ref4 = _slicedToArray(_ref3, 4),
+    var _ref4 = _slicedToArray(_ref3, 5),
         nextCorrectLocation = _ref4[0],
         currentLocation = _ref4[1],
         lastLocation = _ref4[2],
-        locations = _ref4[3];
-
-    // console.log("currentLocation.links", currentLocation.links);
-    // console.log("lastLocation", lastLocation);
+        locations = _ref4[3],
+        path = _ref4[4];
 
     var links = _.chain(currentLocation.links || []).concat(lastLocation ? [lastLocation.id] : []).concat(nextCorrectLocation ? [nextCorrectLocation.id] : []).uniq().filter(function (o) {
       return o !== currentLocation.id;
@@ -631,31 +631,6 @@ function main(sources) {
   var linksVtree$ = currentLocationLinks$.map(function (links) {
     return _xstream2.default.combine.apply(_xstream2.default, _toConsumableArray(links.map(function (link) {
       return link.DOM;
-    })));
-  }).flatten();
-
-  var witnessesData$ = currentLocation$.map(function (currentLocation) {
-    return currentLocation.places;
-  });
-
-  var witnesses$ = witnessesData$.map(function (witnessesData) {
-    return Object.keys(witnessesData).map(function (key, value) {
-      return (0, _Witness.Witness)({
-        DOM: sources.DOM,
-        props$: _xstream2.default.of(witnessesData[key])
-      });
-    });
-  });
-
-  var witnessQuestionned$ = witnesses$.map(function (witnesses) {
-    return _xstream2.default.merge.apply(_xstream2.default, _toConsumableArray(witnesses.map(function (witness) {
-      return witness.questionned$;
-    })));
-  }).flatten();
-
-  var witnessesVTree$ = witnesses$.map(function (witnesses) {
-    return _xstream2.default.combine.apply(_xstream2.default, _toConsumableArray(witnesses.map(function (witness) {
-      return witness.DOM;
     })));
   }).flatten();
 
@@ -686,17 +661,49 @@ function main(sources) {
 
   progressionProxy$.imitate(_xstream2.default.merge(progression$, _xstream2.default.of(0)));
 
+  // Witness management
+  var witnessesData$ = currentLocation$.map(function (currentLocation) {
+    return currentLocation.places;
+  });
+
+  var witnesses$ = _xstream2.default.combine(witnessesData$, path$, currentLocation$, progression$).map(function (_ref9) {
+    var _ref10 = _slicedToArray(_ref9, 4),
+        witnessesData = _ref10[0],
+        path = _ref10[1],
+        currentLocation = _ref10[2],
+        progression = _ref10[3];
+
+    return Object.keys(witnessesData).map(function (key, value) {
+      return (0, _Witness.Witness)({
+        DOM: sources.DOM,
+        props$: _xstream2.default.of(Object.assign({}, witnessesData[key], path[progression].location === currentLocation.id ? { clue: path[progression].clues[key] } : {}))
+      });
+    });
+  });
+
+  var witnessQuestionned$ = witnesses$.map(function (witnesses) {
+    return _xstream2.default.merge.apply(_xstream2.default, _toConsumableArray(witnesses.map(function (witness) {
+      return witness.questionned$;
+    })));
+  }).flatten();
+
+  var witnessesVTree$ = witnesses$.map(function (witnesses) {
+    return _xstream2.default.combine.apply(_xstream2.default, _toConsumableArray(witnesses.map(function (witness) {
+      return witness.DOM;
+    })));
+  }).flatten();
+
   // Time management
   var TimeManagerSink = (0, _TimeManager.TimeManager)({ DOM: DOM, settings: settings$, changeLocation: changeLocation$, witnessQuestionned: witnessQuestionned$ });
   var TimeManagerVTree$ = TimeManagerSink.DOM;
 
-  var DOMSink$ = _xstream2.default.combine(linksVtree$, changeLocation$, witnessesVTree$, progression$, TimeManagerVTree$).map(function (_ref9) {
-    var _ref10 = _slicedToArray(_ref9, 5),
-        linksVtree = _ref10[0],
-        changeLocation = _ref10[1],
-        witnessesVTree = _ref10[2],
-        progression = _ref10[3],
-        TimeManagerVTree = _ref10[4];
+  var DOMSink$ = _xstream2.default.combine(linksVtree$, changeLocation$, witnessesVTree$, progression$, TimeManagerVTree$).map(function (_ref11) {
+    var _ref12 = _slicedToArray(_ref11, 5),
+        linksVtree = _ref12[0],
+        changeLocation = _ref12[1],
+        witnessesVTree = _ref12[2],
+        progression = _ref12[3],
+        TimeManagerVTree = _ref12[4];
 
     return (0, _snabbdomJsx.html)(
       'div',

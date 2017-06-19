@@ -44,10 +44,7 @@ function main(sources) {
 
   const pathInit$ = path$.map(path => ({id: path[0].location}));
 
-  const currentLocationLinks$ = xs.combine(nextCorrectLocationProxy$, currentLocation$, lastLocation$, locations$).map(([nextCorrectLocation, currentLocation, lastLocation, locations]) => {
-      // console.log("currentLocation.links", currentLocation.links);
-      // console.log("lastLocation", lastLocation);
-      
+  const currentLocationLinks$ = xs.combine(nextCorrectLocationProxy$, currentLocation$, lastLocation$, locations$).map(([nextCorrectLocation, currentLocation, lastLocation, locations, path]) => {
       const links = _.chain(currentLocation.links || [])
         .concat(lastLocation ? [lastLocation.id] : [])
         .concat(nextCorrectLocation ? [nextCorrectLocation.id] : [])
@@ -55,7 +52,7 @@ function main(sources) {
         .filter((o) => o !== currentLocation.id)
         .shuffle()
         .value();
-        
+
       return links.map(link =>
         ChangeLocation({
           DOM, 
@@ -76,25 +73,6 @@ function main(sources) {
   changeLocationProxy$.imitate(changeLocation$);
 
   const linksVtree$ = currentLocationLinks$.map(links => xs.combine(...links.map(link => link.DOM))).flatten();
-  
-  const witnessesData$ = currentLocation$.map(currentLocation => currentLocation.places);
-
-  const witnesses$ = witnessesData$.map(witnessesData =>
-    Object.keys(witnessesData).map((key, value) =>
-      Witness({
-        DOM: sources.DOM, 
-        props$: xs.of(witnessesData[key]),
-      })
-    )
-  );
-
-  const witnessQuestionned$ = witnesses$.map(witnesses =>
-    xs.merge(...witnesses.map(witness => witness.questionned$))
-  ).flatten();
-
-  const witnessesVTree$ = witnesses$.map(witnesses =>
-    xs.combine(...witnesses.map(witness => witness.DOM))
-  ).flatten();
 
   // Progression management
   const progressionProxy$ = xs.create();
@@ -113,6 +91,26 @@ function main(sources) {
   .fold((acc, x) => acc + x, 0);
 
   progressionProxy$.imitate(xs.merge(progression$, xs.of(0)));
+
+  // Witness management
+  const witnessesData$ = currentLocation$.map(currentLocation => currentLocation.places);
+
+  const witnesses$ = xs.combine(witnessesData$, path$, currentLocation$, progression$).map(([witnessesData, path, currentLocation, progression]) =>
+    Object.keys(witnessesData).map((key, value) =>
+      Witness({
+        DOM: sources.DOM, 
+        props$: xs.of(Object.assign({}, witnessesData[key], path[progression].location === currentLocation.id ? {clue: path[progression].clues[key]} : {})),
+      })
+    )
+  );
+
+  const witnessQuestionned$ = witnesses$.map(witnesses =>
+    xs.merge(...witnesses.map(witness => witness.questionned$))
+  ).flatten();
+
+  const witnessesVTree$ = witnesses$.map(witnesses =>
+    xs.combine(...witnesses.map(witness => witness.DOM))
+  ).flatten();
 
   // Time management
   const TimeManagerSink = TimeManager({DOM, settings: settings$, changeLocation: changeLocation$, witnessQuestionned: witnessQuestionned$});

@@ -20,10 +20,9 @@ function model(sources){
 }
 
 function view(value$){
-    return value$
-        .map(value =>
-            <span>{value-value%1}h{value%1*60}</span>
-        );
+    return value$.map(value =>
+      <span>{value-value%1}h{value%1*60}</span>
+    );
 }
 
 function _TimeManager(sources) {
