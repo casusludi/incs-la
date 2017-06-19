@@ -22,43 +22,44 @@ function main(sources) {
 
   const locations$ = jsonResponse$.map( jsonResponse => jsonResponse.locations);
   const path$ = jsonResponse$.map(jsonResponse => jsonResponse.path);
+  const settings$ = jsonResponse$.map(jsonResponse => jsonResponse.setting);
 
   const changeLocationProxy$ = xs.create();  
 
   const currentLocation$ = locations$.map(locations =>
-      changeLocationProxy$.map( node => locations[node.id])
+      changeLocationProxy$.map(node => locations[node.id])
   ).flatten();
 
-  const pathInit$ = path$.map( path => ({id:path[0].location}));
+  const pathInit$ = path$.map(path => ({id:path[0].location}));
 
   /// ça pourrait fonctionner si les noms avaient partout la même convention d'écriture. chercher autre alternative ///
-  const progressionProxy$ = xs.create();
-  const correctLocation$ = jsonResponse$.map(jsonResponse =>
-    currentLocation$.map(currentLocation =>
-      progressionProxy$.filter(progression => {
-        console.log(currentLocation);
-        return currentLocation.name === jsonResponse.path[progression+1].location
-      }
-      )
-    ).flatten()
-  ).flatten();
-  const progression$ = correctLocation$.mapTo(1).fold((acc, x) => acc + x, 0);
-  progressionProxy$.imitate(progression$);
+  // const progressionProxy$ = xs.create();
+  // const correctLocation$ = jsonResponse$.map(jsonResponse =>
+  //   currentLocation$.map(currentLocation =>
+  //     progressionProxy$.filter(progression => {
+  //       console.log(currentLocation);
+  //       return currentLocation.name === jsonResponse.path[progression+1].location
+  //     }
+  //     )
+  //   ).flatten()
+  // ).flatten();
+  // const progression$ = correctLocation$.mapTo(1).fold((acc, x) => acc + x, 0);
+  // progressionProxy$.imitate(progression$);
   /////////////////////////////////////////////////
 
-  const links$ = currentLocation$.map( node => node.links.map(
+  const currentLocationLinks$ = currentLocation$.map( node => node.links.map(
     link => ChangeLocation({DOM, props$: xs.of({id:link})})
   ));
 
-  const changeLocation$ = links$.map( 
-      links => xs.merge(...links.map( link => link.value$))
+  const changeLocation$ = currentLocationLinks$.map( 
+      links => xs.merge(...links.map(link => link.value$))
   )
   .startWith(pathInit$)
   .flatten();
 
   changeLocationProxy$.imitate(changeLocation$);
 
-  const linksVtree$ = links$.map( links => xs.combine(...links.map( link => link.DOM))).flatten();
+  const linksVtree$ = currentLocationLinks$.map( links => xs.combine(...links.map( link => link.DOM))).flatten();
   
   const witnessesData$ = currentLocation$.map(currentLocation => currentLocation.places);
 
@@ -71,14 +72,28 @@ function main(sources) {
     )
   );
 
+  const witnessQuestionned$ = witnesses$.map(witnesses =>
+    xs.merge(...witnesses.map(witness => witness.questionned$))
+  ).flatten();
+
   const witnessesVTree$ = witnesses$.map(witnesses =>
     xs.combine(...witnesses.map(witness => witness.DOM))
   ).flatten();
+
+  // Time management
+  const elapsedTime$ = settings$.map(settings =>
+      xs.merge(
+        changeLocation$.mapTo(settings.cost.travel), 
+        witnessQuestionned$.mapTo(settings.cost.investigate)
+      )
+    ).flatten()
+    .fold((acc, x) => acc + x, 0);
   
-  const DOMSink$ = xs.combine(linksVtree$, changeLocation$, witnessesVTree$, progression$).map(
-      ([linksVtree, changeLocation, witnessesVTree, progression]) =>
+  const DOMSink$ = xs.combine(linksVtree$, changeLocation$, witnessesVTree$/*, progression$*/, elapsedTime$).map(
+      ([linksVtree, changeLocation, witnessesVTree/*, progression*/, elapsedTime]) =>
         <div>
-          <h1>{progression}</h1>
+          {/*<h1>Progression : {progression}</h1>*/}
+          <h2>Temps écoulé : {elapsedTime}</h2>
           <div>
             {witnessesVTree}
           </div>

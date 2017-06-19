@@ -492,6 +492,9 @@ function main(sources) {
   var path$ = jsonResponse$.map(function (jsonResponse) {
     return jsonResponse.path;
   });
+  var settings$ = jsonResponse$.map(function (jsonResponse) {
+    return jsonResponse.setting;
+  });
 
   var changeLocationProxy$ = _xstream2.default.create();
 
@@ -506,28 +509,27 @@ function main(sources) {
   });
 
   /// ça pourrait fonctionner si les noms avaient partout la même convention d'écriture. chercher autre alternative ///
-  var progressionProxy$ = _xstream2.default.create();
-  var correctLocation$ = jsonResponse$.map(function (jsonResponse) {
-    return currentLocation$.map(function (currentLocation) {
-      return progressionProxy$.filter(function (progression) {
-        console.log(currentLocation);
-        return currentLocation.name === jsonResponse.path[progression + 1].location;
-      });
-    }).flatten();
-  }).flatten();
-  var progression$ = correctLocation$.mapTo(1).fold(function (acc, x) {
-    return acc + x;
-  }, 0);
-  progressionProxy$.imitate(progression$);
+  // const progressionProxy$ = xs.create();
+  // const correctLocation$ = jsonResponse$.map(jsonResponse =>
+  //   currentLocation$.map(currentLocation =>
+  //     progressionProxy$.filter(progression => {
+  //       console.log(currentLocation);
+  //       return currentLocation.name === jsonResponse.path[progression+1].location
+  //     }
+  //     )
+  //   ).flatten()
+  // ).flatten();
+  // const progression$ = correctLocation$.mapTo(1).fold((acc, x) => acc + x, 0);
+  // progressionProxy$.imitate(progression$);
   /////////////////////////////////////////////////
 
-  var links$ = currentLocation$.map(function (node) {
+  var currentLocationLinks$ = currentLocation$.map(function (node) {
     return node.links.map(function (link) {
       return (0, _ChangeLocation.ChangeLocation)({ DOM: DOM, props$: _xstream2.default.of({ id: link }) });
     });
   });
 
-  var changeLocation$ = links$.map(function (links) {
+  var changeLocation$ = currentLocationLinks$.map(function (links) {
     return _xstream2.default.merge.apply(_xstream2.default, _toConsumableArray(links.map(function (link) {
       return link.value$;
     })));
@@ -535,7 +537,7 @@ function main(sources) {
 
   changeLocationProxy$.imitate(changeLocation$);
 
-  var linksVtree$ = links$.map(function (links) {
+  var linksVtree$ = currentLocationLinks$.map(function (links) {
     return _xstream2.default.combine.apply(_xstream2.default, _toConsumableArray(links.map(function (link) {
       return link.DOM;
     })));
@@ -554,26 +556,40 @@ function main(sources) {
     });
   });
 
+  var witnessQuestionned$ = witnesses$.map(function (witnesses) {
+    return _xstream2.default.merge.apply(_xstream2.default, _toConsumableArray(witnesses.map(function (witness) {
+      return witness.questionned$;
+    })));
+  }).flatten();
+
   var witnessesVTree$ = witnesses$.map(function (witnesses) {
     return _xstream2.default.combine.apply(_xstream2.default, _toConsumableArray(witnesses.map(function (witness) {
       return witness.DOM;
     })));
   }).flatten();
 
-  var DOMSink$ = _xstream2.default.combine(linksVtree$, changeLocation$, witnessesVTree$, progression$).map(function (_ref) {
+  // Time management
+  var elapsedTime$ = settings$.map(function (settings) {
+    return _xstream2.default.merge(changeLocation$.mapTo(settings.cost.travel), witnessQuestionned$.mapTo(settings.cost.investigate));
+  }).flatten().fold(function (acc, x) {
+    return acc + x;
+  }, 0);
+
+  var DOMSink$ = _xstream2.default.combine(linksVtree$, changeLocation$, witnessesVTree$ /*, progression$*/, elapsedTime$).map(function (_ref) {
     var _ref2 = _slicedToArray(_ref, 4),
         linksVtree = _ref2[0],
         changeLocation = _ref2[1],
-        witnessesVTree = _ref2[2],
-        progression = _ref2[3];
+        witnessesVTree /*, progression*/ = _ref2[2],
+        elapsedTime = _ref2[3];
 
     return (0, _snabbdomJsx.html)(
       'div',
       null,
       (0, _snabbdomJsx.html)(
-        'h1',
+        'h2',
         null,
-        progression
+        'Temps \xE9coul\xE9 : ',
+        elapsedTime
       ),
       (0, _snabbdomJsx.html)(
         'div',
