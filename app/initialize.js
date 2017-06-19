@@ -30,7 +30,7 @@ function main(sources) {
       changeLocationProxy$.map(node => locations[node.id])
   ).flatten();
 
-  const pathInit$ = path$.map(path => ({id:path[0].location}));
+  const pathInit$ = path$.map(path => ({id: path[0].location}));
 
   /// ça pourrait fonctionner si les noms avaient partout la même convention d'écriture. chercher autre alternative ///
   // const progressionProxy$ = xs.create();
@@ -80,6 +80,44 @@ function main(sources) {
     xs.combine(...witnesses.map(witness => witness.DOM))
   ).flatten();
 
+  // Progression management
+  const progressionProxy$ = xs.create();
+
+  const nextCorrectLocation$ = changeLocation$.map(changeLocation =>
+    xs.combine(path$, progressionProxy$).map(
+      ([path, progression]) =>
+        ({id: path[progression].location})
+    )
+  ).flatten()
+  .remember()
+  .debug();
+  // path$.map(path =>
+  //   changeLocation$.map(changeLocation =>
+  //     progressionProxy$.map(progression =>
+  //       ({id: path[progression].location})
+  //     ).debug()
+  //   ).debug()
+  // ).flatten().debug();
+
+  const progression$ = currentLocation$.map(currentLocation =>
+    nextCorrectLocation$/*.filter(nextCorrectLocation => {
+        console.log(currentLocation);
+        console.log(nextCorrectLocation);
+        return currentLocation === nextCorrectLocation
+      }
+    )*/
+  ).flatten()
+  .mapTo(1)
+  .fold((acc, x) => acc + x, 0);
+  
+  // changeLocation$.addListener({
+  //   next: (value) => {
+  //     console.log('The Stream gave me a value: ', value);
+  //   },
+  // });
+
+  progressionProxy$.imitate(progression$);
+
   // Time management
   const elapsedTime$ = settings$.map(settings =>
       xs.merge(
@@ -89,10 +127,10 @@ function main(sources) {
     ).flatten()
     .fold((acc, x) => acc + x, 0);
   
-  const DOMSink$ = xs.combine(linksVtree$, changeLocation$, witnessesVTree$/*, progression$*/, elapsedTime$).map(
-      ([linksVtree, changeLocation, witnessesVTree/*, progression*/, elapsedTime]) =>
+  const DOMSink$ = xs.combine(linksVtree$, changeLocation$, witnessesVTree$, progression$, elapsedTime$).map(
+      ([linksVtree, changeLocation, witnessesVTree, progression, elapsedTime]) =>
         <div>
-          {/*<h1>Progression : {progression}</h1>*/}
+          <h1>Progression : {progression}</h1>
           <h2>Temps écoulé : {elapsedTime}</h2>
           <div>
             {witnessesVTree}

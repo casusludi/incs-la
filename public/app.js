@@ -568,6 +568,46 @@ function main(sources) {
     })));
   }).flatten();
 
+  // Progression management
+  var progressionProxy$ = _xstream2.default.create();
+
+  var nextCorrectLocation$ = changeLocation$.map(function (changeLocation) {
+    return _xstream2.default.combine(path$, progressionProxy$).map(function (_ref) {
+      var _ref2 = _slicedToArray(_ref, 2),
+          path = _ref2[0],
+          progression = _ref2[1];
+
+      return { id: path[progression].location };
+    });
+  }).flatten().remember().debug();
+  // path$.map(path =>
+  //   changeLocation$.map(changeLocation =>
+  //     progressionProxy$.map(progression =>
+  //       ({id: path[progression].location})
+  //     ).debug()
+  //   ).debug()
+  // ).flatten().debug();
+
+  var progression$ = currentLocation$.map(function (currentLocation) {
+    return nextCorrectLocation$;
+  } /*.filter(nextCorrectLocation => {
+    console.log(currentLocation);
+    console.log(nextCorrectLocation);
+    return currentLocation === nextCorrectLocation
+    }
+    )*/
+  ).flatten().mapTo(1).fold(function (acc, x) {
+    return acc + x;
+  }, 0);
+
+  // changeLocation$.addListener({
+  //   next: (value) => {
+  //     console.log('The Stream gave me a value: ', value);
+  //   },
+  // });
+
+  progressionProxy$.imitate(progression$);
+
   // Time management
   var elapsedTime$ = settings$.map(function (settings) {
     return _xstream2.default.merge(changeLocation$.mapTo(settings.cost.travel), witnessQuestionned$.mapTo(settings.cost.investigate));
@@ -575,16 +615,23 @@ function main(sources) {
     return acc + x;
   }, 0);
 
-  var DOMSink$ = _xstream2.default.combine(linksVtree$, changeLocation$, witnessesVTree$ /*, progression$*/, elapsedTime$).map(function (_ref) {
-    var _ref2 = _slicedToArray(_ref, 4),
-        linksVtree = _ref2[0],
-        changeLocation = _ref2[1],
-        witnessesVTree /*, progression*/ = _ref2[2],
-        elapsedTime = _ref2[3];
+  var DOMSink$ = _xstream2.default.combine(linksVtree$, changeLocation$, witnessesVTree$, progression$, elapsedTime$).map(function (_ref3) {
+    var _ref4 = _slicedToArray(_ref3, 5),
+        linksVtree = _ref4[0],
+        changeLocation = _ref4[1],
+        witnessesVTree = _ref4[2],
+        progression = _ref4[3],
+        elapsedTime = _ref4[4];
 
     return (0, _snabbdomJsx.html)(
       'div',
       null,
+      (0, _snabbdomJsx.html)(
+        'h1',
+        null,
+        'Progression : ',
+        progression
+      ),
       (0, _snabbdomJsx.html)(
         'h2',
         null,

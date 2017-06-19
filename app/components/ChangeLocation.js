@@ -27,12 +27,12 @@ function view(props$){
 function _ChangeLocation(sources) {
     const {props$,DOM} = sources;
     const action$ = intent(DOM);
-    const value$ = model(props$,action$);
+    const value$ = model(props$, action$);
     const vdom$ = view(props$);
 
     const sinks = {
         DOM: vdom$,
-        value$:value$
+        value$: value$
     };
 
     return sinks;
