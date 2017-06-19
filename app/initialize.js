@@ -26,30 +26,17 @@ function main(sources) {
 
   const changeLocationProxy$ = xs.create();  
 
-  const currentLocation$ = locations$.map(locations =>
-      changeLocationProxy$.map(node => locations[node.id])
-  ).flatten();
+  const currentLocation$ = xs.combine(locations$, changeLocationProxy$).map(([locations, node]) =>
+    Object.assign({}, locations[node.id], node)
+  );
 
   const pathInit$ = path$.map(path => ({id: path[0].location}));
 
-  /// ça pourrait fonctionner si les noms avaient partout la même convention d'écriture. chercher autre alternative ///
-  // const progressionProxy$ = xs.create();
-  // const correctLocation$ = jsonResponse$.map(jsonResponse =>
-  //   currentLocation$.map(currentLocation =>
-  //     progressionProxy$.filter(progression => {
-  //       console.log(currentLocation);
-  //       return currentLocation.name === jsonResponse.path[progression+1].location
-  //     }
-  //     )
-  //   ).flatten()
-  // ).flatten();
-  // const progression$ = correctLocation$.mapTo(1).fold((acc, x) => acc + x, 0);
-  // progressionProxy$.imitate(progression$);
-  /////////////////////////////////////////////////
-
-  const currentLocationLinks$ = currentLocation$.map( node => node.links.map(
-    link => ChangeLocation({DOM, props$: xs.of({id:link})})
-  ));
+  const currentLocationLinks$ = currentLocation$.map(node => 
+    node.links.map(link =>
+      ChangeLocation({DOM, props$: xs.of({id: link})})
+    )
+  );
 
   const changeLocation$ = currentLocationLinks$.map( 
       links => xs.merge(...links.map(link => link.value$))
@@ -59,7 +46,7 @@ function main(sources) {
 
   changeLocationProxy$.imitate(changeLocation$);
 
-  const linksVtree$ = currentLocationLinks$.map( links => xs.combine(...links.map( link => link.DOM))).flatten();
+  const linksVtree$ = currentLocationLinks$.map(links => xs.combine(...links.map( link => link.DOM))).flatten();
   
   const witnessesData$ = currentLocation$.map(currentLocation => currentLocation.places);
 
@@ -83,40 +70,19 @@ function main(sources) {
   // Progression management
   const progressionProxy$ = xs.create();
 
-  const nextCorrectLocation$ = changeLocation$.map(changeLocation =>
-    xs.combine(path$, progressionProxy$).map(
-      ([path, progression]) =>
-        ({id: path[progression].location})
-    )
-  ).flatten()
-  .remember()
-  .debug();
-  // path$.map(path =>
-  //   changeLocation$.map(changeLocation =>
-  //     progressionProxy$.map(progression =>
-  //       ({id: path[progression].location})
-  //     ).debug()
-  //   ).debug()
-  // ).flatten().debug();
+  const nextCorrectLocation$ = xs.combine(path$, progressionProxy$).map(([path, progression]) =>
+    ({id: path[progression + 1].location})
+  ).remember()
+  .debug("nextCorrectLocation");
 
-  const progression$ = currentLocation$.map(currentLocation =>
-    nextCorrectLocation$/*.filter(nextCorrectLocation => {
-        console.log(currentLocation);
-        console.log(nextCorrectLocation);
-        return currentLocation === nextCorrectLocation
-      }
-    )*/
-  ).flatten()
-  .mapTo(1)
+  const progression$ = xs.combine(currentLocation$, nextCorrectLocation$).filter(([currentLocation, nextCorrectLocation]) => {
+    console.log("currentLocation", currentLocation.id);
+    console.log("nextCorrectLocation", nextCorrectLocation.id);
+    return currentLocation.id === nextCorrectLocation.id
+  }).mapTo(1)
   .fold((acc, x) => acc + x, 0);
-  
-  // changeLocation$.addListener({
-  //   next: (value) => {
-  //     console.log('The Stream gave me a value: ', value);
-  //   },
-  // });
 
-  progressionProxy$.imitate(progression$);
+  progressionProxy$.imitate(xs.merge(progression$, xs.of(0)));
 
   // Time management
   const elapsedTime$ = settings$.map(settings =>

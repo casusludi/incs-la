@@ -498,30 +498,17 @@ function main(sources) {
 
   var changeLocationProxy$ = _xstream2.default.create();
 
-  var currentLocation$ = locations$.map(function (locations) {
-    return changeLocationProxy$.map(function (node) {
-      return locations[node.id];
-    });
-  }).flatten();
+  var currentLocation$ = _xstream2.default.combine(locations$, changeLocationProxy$).map(function (_ref) {
+    var _ref2 = _slicedToArray(_ref, 2),
+        locations = _ref2[0],
+        node = _ref2[1];
+
+    return Object.assign({}, locations[node.id], node);
+  });
 
   var pathInit$ = path$.map(function (path) {
     return { id: path[0].location };
   });
-
-  /// ça pourrait fonctionner si les noms avaient partout la même convention d'écriture. chercher autre alternative ///
-  // const progressionProxy$ = xs.create();
-  // const correctLocation$ = jsonResponse$.map(jsonResponse =>
-  //   currentLocation$.map(currentLocation =>
-  //     progressionProxy$.filter(progression => {
-  //       console.log(currentLocation);
-  //       return currentLocation.name === jsonResponse.path[progression+1].location
-  //     }
-  //     )
-  //   ).flatten()
-  // ).flatten();
-  // const progression$ = correctLocation$.mapTo(1).fold((acc, x) => acc + x, 0);
-  // progressionProxy$.imitate(progression$);
-  /////////////////////////////////////////////////
 
   var currentLocationLinks$ = currentLocation$.map(function (node) {
     return node.links.map(function (link) {
@@ -571,42 +558,27 @@ function main(sources) {
   // Progression management
   var progressionProxy$ = _xstream2.default.create();
 
-  var nextCorrectLocation$ = changeLocation$.map(function (changeLocation) {
-    return _xstream2.default.combine(path$, progressionProxy$).map(function (_ref) {
-      var _ref2 = _slicedToArray(_ref, 2),
-          path = _ref2[0],
-          progression = _ref2[1];
+  var nextCorrectLocation$ = _xstream2.default.combine(path$, progressionProxy$).map(function (_ref3) {
+    var _ref4 = _slicedToArray(_ref3, 2),
+        path = _ref4[0],
+        progression = _ref4[1];
 
-      return { id: path[progression].location };
-    });
-  }).flatten().remember().debug();
-  // path$.map(path =>
-  //   changeLocation$.map(changeLocation =>
-  //     progressionProxy$.map(progression =>
-  //       ({id: path[progression].location})
-  //     ).debug()
-  //   ).debug()
-  // ).flatten().debug();
+    return { id: path[progression + 1].location };
+  }).remember().debug("nextCorrectLocation");
 
-  var progression$ = currentLocation$.map(function (currentLocation) {
-    return nextCorrectLocation$;
-  } /*.filter(nextCorrectLocation => {
-    console.log(currentLocation);
-    console.log(nextCorrectLocation);
-    return currentLocation === nextCorrectLocation
-    }
-    )*/
-  ).flatten().mapTo(1).fold(function (acc, x) {
+  var progression$ = _xstream2.default.combine(currentLocation$, nextCorrectLocation$).filter(function (_ref5) {
+    var _ref6 = _slicedToArray(_ref5, 2),
+        currentLocation = _ref6[0],
+        nextCorrectLocation = _ref6[1];
+
+    console.log("currentLocation", currentLocation.id);
+    console.log("nextCorrectLocation", nextCorrectLocation.id);
+    return currentLocation.id === nextCorrectLocation.id;
+  }).mapTo(1).fold(function (acc, x) {
     return acc + x;
   }, 0);
 
-  // changeLocation$.addListener({
-  //   next: (value) => {
-  //     console.log('The Stream gave me a value: ', value);
-  //   },
-  // });
-
-  progressionProxy$.imitate(progression$);
+  progressionProxy$.imitate(_xstream2.default.merge(progression$, _xstream2.default.of(0)));
 
   // Time management
   var elapsedTime$ = settings$.map(function (settings) {
@@ -615,13 +587,13 @@ function main(sources) {
     return acc + x;
   }, 0);
 
-  var DOMSink$ = _xstream2.default.combine(linksVtree$, changeLocation$, witnessesVTree$, progression$, elapsedTime$).map(function (_ref3) {
-    var _ref4 = _slicedToArray(_ref3, 5),
-        linksVtree = _ref4[0],
-        changeLocation = _ref4[1],
-        witnessesVTree = _ref4[2],
-        progression = _ref4[3],
-        elapsedTime = _ref4[4];
+  var DOMSink$ = _xstream2.default.combine(linksVtree$, changeLocation$, witnessesVTree$, progression$, elapsedTime$).map(function (_ref7) {
+    var _ref8 = _slicedToArray(_ref7, 5),
+        linksVtree = _ref8[0],
+        changeLocation = _ref8[1],
+        witnessesVTree = _ref8[2],
+        progression = _ref8[3],
+        elapsedTime = _ref8[4];
 
     return (0, _snabbdomJsx.html)(
       'div',
