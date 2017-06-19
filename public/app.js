@@ -179,7 +179,7 @@ function intent(DOM) {
 function model(props$, action$) {
     return action$.map(function (action) {
         return props$;
-    }).flatten(); //.remember();
+    }).flatten();
 }
 
 function view(props$) {
@@ -187,7 +187,7 @@ function view(props$) {
         return (0, _snabbdomJsx.html)(
             'button',
             { selector: '.js-change-location', type: 'button' },
-            props.id
+            props.name
         );
     }).remember();
 }
@@ -350,7 +350,73 @@ function JSONReader(sources) {
 
 });
 
-;require.register("components/Witness.js", function(exports, require, module) {
+;require.register("components/TimeManager.js", function(exports, require, module) {
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.TimeManager = TimeManager;
+
+var _xstream = require('xstream');
+
+var _xstream2 = _interopRequireDefault(_xstream);
+
+var _run = require('@cycle/run');
+
+var _isolate = require('@cycle/isolate');
+
+var _isolate2 = _interopRequireDefault(_isolate);
+
+var _snabbdomJsx = require('snabbdom-jsx');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function model(sources) {
+    var settings$ = sources.settings;
+    var changeLocation$ = sources.changeLocation;
+    var witnessQuestionned$ = sources.witnessQuestionned;
+
+    var elapsedTime$ = settings$.map(function (settings) {
+        return _xstream2.default.merge(changeLocation$.mapTo(settings.cost.travel), witnessQuestionned$.mapTo(settings.cost.investigate));
+    }).flatten().fold(function (acc, x) {
+        return acc + x;
+    }, 0);
+
+    return elapsedTime$;
+}
+
+function view(value$) {
+    return value$.map(function (value) {
+        return (0, _snabbdomJsx.html)(
+            'span',
+            null,
+            value - value % 1,
+            'h',
+            value % 1 * 60
+        );
+    });
+}
+
+function _TimeManager(sources) {
+    var value$ = model(sources);
+    var vdom$ = view(value$);
+
+    var sinks = {
+        DOM: vdom$,
+        elapsedTime: value$
+    };
+
+    return sinks;
+}
+
+function TimeManager(sources) {
+    return (0, _isolate2.default)(_TimeManager)(sources);
+};
+
+});
+
+require.register("components/Witness.js", function(exports, require, module) {
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -437,10 +503,6 @@ require.register("initialize.js", function(exports, require, module) {
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
-var _xstream = require('xstream');
-
-var _xstream2 = _interopRequireDefault(_xstream);
-
 var _run = require('@cycle/run');
 
 var _dom = require('@cycle/dom');
@@ -450,6 +512,14 @@ var _http = require('@cycle/http');
 var _collection = require('@cycle/collection');
 
 var _collection2 = _interopRequireDefault(_collection);
+
+var _cycleOnionify = require('cycle-onionify');
+
+var _cycleOnionify2 = _interopRequireDefault(_cycleOnionify);
+
+var _xstream = require('xstream');
+
+var _xstream2 = _interopRequireDefault(_xstream);
 
 var _fromDiagram = require('xstream/extra/fromDiagram');
 
@@ -463,6 +533,14 @@ var _delay = require('xstream/extra/delay');
 
 var _delay2 = _interopRequireDefault(_delay);
 
+var _pairwise = require('xstream/extra/pairwise');
+
+var _pairwise2 = _interopRequireDefault(_pairwise);
+
+var _lodash = require('lodash');
+
+var _ = _interopRequireWildcard(_lodash);
+
 var _snabbdomJsx = require('snabbdom-jsx');
 
 var _Investigate = require('./components/Investigate.js');
@@ -472,6 +550,10 @@ var _ChangeLocation = require('./components/ChangeLocation.js');
 var _Witness = require('./components/Witness.js');
 
 var _JSONReader = require('./components/JSONReader.js');
+
+var _TimeManager = require('./components/TimeManager.js');
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -501,18 +583,40 @@ function main(sources) {
   var currentLocation$ = _xstream2.default.combine(locations$, changeLocationProxy$).map(function (_ref) {
     var _ref2 = _slicedToArray(_ref, 2),
         locations = _ref2[0],
-        node = _ref2[1];
+        changeLocation = _ref2[1];
 
-    return Object.assign({}, locations[node.id], node);
+    return Object.assign({}, locations[changeLocation.id], changeLocation);
   });
+
+  var lastLocation$ = currentLocation$.compose(_pairwise2.default).map(function (item) {
+    return item[0];
+  }).startWith("");
+
+  var nextCorrectLocationProxy$ = _xstream2.default.create();
 
   var pathInit$ = path$.map(function (path) {
     return { id: path[0].location };
   });
 
-  var currentLocationLinks$ = currentLocation$.map(function (node) {
-    return node.links.map(function (link) {
-      return (0, _ChangeLocation.ChangeLocation)({ DOM: DOM, props$: _xstream2.default.of({ id: link }) });
+  var currentLocationLinks$ = _xstream2.default.combine(nextCorrectLocationProxy$, currentLocation$, lastLocation$, locations$).map(function (_ref3) {
+    var _ref4 = _slicedToArray(_ref3, 4),
+        nextCorrectLocation = _ref4[0],
+        currentLocation = _ref4[1],
+        lastLocation = _ref4[2],
+        locations = _ref4[3];
+
+    // console.log("currentLocation.links", currentLocation.links);
+    // console.log("lastLocation", lastLocation);
+
+    var links = _.chain(currentLocation.links || []).concat(lastLocation ? [lastLocation.id] : []).concat(nextCorrectLocation ? [nextCorrectLocation.id] : []).uniq().filter(function (o) {
+      return o !== currentLocation.id;
+    }).shuffle().value();
+
+    return links.map(function (link) {
+      return (0, _ChangeLocation.ChangeLocation)({
+        DOM: DOM,
+        props$: _xstream2.default.of(Object.assign({}, locations[link], { id: link }))
+      });
     });
   });
 
@@ -558,21 +662,23 @@ function main(sources) {
   // Progression management
   var progressionProxy$ = _xstream2.default.create();
 
-  var nextCorrectLocation$ = _xstream2.default.combine(path$, progressionProxy$).map(function (_ref3) {
-    var _ref4 = _slicedToArray(_ref3, 2),
-        path = _ref4[0],
-        progression = _ref4[1];
-
-    return { id: path[progression + 1].location };
-  }).remember().debug("nextCorrectLocation");
-
-  var progression$ = _xstream2.default.combine(currentLocation$, nextCorrectLocation$).filter(function (_ref5) {
+  var nextCorrectLocation$ = _xstream2.default.combine(path$, progressionProxy$).map(function (_ref5) {
     var _ref6 = _slicedToArray(_ref5, 2),
-        currentLocation = _ref6[0],
-        nextCorrectLocation = _ref6[1];
+        path = _ref6[0],
+        progression = _ref6[1];
 
-    console.log("currentLocation", currentLocation.id);
-    console.log("nextCorrectLocation", nextCorrectLocation.id);
+    return { id: path.length > progression + 1 ? path[progression + 1].location : null };
+  }).remember();
+
+  nextCorrectLocationProxy$.imitate(nextCorrectLocation$.compose((0, _dropRepeats2.default)()));
+
+  var progression$ = _xstream2.default.combine(currentLocation$, nextCorrectLocation$).filter(function (_ref7) {
+    var _ref8 = _slicedToArray(_ref7, 2),
+        currentLocation = _ref8[0],
+        nextCorrectLocation = _ref8[1];
+
+    // console.log("currentLocation", currentLocation.id);
+    // console.log("nextCorrectLocation", nextCorrectLocation.id);
     return currentLocation.id === nextCorrectLocation.id;
   }).mapTo(1).fold(function (acc, x) {
     return acc + x;
@@ -581,19 +687,16 @@ function main(sources) {
   progressionProxy$.imitate(_xstream2.default.merge(progression$, _xstream2.default.of(0)));
 
   // Time management
-  var elapsedTime$ = settings$.map(function (settings) {
-    return _xstream2.default.merge(changeLocation$.mapTo(settings.cost.travel), witnessQuestionned$.mapTo(settings.cost.investigate));
-  }).flatten().fold(function (acc, x) {
-    return acc + x;
-  }, 0);
+  var TimeManagerSink = (0, _TimeManager.TimeManager)({ DOM: DOM, settings: settings$, changeLocation: changeLocation$, witnessQuestionned: witnessQuestionned$ });
+  var TimeManagerVTree$ = TimeManagerSink.DOM;
 
-  var DOMSink$ = _xstream2.default.combine(linksVtree$, changeLocation$, witnessesVTree$, progression$, elapsedTime$).map(function (_ref7) {
-    var _ref8 = _slicedToArray(_ref7, 5),
-        linksVtree = _ref8[0],
-        changeLocation = _ref8[1],
-        witnessesVTree = _ref8[2],
-        progression = _ref8[3],
-        elapsedTime = _ref8[4];
+  var DOMSink$ = _xstream2.default.combine(linksVtree$, changeLocation$, witnessesVTree$, progression$, TimeManagerVTree$).map(function (_ref9) {
+    var _ref10 = _slicedToArray(_ref9, 5),
+        linksVtree = _ref10[0],
+        changeLocation = _ref10[1],
+        witnessesVTree = _ref10[2],
+        progression = _ref10[3],
+        TimeManagerVTree = _ref10[4];
 
     return (0, _snabbdomJsx.html)(
       'div',
@@ -607,8 +710,8 @@ function main(sources) {
       (0, _snabbdomJsx.html)(
         'h2',
         null,
-        'Temps \xE9coul\xE9 : ',
-        elapsedTime
+        'Elapsed time : ',
+        TimeManagerVTree
       ),
       (0, _snabbdomJsx.html)(
         'div',
@@ -624,8 +727,7 @@ function main(sources) {
           (0, _snabbdomJsx.html)(
             'p',
             null,
-            'Current : ',
-            changeLocation ? changeLocation.id : ''
+            changeLocation.name ? 'Current : ' + changeLocation.name : ''
           ),
           (0, _snabbdomJsx.html)('h1', null),
           (0, _snabbdomJsx.html)(
@@ -650,7 +752,9 @@ var drivers = {
   HTTP: (0, _http.makeHTTPDriver)()
 };
 
-(0, _run.run)(main, drivers);
+var wrappedMain = (0, _cycleOnionify2.default)(main);
+
+(0, _run.run)(wrappedMain, drivers);
 
 });
 

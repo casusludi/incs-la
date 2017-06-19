@@ -16,10 +16,12 @@ function intent(DOM){
 function model(props$, action$){
     return props$
         .map(props => action$
-            .map(action => (Object.assign(
+            .map(action =>
+              Object.assign(
                 props,
                 {showResult: action,}
-            ))).startWith(props)
+              )
+            ).startWith(props)
         )
         .flatten()
         .remember();

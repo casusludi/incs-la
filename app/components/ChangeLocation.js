@@ -14,18 +14,18 @@ function intent(DOM){
 }
 
 function model(props$,action$){
-    return action$.map(action => props$).flatten(); //.remember();
+    return action$.map(action => props$).flatten();
 }
 
 function view(props$){
     return props$
         .map(props =>
-            <button selector=".js-change-location" type="button" >{props.id}</button>
+            <button selector=".js-change-location" type="button" >{props.name}</button>
         ).remember();
 }
 
 function _ChangeLocation(sources) {
-    const {props$,DOM} = sources;
+    const {props$, DOM} = sources;
     const action$ = intent(DOM);
     const value$ = model(props$, action$);
     const vdom$ = view(props$);
