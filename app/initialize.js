@@ -9,9 +9,9 @@ import switchPath from 'switch-path';
 
 import {createBrowserHistory} from 'history';
 
-import {MainGame} from './components/MainGame.js';
-import {EndGame} from './components/EndGame.js';
-import {NotFound} from './components/NotFound.js';
+import {MainGame} from './components/MainGame';
+import {EndGame} from './components/EndGame';
+import {NotFound} from './components/NotFound';
 
 function main(sources) {
 

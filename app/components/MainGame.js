@@ -16,12 +16,12 @@ import {html} from 'snabbdom-jsx';
 
 import switchPath from 'switch-path';
 
-import {Investigate} from './Investigate.js';
-import {ChangeLocation} from './ChangeLocation.js';
-import {Witness} from './Witness.js';
-import {JSONReader} from './JSONReader.js';
-import {TimeManager} from './TimeManager.js';
-import {Map} from './Map.js';
+import {Investigate} from './Investigate';
+import {ChangeLocation} from './ChangeLocation';
+import {Witness} from './Witness';
+import {JSONReader} from './JSONReader';
+import {TimeManager} from './TimeManager';
+import {Map} from './Map';
 
 function _MainGame(sources) {
 
@@ -72,16 +72,23 @@ function _MainGame(sources) {
     }
   );
 
-  const changeLocation$ = currentLocationLinks$.map( 
-      links => xs.merge(...links.map(link => link.changeLocation$))
-  )
-  .startWith(pathInit$)
-  .flatten();
-
   const currentLinksValues$ = currentLocationLinks$.map( 
       links => xs.combine(...links.map(link => link.linkValue$))
   )
   .flatten();
+
+  // Map
+  const mapProps$ = xs.combine(settings$, locations$, currentLinksValues$);
+  const mapSinks = Map({DOM, props$: mapProps$});
+  //////////
+
+  const changeLocation$ = xs.merge(
+    currentLocationLinks$.map( 
+        links => xs.merge(...links.map(link => link.changeLocation$))
+    ).startWith(pathInit$)
+    .flatten(),
+    mapSinks.changeLocation$,
+  );
 
   changeLocationProxy$.imitate(changeLocation$);
 
@@ -107,7 +114,7 @@ function _MainGame(sources) {
   const witnessesData$ = currentLocation$.map(currentLocation => currentLocation.places);
 
   const witnesses$ = xs.combine(witnessesData$, path$, currentLocation$, progression$)
-  .map(([witnessesData, path, currentLocation, progression]) =>
+  .map(([witnessesData, path, currentLocation, progression]) => 
     Object.keys(witnessesData).map((key, value) =>
       Witness({
         DOM: sources.DOM, 
@@ -134,10 +141,6 @@ function _MainGame(sources) {
   .filter(([path, progression]) =>
     path.length - 1 === progression
   );
-
-  // Map
-  const mapProps$ = xs.combine(settings$, locations$, currentLinksValues$);
-  const mapSinks = Map({DOM, props$: mapProps$});
 
   // View
   const witnessesVTree$ = witnesses$.map(witnesses =>

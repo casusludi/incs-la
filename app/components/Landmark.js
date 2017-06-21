@@ -14,17 +14,24 @@ function intent(DOM){
 }
 
 function model(props$, action$){
-    return action$.map(action => props$).flatten();
+    return action$.map(action => props$.map(props => props.location)).flatten();
 }
 
 function view(props$){
-    return props$
-        .map(props =>
-            <button selector=".js-change-location" type="button" >{props.name}</button>
-        );
+    return props$.map(props => {
+        return <img 
+            selector=".js-change-location"
+            src={props.settings.images.landmark}
+            style={ ({
+                position: 'absolute',  
+                left: props.pixelCoordinates.x + "px",
+                top: props.pixelCoordinates.y + "px",
+            }) }
+        />
+    });
 }
 
-function _ChangeLocation(sources) {
+function _Landmark(sources) {
     const {props$, DOM} = sources;
     const action$ = intent(DOM);
     const value$ = model(props$, action$);
@@ -33,10 +40,9 @@ function _ChangeLocation(sources) {
     const sinks = {
         DOM: vdom$,
         changeLocation$: value$,
-        linkValue$: props$,
     };
 
     return sinks;
 }
 
-export function ChangeLocation(sources){ return isolate(_ChangeLocation)(sources) };
+export function Landmark(sources){ return isolate(_Landmark)(sources) };

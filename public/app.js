@@ -189,7 +189,7 @@ function view(props$) {
             { selector: '.js-change-location', type: 'button' },
             props.name
         );
-    }).remember();
+    });
 }
 
 function _ChangeLocation(sources) {
@@ -405,7 +405,80 @@ function JSONReader(sources) {
 
 });
 
-;require.register("components/MainGame.js", function(exports, require, module) {
+;require.register("components/Landmark.js", function(exports, require, module) {
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.Landmark = Landmark;
+
+var _xstream = require('xstream');
+
+var _xstream2 = _interopRequireDefault(_xstream);
+
+var _run = require('@cycle/run');
+
+var _isolate = require('@cycle/isolate');
+
+var _isolate2 = _interopRequireDefault(_isolate);
+
+var _snabbdomJsx = require('snabbdom-jsx');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function intent(DOM) {
+
+    var click$ = DOM.select('.js-change-location').events('click').mapTo(true);
+
+    return click$;
+}
+
+function model(props$, action$) {
+    return action$.map(function (action) {
+        return props$.map(function (props) {
+            return props.location;
+        });
+    }).flatten();
+}
+
+function view(props$) {
+    return props$.map(function (props) {
+        return (0, _snabbdomJsx.html)('img', {
+            selector: '.js-change-location',
+            src: props.settings.images.landmark,
+            style: {
+                position: 'absolute',
+                left: props.pixelCoordinates.x + "px",
+                top: props.pixelCoordinates.y + "px"
+            }
+        });
+    });
+}
+
+function _Landmark(sources) {
+    var props$ = sources.props$,
+        DOM = sources.DOM;
+
+    var action$ = intent(DOM);
+    var value$ = model(props$, action$);
+    var vdom$ = view(props$);
+
+    var sinks = {
+        DOM: vdom$,
+        changeLocation$: value$
+    };
+
+    return sinks;
+}
+
+function Landmark(sources) {
+    return (0, _isolate2.default)(_Landmark)(sources);
+};
+
+});
+
+require.register("components/MainGame.js", function(exports, require, module) {
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -458,17 +531,17 @@ var _switchPath = require('switch-path');
 
 var _switchPath2 = _interopRequireDefault(_switchPath);
 
-var _Investigate = require('./Investigate.js');
+var _Investigate = require('./Investigate');
 
-var _ChangeLocation = require('./ChangeLocation.js');
+var _ChangeLocation = require('./ChangeLocation');
 
-var _Witness = require('./Witness.js');
+var _Witness = require('./Witness');
 
-var _JSONReader = require('./JSONReader.js');
+var _JSONReader = require('./JSONReader');
 
-var _TimeManager = require('./TimeManager.js');
+var _TimeManager = require('./TimeManager');
 
-var _Map = require('./Map.js');
+var _Map = require('./Map');
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
@@ -541,17 +614,22 @@ function _MainGame(sources) {
     });
   });
 
-  var changeLocation$ = currentLocationLinks$.map(function (links) {
-    return _xstream2.default.merge.apply(_xstream2.default, _toConsumableArray(links.map(function (link) {
-      return link.changeLocation$;
-    })));
-  }).startWith(pathInit$).flatten();
-
   var currentLinksValues$ = currentLocationLinks$.map(function (links) {
     return _xstream2.default.combine.apply(_xstream2.default, _toConsumableArray(links.map(function (link) {
       return link.linkValue$;
     })));
   }).flatten();
+
+  // Map
+  var mapProps$ = _xstream2.default.combine(settings$, locations$, currentLinksValues$);
+  var mapSinks = (0, _Map.Map)({ DOM: DOM, props$: mapProps$ });
+  //////////
+
+  var changeLocation$ = _xstream2.default.merge(currentLocationLinks$.map(function (links) {
+    return _xstream2.default.merge.apply(_xstream2.default, _toConsumableArray(links.map(function (link) {
+      return link.changeLocation$;
+    })));
+  }).startWith(pathInit$).flatten(), mapSinks.changeLocation$);
 
   changeLocationProxy$.imitate(changeLocation$);
 
@@ -619,10 +697,6 @@ function _MainGame(sources) {
 
     return path.length - 1 === progression;
   });
-
-  // Map
-  var mapProps$ = _xstream2.default.combine(settings$, locations$, currentLinksValues$);
-  var mapSinks = (0, _Map.Map)({ DOM: DOM, props$: mapProps$ });
 
   // View
   var witnessesVTree$ = witnesses$.map(function (witnesses) {
@@ -733,12 +807,16 @@ var _isolate2 = _interopRequireDefault(_isolate);
 
 var _snabbdomJsx = require('snabbdom-jsx');
 
+var _Landmark = require('./Landmark');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 function intent(DOM) {}
 
-function model(props$, action$) {
-    return props$.map(function (_ref) {
+function model(props$, DOM) {
+    var propsWithPixelCoordinates$ = props$.map(function (_ref) {
         var _ref2 = _slicedToArray(_ref, 3),
             settings = _ref2[0],
             locations = _ref2[1],
@@ -751,43 +829,60 @@ function model(props$, action$) {
         var pixelCoordinateLandmark1 = settings.landmarks[0].pixelCoordinates;
         var pixelCoordinateLandmark2 = settings.landmarks[1].pixelCoordinates;
 
-        return Object.assign({}, { images: settings.images }, { locations: currentLinksValues.map(function (currentLinkValue) {
-                var xRatio = (coordinateLandmark2.latitude - coordinateLandmark1.latitude) / (pixelCoordinateLandmark2.x - pixelCoordinateLandmark1.x);
-                var x0 = (pixelCoordinateLandmark2.x * coordinateLandmark1.latitude - pixelCoordinateLandmark1.x * coordinateLandmark2.latitude) / (pixelCoordinateLandmark2.x - pixelCoordinateLandmark1.x);
-                var curX = (currentLinkValue.coordinates.latitude - x0) / xRatio - settings.landmarkImageDimension.x / 2;
+        return currentLinksValues.map(function (currentLinkValue) {
+            var xRatio = (coordinateLandmark2.latitude - coordinateLandmark1.latitude) / (pixelCoordinateLandmark2.x - pixelCoordinateLandmark1.x);
+            var x0 = (pixelCoordinateLandmark2.x * coordinateLandmark1.latitude - pixelCoordinateLandmark1.x * coordinateLandmark2.latitude) / (pixelCoordinateLandmark2.x - pixelCoordinateLandmark1.x);
+            var curX = (currentLinkValue.coordinates.latitude - x0) / xRatio - settings.landmarkImageDimension.x / 2;
 
-                var yRatio = (coordinateLandmark2.longitude - coordinateLandmark1.longitude) / (pixelCoordinateLandmark2.y - pixelCoordinateLandmark1.y);
-                var y0 = (pixelCoordinateLandmark2.y * coordinateLandmark1.longitude - pixelCoordinateLandmark1.y * coordinateLandmark2.longitude) / (pixelCoordinateLandmark2.y - pixelCoordinateLandmark1.y);
-                var curY = (currentLinkValue.coordinates.longitude - y0) / yRatio - settings.landmarkImageDimension.y;
+            var yRatio = (coordinateLandmark2.longitude - coordinateLandmark1.longitude) / (pixelCoordinateLandmark2.y - pixelCoordinateLandmark1.y);
+            var y0 = (pixelCoordinateLandmark2.y * coordinateLandmark1.longitude - pixelCoordinateLandmark1.y * coordinateLandmark2.longitude) / (pixelCoordinateLandmark2.y - pixelCoordinateLandmark1.y);
+            var curY = (currentLinkValue.coordinates.longitude - y0) / yRatio - settings.landmarkImageDimension.y;
 
-                return {
-                    id: currentLinkValue.id,
+            return {
+                settings: settings,
+                location: currentLinkValue,
+                pixelCoordinates: {
                     x: curX,
                     y: curY
-                };
-            })
+                }
+            };
         });
     });
+
+    var landmarks$ = propsWithPixelCoordinates$.map(function (propsWithPixelCoordinates) {
+        return propsWithPixelCoordinates.map(function (propWithPixelCoordinates) {
+            return (0, _Landmark.Landmark)({ DOM: DOM, props$: _xstream2.default.of(propWithPixelCoordinates) });
+        });
+    });
+
+    return landmarks$;
 }
 
-function view(value$) {
-    return value$.map(function (value) {
+function view(value$, props$) {
+    var landmarksVTree$ = value$.map(function (landmarks) {
+        return _xstream2.default.combine.apply(_xstream2.default, _toConsumableArray(landmarks.map(function (landmark) {
+            return landmark.DOM;
+        })));
+    }).flatten();
+
+    var vdom$ = _xstream2.default.combine(value$, landmarksVTree$, props$).map(function (_ref3) {
+        var _ref4 = _slicedToArray(_ref3, 3),
+            value = _ref4[0],
+            landmarksVTree = _ref4[1],
+            _ref4$ = _slicedToArray(_ref4[2], 3),
+            settings = _ref4$[0],
+            locations = _ref4$[1],
+            currentLinksValues = _ref4$[2];
+
         return (0, _snabbdomJsx.html)(
             'div',
             { 'class-map': 'true' },
-            (0, _snabbdomJsx.html)('img', { src: value.images.map, style: { position: 'relative', top: '0', left: '0' } }),
-            Object.keys(value.locations).map(function (key, v) {
-                return (0, _snabbdomJsx.html)('img', {
-                    src: value.images.landmark,
-                    style: {
-                        position: 'absolute',
-                        left: value.locations[key].x + "px",
-                        top: value.locations[key].y + "px"
-                    }
-                });
-            })
+            (0, _snabbdomJsx.html)('img', { src: settings.images.map, style: { position: 'relative', top: '0', left: '0' } }),
+            landmarksVTree
         );
     });
+
+    return vdom$;
 }
 
 function _Map(sources) {
@@ -795,11 +890,19 @@ function _Map(sources) {
         DOM = sources.DOM;
 
     var action$ = intent(DOM);
-    var value$ = model(props$, action$);
-    var vdom$ = view(value$);
+    var value$ = model(props$, DOM);
+
+    var changeLocation$ = value$.map(function (landmarks) {
+        return _xstream2.default.merge.apply(_xstream2.default, _toConsumableArray(landmarks.map(function (landmark) {
+            return landmark.changeLocation$;
+        })));
+    }).flatten();
+
+    var vdom$ = view(value$, props$);
 
     var sinks = {
-        DOM: vdom$
+        DOM: vdom$,
+        changeLocation$: changeLocation$
     };
 
     return sinks;
@@ -1045,11 +1148,11 @@ var _switchPath2 = _interopRequireDefault(_switchPath);
 
 var _history = require('history');
 
-var _MainGame = require('./components/MainGame.js');
+var _MainGame = require('./components/MainGame');
 
-var _EndGame = require('./components/EndGame.js');
+var _EndGame = require('./components/EndGame');
 
-var _NotFound = require('./components/NotFound.js');
+var _NotFound = require('./components/NotFound');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
