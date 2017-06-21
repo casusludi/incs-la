@@ -445,8 +445,8 @@ function model(props$, action$) {
 function view(props$) {
     return props$.map(function (props) {
         return (0, _snabbdomJsx.html)('img', {
-            selector: '.js-change-location',
-            src: props.settings.images.landmark,
+            'class-js-change-location': props.isReachableLandmark,
+            src: props.isCurrentLocation ? props.settings.images.currentLocationLandmark : props.isReachableLandmark ? props.settings.images.reachableLandmark : props.settings.images.unreachableLandmark,
             style: {
                 position: 'absolute',
                 left: props.pixelCoordinates.x + "px",
@@ -575,13 +575,7 @@ function _MainGame(sources) {
   // Locations management
   var changeLocationProxy$ = _xstream2.default.create();
 
-  var currentLocation$ = _xstream2.default.combine(locations$, changeLocationProxy$).map(function (_ref) {
-    var _ref2 = _slicedToArray(_ref, 2),
-        locations = _ref2[0],
-        changeLocation = _ref2[1];
-
-    return Object.assign({}, locations[changeLocation.id], changeLocation);
-  });
+  var currentLocation$ = changeLocationProxy$.remember();
 
   var lastLocation$ = currentLocation$.compose(_pairwise2.default).map(function (item) {
     return item[0];
@@ -589,21 +583,21 @@ function _MainGame(sources) {
 
   var nextCorrectLocationProxy$ = _xstream2.default.create();
 
-  var pathInit$ = _xstream2.default.combine(path$, locations$).map(function (_ref3) {
-    var _ref4 = _slicedToArray(_ref3, 2),
-        path = _ref4[0],
-        locations = _ref4[1];
+  var pathInit$ = _xstream2.default.combine(path$, locations$).map(function (_ref) {
+    var _ref2 = _slicedToArray(_ref, 2),
+        path = _ref2[0],
+        locations = _ref2[1];
 
     return Object.assign({}, locations[path[0].location], { id: path[0].location });
   });
 
-  var currentLocationLinks$ = _xstream2.default.combine(nextCorrectLocationProxy$, currentLocation$, lastLocation$, locations$).map(function (_ref5) {
-    var _ref6 = _slicedToArray(_ref5, 5),
-        nextCorrectLocation = _ref6[0],
-        currentLocation = _ref6[1],
-        lastLocation = _ref6[2],
-        locations = _ref6[3],
-        path = _ref6[4];
+  var currentLocationLinks$ = _xstream2.default.combine(nextCorrectLocationProxy$, currentLocation$, lastLocation$, locations$).map(function (_ref3) {
+    var _ref4 = _slicedToArray(_ref3, 5),
+        nextCorrectLocation = _ref4[0],
+        currentLocation = _ref4[1],
+        lastLocation = _ref4[2],
+        locations = _ref4[3],
+        path = _ref4[4];
 
     var links = _.chain(currentLocation.links || []).concat(lastLocation ? [lastLocation.id] : []).uniq().filter(function (o) {
       return o !== currentLocation.id;
@@ -624,7 +618,7 @@ function _MainGame(sources) {
   }).flatten();
 
   // Map
-  var mapProps$ = _xstream2.default.combine(settings$, locations$, currentLinksValues$);
+  var mapProps$ = _xstream2.default.combine(currentLocation$, settings$, locations$, currentLinksValues$);
   var mapSinks = (0, _Map.Map)({ DOM: DOM, props$: mapProps$ });
   //////////
 
@@ -639,20 +633,20 @@ function _MainGame(sources) {
   // Progression management
   var progressionProxy$ = _xstream2.default.create();
 
-  var nextCorrectLocation$ = _xstream2.default.combine(path$, progressionProxy$).map(function (_ref7) {
-    var _ref8 = _slicedToArray(_ref7, 2),
-        path = _ref8[0],
-        progression = _ref8[1];
+  var nextCorrectLocation$ = _xstream2.default.combine(path$, progressionProxy$).map(function (_ref5) {
+    var _ref6 = _slicedToArray(_ref5, 2),
+        path = _ref6[0],
+        progression = _ref6[1];
 
     return { id: path.length > progression + 1 ? path[progression + 1].location : null };
   }).remember();
 
   nextCorrectLocationProxy$.imitate(nextCorrectLocation$.compose((0, _dropRepeats2.default)()));
 
-  var correctNextChoosenCity$ = _xstream2.default.combine(currentLocation$, nextCorrectLocation$).filter(function (_ref9) {
-    var _ref10 = _slicedToArray(_ref9, 2),
-        currentLocation = _ref10[0],
-        nextCorrectLocation = _ref10[1];
+  var correctNextChoosenCity$ = _xstream2.default.combine(currentLocation$, nextCorrectLocation$).filter(function (_ref7) {
+    var _ref8 = _slicedToArray(_ref7, 2),
+        currentLocation = _ref8[0],
+        nextCorrectLocation = _ref8[1];
 
     return currentLocation.id === nextCorrectLocation.id;
   });
@@ -668,12 +662,12 @@ function _MainGame(sources) {
     return currentLocation.places;
   });
 
-  var witnesses$ = _xstream2.default.combine(witnessesData$, path$, currentLocation$, progression$).map(function (_ref11) {
-    var _ref12 = _slicedToArray(_ref11, 4),
-        witnessesData = _ref12[0],
-        path = _ref12[1],
-        currentLocation = _ref12[2],
-        progression = _ref12[3];
+  var witnesses$ = _xstream2.default.combine(witnessesData$, path$, currentLocation$, progression$).map(function (_ref9) {
+    var _ref10 = _slicedToArray(_ref9, 4),
+        witnessesData = _ref10[0],
+        path = _ref10[1],
+        currentLocation = _ref10[2],
+        progression = _ref10[3];
 
     return Object.keys(witnessesData).map(function (key, value) {
       return (0, _isolate2.default)(_Witness.Witness, key)({
@@ -693,10 +687,10 @@ function _MainGame(sources) {
   var timeManagerSinks = (0, _TimeManager.TimeManager)({ DOM: DOM, settings: settings$, changeLocation: changeLocation$, witnessQuestionned: witnessQuestionned$ });
 
   // End game reached ?
-  var lastLocationReached$ = _xstream2.default.combine(path$, progression$).filter(function (_ref13) {
-    var _ref14 = _slicedToArray(_ref13, 2),
-        path = _ref14[0],
-        progression = _ref14[1];
+  var lastLocationReached$ = _xstream2.default.combine(path$, progression$).filter(function (_ref11) {
+    var _ref12 = _slicedToArray(_ref11, 2),
+        path = _ref12[0],
+        progression = _ref12[1];
 
     return path.length - 1 === progression;
   });
@@ -715,16 +709,16 @@ function _MainGame(sources) {
   var TimeManagerVTree$ = timeManagerSinks.DOM;
   var mapVTree$ = mapSinks.DOM;
 
-  var DOMSink$ = _xstream2.default.combine(linksVTree$, currentLocation$, witnessesVTree$, progression$, TimeManagerVTree$, mapVTree$, texts$, witnessQuestionned$).map(function (_ref15) {
-    var _ref16 = _slicedToArray(_ref15, 8),
-        linksVTree = _ref16[0],
-        currentLocation = _ref16[1],
-        witnessesVTree = _ref16[2],
-        progression = _ref16[3],
-        TimeManagerVTree = _ref16[4],
-        mapVTree = _ref16[5],
-        texts = _ref16[6],
-        witnessQuestionned = _ref16[7];
+  var DOMSink$ = _xstream2.default.combine(linksVTree$, currentLocation$, witnessesVTree$, progression$, TimeManagerVTree$, mapVTree$, texts$, witnessQuestionned$).map(function (_ref13) {
+    var _ref14 = _slicedToArray(_ref13, 8),
+        linksVTree = _ref14[0],
+        currentLocation = _ref14[1],
+        witnessesVTree = _ref14[2],
+        progression = _ref14[3],
+        TimeManagerVTree = _ref14[4],
+        mapVTree = _ref14[5],
+        texts = _ref14[6],
+        witnessQuestionned = _ref14[7];
 
     return (0, _snabbdomJsx.html)(
       'section',
@@ -835,6 +829,12 @@ var _snabbdomJsx = require('snabbdom-jsx');
 
 var _Landmark = require('./Landmark');
 
+var _lodash = require('lodash');
+
+var _ = _interopRequireWildcard(_lodash);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
@@ -852,10 +852,11 @@ function intent(DOM) {
 
 function model(props$, DOM) {
     var propsWithPixelCoordinates$ = props$.map(function (_ref) {
-        var _ref2 = _slicedToArray(_ref, 3),
-            settings = _ref2[0],
-            locations = _ref2[1],
-            currentLinksValues = _ref2[2];
+        var _ref2 = _slicedToArray(_ref, 4),
+            currentLocation = _ref2[0],
+            settings = _ref2[1],
+            locations = _ref2[2],
+            currentLinksValues = _ref2[3];
 
         var landmark1 = settings.landmarks[0].location;
         var landmark2 = settings.landmarks[1].location;
@@ -864,22 +865,31 @@ function model(props$, DOM) {
         var pixelCoordinateLandmark1 = settings.landmarks[0].pixelCoordinates;
         var pixelCoordinateLandmark2 = settings.landmarks[1].pixelCoordinates;
 
-        return currentLinksValues.map(function (currentLinkValue) {
+        var linksIDs = currentLinksValues.map(function (currentLinkValue) {
+            return currentLinkValue.id;
+        });
+
+        return Object.keys(locations).map(function (key, value) {
             var xRatio = (coordinateLandmark2.latitude - coordinateLandmark1.latitude) / (pixelCoordinateLandmark2.x - pixelCoordinateLandmark1.x);
             var x0 = (pixelCoordinateLandmark2.x * coordinateLandmark1.latitude - pixelCoordinateLandmark1.x * coordinateLandmark2.latitude) / (pixelCoordinateLandmark2.x - pixelCoordinateLandmark1.x);
-            var curX = (currentLinkValue.coordinates.latitude - x0) / xRatio - settings.landmarkImageDimension.x / 2;
+            var curX = (locations[key].coordinates.latitude - x0) / xRatio - settings.landmarkImageDimension.x / 2;
 
             var yRatio = (coordinateLandmark2.longitude - coordinateLandmark1.longitude) / (pixelCoordinateLandmark2.y - pixelCoordinateLandmark1.y);
             var y0 = (pixelCoordinateLandmark2.y * coordinateLandmark1.longitude - pixelCoordinateLandmark1.y * coordinateLandmark2.longitude) / (pixelCoordinateLandmark2.y - pixelCoordinateLandmark1.y);
-            var curY = (currentLinkValue.coordinates.longitude - y0) / yRatio - settings.landmarkImageDimension.y;
+            var curY = (locations[key].coordinates.longitude - y0) / yRatio - settings.landmarkImageDimension.y;
+
+            var isCurrentLocation = key === currentLocation.id;
+            var isReachableLandmark = _.includes(linksIDs, key);
 
             return {
                 settings: settings,
-                location: currentLinkValue,
+                location: Object.assign({}, locations[key], { id: key }),
                 pixelCoordinates: {
                     x: curX,
                     y: curY
-                }
+                },
+                isCurrentLocation: isCurrentLocation,
+                isReachableLandmark: isReachableLandmark
             };
         });
     });
@@ -904,10 +914,11 @@ function view(value$, props$, action$) {
         var _ref4 = _slicedToArray(_ref3, 4),
             value = _ref4[0],
             landmarksVTree = _ref4[1],
-            _ref4$ = _slicedToArray(_ref4[2], 3),
-            settings = _ref4$[0],
-            locations = _ref4$[1],
-            currentLinksValues = _ref4$[2],
+            _ref4$ = _slicedToArray(_ref4[2], 4),
+            currentLocation = _ref4$[0],
+            settings = _ref4$[1],
+            locations = _ref4$[2],
+            currentLinksValues = _ref4$[3],
             showMap = _ref4[3];
 
         return (0, _snabbdomJsx.html)(

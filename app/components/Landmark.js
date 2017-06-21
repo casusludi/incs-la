@@ -18,17 +18,21 @@ function model(props$, action$){
 }
 
 function view(props$){
-    return props$.map(props => {
-        return <img 
-            selector=".js-change-location"
-            src={props.settings.images.landmark}
+    return props$.map(props =>
+        <img 
+            class-js-change-location={props.isReachableLandmark}
+            src={props.isCurrentLocation ? 
+                    props.settings.images.currentLocationLandmark : 
+                    (props.isReachableLandmark ? 
+                        props.settings.images.reachableLandmark : 
+                        props.settings.images.unreachableLandmark)}
             style={ ({
                 position: 'absolute',  
                 left: props.pixelCoordinates.x + "px",
                 top: props.pixelCoordinates.y + "px",
             }) }
         />
-    });
+    );
 }
 
 function _Landmark(sources) {

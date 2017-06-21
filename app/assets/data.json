@@ -29,7 +29,9 @@
         "images":{
             "intro":"images/Nantes-sanstour.jpg",
             "map": "images/carte/carte.png",
-            "landmark": "images/carte/landmark.png"
+            "currentLocationLandmark": "images/carte/currentLocationLandmark.png",
+            "reachableLandmark": "images/carte/reachableLandmark.png",
+            "unreachableLandmark": "images/carte/unreachableLandmark.png"
         }
     },
     "texts":{

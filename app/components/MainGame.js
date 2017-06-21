@@ -40,10 +40,7 @@ function _MainGame(sources) {
   // Locations management
   const changeLocationProxy$ = xs.create();
 
-  const currentLocation$ = xs.combine(locations$, changeLocationProxy$)
-  .map(([locations, changeLocation]) =>
-    Object.assign({}, locations[changeLocation.id], changeLocation)
-  );
+  const currentLocation$ = changeLocationProxy$.remember();
 
   const lastLocation$ = currentLocation$.compose(pairwise).map(item => item[0]).startWith("");
 
@@ -79,7 +76,7 @@ function _MainGame(sources) {
   .flatten();
 
   // Map
-  const mapProps$ = xs.combine(settings$, locations$, currentLinksValues$);
+  const mapProps$ = xs.combine(currentLocation$, settings$, locations$, currentLinksValues$);
   const mapSinks = Map({DOM, props$: mapProps$});
   //////////
 

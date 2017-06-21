@@ -5,6 +5,8 @@ import { html } from 'snabbdom-jsx';
 
 import {Landmark} from './Landmark';
 
+import * as _ from 'lodash';
+
 function intent(DOM){
 
     const click$ = DOM
@@ -17,7 +19,7 @@ function intent(DOM){
 }
 
 function model(props$, DOM){
-    const propsWithPixelCoordinates$ = props$.map(([settings, locations, currentLinksValues]) => {
+    const propsWithPixelCoordinates$ = props$.map(([currentLocation, settings, locations, currentLinksValues]) => {
         const landmark1 = settings.landmarks[0].location;
         const landmark2 = settings.landmarks[1].location;
         const coordinateLandmark1 = locations[landmark1].coordinates;
@@ -25,22 +27,29 @@ function model(props$, DOM){
         const pixelCoordinateLandmark1 = settings.landmarks[0].pixelCoordinates;
         const pixelCoordinateLandmark2 = settings.landmarks[1].pixelCoordinates;
 
-        return currentLinksValues.map(currentLinkValue => {
+        const linksIDs = currentLinksValues.map(currentLinkValue => currentLinkValue.id);
+
+        return Object.keys(locations).map((key, value) => {
             const xRatio = (coordinateLandmark2.latitude - coordinateLandmark1.latitude) / (pixelCoordinateLandmark2.x - pixelCoordinateLandmark1.x);
             const x0 = (pixelCoordinateLandmark2.x * coordinateLandmark1.latitude - pixelCoordinateLandmark1.x * coordinateLandmark2.latitude) / (pixelCoordinateLandmark2.x - pixelCoordinateLandmark1.x);
-            const curX = (currentLinkValue.coordinates.latitude - x0) / xRatio - settings.landmarkImageDimension.x / 2;
+            const curX = (locations[key].coordinates.latitude - x0) / xRatio - settings.landmarkImageDimension.x / 2;
             
             const yRatio = (coordinateLandmark2.longitude - coordinateLandmark1.longitude) / (pixelCoordinateLandmark2.y - pixelCoordinateLandmark1.y);
             const y0 = (pixelCoordinateLandmark2.y * coordinateLandmark1.longitude - pixelCoordinateLandmark1.y * coordinateLandmark2.longitude) / (pixelCoordinateLandmark2.y - pixelCoordinateLandmark1.y);
-            const curY = (currentLinkValue.coordinates.longitude - y0) / yRatio - settings.landmarkImageDimension.y;
-            
+            const curY = (locations[key].coordinates.longitude - y0) / yRatio - settings.landmarkImageDimension.y;
+
+            const isCurrentLocation = key === currentLocation.id;
+            const isReachableLandmark = _.includes(linksIDs, key);
+
             return {
                 settings: settings,
-                location: currentLinkValue,
+                location: Object.assign({}, locations[key], {id: key}),
                 pixelCoordinates: {
                     x: curX,
                     y: curY,
                 },
+                isCurrentLocation: isCurrentLocation,
+                isReachableLandmark: isReachableLandmark,
             }
         });
     });
@@ -59,8 +68,8 @@ function view(value$, props$, action$){
         xs.combine(...landmarks.map(landmark => landmark.DOM))
     ).flatten();
     
-    const vdom$ = xs.combine(value$, landmarksVTree$, props$, action$).map(([value, landmarksVTree, [settings, locations, currentLinksValues], showMap]) => (
-        <div>
+    const vdom$ = xs.combine(value$, landmarksVTree$, props$, action$).map(([value, landmarksVTree, [currentLocation, settings, locations, currentLinksValues], showMap]) => {
+        return (<div>
             <button selector=".js-show-map" type="button" >Show map</button>
             {showMap ?
                 <div class-map="true">
@@ -69,8 +78,8 @@ function view(value$, props$, action$){
                 </div>
                 : ""
             }
-        </div>
-    ));
+        </div>)}
+    );
 
     return vdom$;
 }
