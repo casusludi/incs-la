@@ -2,6 +2,7 @@ import xs from 'xstream';
 import { run } from '@cycle/run';
 import isolate from '@cycle/isolate';
 import { html } from 'snabbdom-jsx';
+import * as _ from 'lodash';
 
 function model(sources){
     const settings$ = sources.settings;
@@ -15,13 +16,23 @@ function model(sources){
       )
     ).flatten()
     .fold((acc, x) => acc + x, 0);
-
-    return elapsedTime$;
+    
+    return elapsedTime$.map(elapsedTime => {
+      const hours = parseInt(elapsedTime % 24);//elapsedTime - elapsedTime % 1;
+      const minutes = (elapsedTime % 24 - hours) * 60;
+      return {
+        raw: elapsedTime,
+        hours: hours,
+        minutes: minutes,
+      }
+    });
 }
 
 function view(value$){
     return value$.map(value =>
-      <span>{value-value%1}h{value%1*60}</span>
+      <span>
+        {_.padStart(value.hours, 2, '0')}h{_.padStart(value.minutes, 2, '0')}
+      </span>
     );
 }
 

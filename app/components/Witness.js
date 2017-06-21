@@ -28,7 +28,7 @@ function model(props$, action$){
 }
 
 function view(value$){
-    //const RE = /\[([^\]]*)\]\(([^)]*)\)/g;
+    const RE = /\[([^\]]*)\]\(([^)]*)\)/g;
 
     return value$
         .map(value =>
@@ -36,10 +36,10 @@ function view(value$){
                 {value.showResult 
                     ?
                     <figure> 
-                        <img src={value.image} />
+                        <img className="witness" src={value.image} />
                         <figcaption>
-                            {/*{value.clue ? value.clue.text.replace(RE, '<a href="$2" target="_blank">$1</a>') : value.dialogs[0]}*/}
-                            {value.clue ? value.clue.text : value.dialogs[0]}
+                            {value.clue ? value.clue.text.replace(RE, '<a href="$2" target="_blank">$1</a>') : value.dialogs[0]}
+                            {/*{value.clue ? value.clue.text : value.dialogs[0]}*/}
                         </figcaption>
                     </figure>
                     : 

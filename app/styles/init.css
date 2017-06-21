@@ -1,4 +1,12 @@
-img {
+img.witness {
     max-width: 200px;
     max-height: 200px;
+}
+
+.map {
+    max-width: 200px;
+    max-height: 200px;
+    position: relative;
+    top: 0;
+    left: 0;
 }

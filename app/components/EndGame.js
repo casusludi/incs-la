@@ -1,0 +1,21 @@
+import xs from 'xstream';
+import { run } from '@cycle/run';
+import isolate from '@cycle/isolate';
+import { html } from 'snabbdom-jsx';
+
+export function EndGame(sources) {
+
+    const previousPageClick$ = sources.DOM.select(".previous").events("click");
+    const goBack$ = previousPageClick$.mapTo({ type: "goBack" });
+    const DOMSink$ = xs.of(
+        <div>
+            <p>COUCOU</p>
+            <button selector=".previous">Previous</button>
+        </div>
+    );
+
+    return {
+        DOM: DOMSink$,
+        router: goBack$,
+    };
+};

@@ -13,7 +13,7 @@ function intent(DOM){
     return click$;
 }
 
-function model(props$,action$){
+function model(props$, action$){
     return action$.map(action => props$).flatten();
 }
 
@@ -32,7 +32,8 @@ function _ChangeLocation(sources) {
 
     const sinks = {
         DOM: vdom$,
-        value$: value$
+        changeLocation$: value$,
+        linkValue$: props$,
     };
 
     return sinks;

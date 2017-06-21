@@ -1,14 +1,36 @@
 {
-    "setting":{
+    "settings":{
 
         "cost":{
             "travel":0.75,
             "investigate":0.25
         },
-        "totalTime":24
-    },
-    "images":{
-        "intro":"images/Nantes-sanstour.jpg"
+        "totalTime":24,
+        "landmarkImageDimension": {
+            "x": 24,
+            "y": 24
+        },
+        "landmarks":[
+            {
+                "location": "guemene",
+                "pixelCoordinates": {
+                    "x": 368,
+                    "y": 152
+                }
+            },
+            {
+                "location": "chateaubriant",
+                "pixelCoordinates": {
+                    "x": 577,
+                    "y": 90
+                }
+            }
+        ],
+        "images":{
+            "intro":"images/Nantes-sanstour.jpg",
+            "map": "images/carte/carte.png",
+            "landmark": "images/carte/landmark.png"
+        }
     },
     "texts":{
         "gameDescription":"N'oubliez pas, agent, que vous devez faire vite : le touriste que vous poursuivez va recharger son module de translocation en 24 heures. Le compte à rebours ci-dessous indique le temps restant pour le retrouver.",
@@ -212,7 +234,11 @@
                     "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
                 }
             },
-            "links":["la-baule","prefailles","saint-brevin","chateaubriant"]
+            "links":["la-baule","prefailles","saint-brevin","chateaubriant"],
+            "coordinates": {
+                "longitude": 47.218371,
+                "latitude": -1.553621000000021
+            }
         },
         "chateaubriant":{
             "name":"Châteaubriant",
@@ -235,7 +261,11 @@
                     "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
                 }
 			},
-            "links":["guerande","haute-goulaine","la-chapelle-des-marais","coueron"]
+            "links":["guerande","haute-goulaine","la-chapelle-des-marais","coueron"],
+            "coordinates": {
+                "longitude": 47.720948,
+                "latitude": -1.3762239000000136
+            }
         },
         "guerande":{
             "name":"Guérande",
@@ -258,7 +288,11 @@
                     "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
                 }
 			},
-            "links":["guemene","la-montagne","la-roche-blanche","saint-nazaire"]
+            "links":["guemene","la-montagne","la-roche-blanche","saint-nazaire"],
+            "coordinates": {
+                "longitude": 47.328003,
+                "latitude": -2.4297589000000244
+            }
         },
         "guemene":{
             "name":"Guéméné Penfao",
@@ -281,7 +315,11 @@
                     "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
                 }
             },
-            "links":["saint-sebastien","clisson","la-chapelle-sur-erdre","ancenis"]
+            "links":["saint-sebastien","clisson","la-chapelle-sur-erdre","ancenis"],
+            "coordinates": {
+                "longitude": 47.628671,
+                "latitude": -1.834333000000015
+            }
         },
         "ancenis":{
             "name":"Ancenis",
@@ -304,7 +342,11 @@
                     "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
                 }
             },
-            "links":["indre","nozay","clisson","coueron"]
+            "links":["indre","nozay","clisson","coueron"],
+            "coordinates": {
+                "longitude": 47.365464,
+                "latitude": -1.1774910000000318
+            }
         },
         "coueron":{
             "name":"Couëron",
@@ -327,7 +369,11 @@
                     "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
                 }
             },
-            "links":["la-boissiere-du-dore","port-saint-pere","nozay","la-roche-blanche"]
+            "links":["la-boissiere-du-dore","port-saint-pere","nozay","la-roche-blanche"],
+            "coordinates": {
+                "longitude": 47.210999,
+                "latitude": -1.7288499999999658
+            }
         },
         "la-boissiere-du-dore":{
             "name":"La Boissière-du-Doré",
@@ -350,7 +396,11 @@
                     "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
                 }
             },
-            "links":["saint-nazaire","port-saint-pere","pornic","saint-brevin"]
+            "links":["saint-nazaire","port-saint-pere","pornic","saint-brevin"],
+            "coordinates": {
+                "longitude": 47.231741,
+                "latitude": -1.2177119000000403
+            }
         },
         "saint-nazaire":{
             "name":"Saint-Nazaire",
@@ -373,7 +423,11 @@
                     "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
                 }
             },
-			"links":["saint-jean-de-boiseau","la-chapelle-basse-mer","la-chapelle-des-marais","la-chapelle-sur-erdre"]
+			"links":["saint-jean-de-boiseau","la-chapelle-basse-mer","la-chapelle-des-marais","la-chapelle-sur-erdre"],
+            "coordinates": {
+                "longitude": 47.2734979,
+                "latitude": -2.2138479999999845
+            }
         },
         "saint-jean-de-boiseau":{
             "name":"Saint-Jean-de-Boiseau",
@@ -396,7 +450,11 @@
                     "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
                 }
             },
-            "links":["vallet","gorges","haute-goulaine","la-boissiere-du-dore"]
+            "links":["vallet","gorges","haute-goulaine","la-boissiere-du-dore"],
+            "coordinates": {
+                "longitude": 47.195556,
+                "latitude": -1.7241989999999987
+            }
         },
         "vallet":{
             "name":"Vallet",
@@ -419,7 +477,11 @@
                     "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
                 }
             },
-            "links":["clisson","indre","la-montagne","haute-goulaine"]
+            "links":["clisson","indre","la-montagne","haute-goulaine"],
+            "coordinates": {
+                "longitude": 47.160929,
+                "latitude": -1.265137999999979
+            }
         },
         "clisson":{
             "name":"Clisson",
@@ -442,7 +504,11 @@
                     "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
                 }
             },
-            "links":["la-baule","pornic","saint-brevin","prefailles"]
+            "links":["la-baule","pornic","saint-brevin","prefailles"],
+            "coordinates": {
+                "longitude": 47.0864509,
+                "latitude": -1.2804680000000417
+            }
         },
         "la-baule":{
             "name":"La Baule",
@@ -465,7 +531,11 @@
                     "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
                 }
             },
-            "links":["nantes","la-roche-blanche","nozay","vallet"]
+            "links":["nantes","la-roche-blanche","nozay","vallet"],
+            "coordinates": {
+                "longitude": 47.2869183,
+                "latitude": -2.391377700000021
+            }
         },
         "haute-goulaine":{
             "name":"Haute-Goulaine",
@@ -488,7 +558,11 @@
                     "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
                 }
             },
-            "links":["nantes","la-roche-blanche","nozay","vallet"]
+            "links":["nantes","la-roche-blanche","nozay","vallet"],
+            "coordinates": {
+                "longitude": 47.1982209,
+                "latitude": -1.431196
+            }
         },
         "la-montagne":{
             "name":"La Montagne",
@@ -511,7 +585,11 @@
                     "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
                 }
             },
-            "links":["nantes","la-roche-blanche","nozay","vallet"]
+            "links":["nantes","la-roche-blanche","nozay","vallet"],
+            "coordinates": {
+                "longitude": 47.1904899,
+                "latitude": -1.6851920000000291
+            }
         },
         "saint-sebastien":{
             "name":"Saint-Sébastien-sur-Loire",
@@ -534,7 +612,11 @@
                     "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
                 }
             },
-            "links":["nantes","la-roche-blanche","nozay","vallet"]
+            "links":["nantes","la-roche-blanche","nozay","vallet"],
+            "coordinates": {
+                "longitude": 47.205376,
+                "latitude": -1.50310300000001
+            }
         },
         "nozay":{
             "name":"Nozay",
@@ -557,7 +639,11 @@
                     "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
                 }
             },
-            "links":["nantes","la-roche-blanche","nozay","vallet"]
+            "links":["nantes","la-roche-blanche","nozay","vallet"],
+            "coordinates": {
+                "longitude": 47.564751,
+                "latitude": -1.6269159999999374
+            }
         },
         "port-saint-pere":{
             "name":"Port-Saint-Père",
@@ -580,7 +666,11 @@
                     "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
                 }
             },
-            "links":["nantes","la-roche-blanche","nozay","vallet"]
+            "links":["nantes","la-roche-blanche","nozay","vallet"],
+            "coordinates": {
+                "longitude": 47.133401,
+                "latitude": -1.7488479999999527
+            }
         },
         "la-chapelle-sur-erdre":{
             "name":"La Chapelle-sur-Erdre",
@@ -603,7 +693,11 @@
                     "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
                 }
             },
-            "links":["nantes","la-roche-blanche","nozay","vallet"]
+            "links":["nantes","la-roche-blanche","nozay","vallet"],
+            "coordinates": {
+                "longitude": 47.133401,
+                "latitude": -1.7488479999999527
+            }
         },
         "gorges":{
             "name":"Gorges",
@@ -626,7 +720,11 @@
                     "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
                 }
             },
-            "links":["nantes","la-roche-blanche","nozay","vallet"]
+            "links":["nantes","la-roche-blanche","nozay","vallet"],
+            "coordinates": {
+                "longitude": 47.10184,
+                "latitude": -1.3038990000000013
+            }
         },
         "indre":{
             "name":"Indre",
@@ -649,7 +747,11 @@
                     "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
                 }
             },
-            "links":["nantes","la-roche-blanche","nozay","vallet"]
+            "links":["nantes","la-roche-blanche","nozay","vallet"],
+            "coordinates": {
+                "longitude": 46.8136575,
+                "latitude": 1.7066969999999628
+            }
         },
         "pornic":{
             "name":"Pornic",
@@ -672,7 +774,11 @@
                     "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
                 }
             },
-            "links":["nantes","la-roche-blanche","nozay","vallet"]
+            "links":["nantes","la-roche-blanche","nozay","vallet"],
+            "coordinates": {
+                "longitude": 47.115491,
+                "latitude": -2.1044440000000577
+            }
         },
         "la-chapelle-des-marais":{
             "name":"La Chapelle-des-Marais",
@@ -695,7 +801,11 @@
                     "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
                 }
             },
-            "links":["nantes","la-roche-blanche","nozay","vallet"]
+            "links":["nantes","la-roche-blanche","nozay","vallet"],
+            "coordinates": {
+                "longitude": 47.447403,
+                "latitude": -2.2433619999999337
+            }
         },
         "la-roche-blanche":{
             "name":"La Roche-Blanche",
@@ -718,7 +828,11 @@
                     "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
                 }
             },
-            "links":["nantes","la-roche-blanche","nozay","vallet"]
+            "links":["nantes","la-roche-blanche","nozay","vallet"],
+            "coordinates": {
+                "longitude": 47.447403,
+                "latitude": -2.2433619999999337
+            }
         },
         "prefailles":{
             "name":"Préfailles",
@@ -741,7 +855,11 @@
                     "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
                 }
             },
-            "links":["nantes","la-roche-blanche","nozay","vallet"]
+            "links":["nantes","la-roche-blanche","nozay","vallet"],
+            "coordinates": {
+                "longitude": 47.12935299999999,
+                "latitude": -2.2181759999999713
+            }
         },
         "saint-brevin":{
             "name":"Saint-Brévin",
@@ -764,7 +882,11 @@
                     "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
                 }
             },
-            "links":["nantes","la-roche-blanche","nozay","vallet"]
+            "links":["nantes","la-roche-blanche","nozay","vallet"],
+            "coordinates": {
+                "longitude": 47.246659,
+                "latitude": -2.1658069999999725
+            }
         },
         "la-chapelle-basse-mer":{
             "name":"La Chapelle-Basse-Mer",
@@ -787,7 +909,11 @@
                     "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
                 }
             },
-            "links":["nantes","la-roche-blanche","nozay","vallet"]
+            "links":["nantes","la-roche-blanche","nozay","vallet"],
+            "coordinates": {
+                "longitude": 47.271643,
+                "latitude": -1.3389099999999416
+            }
         }
     }
 }

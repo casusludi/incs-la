@@ -148,2309 +148,6 @@ var __makeRelativeRequire = function(require, mappings, pref) {
   }
 };
 
-require.register("@cycle/collection/lib/collection.js", function(exports, require, module) {
-  require = __makeRelativeRequire(require, {}, "@cycle/collection");
-  (function() {
-    'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.makeCollection = undefined;
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _xstream = require('xstream');
-
-var _xstream2 = _interopRequireDefault(_xstream);
-
-var _dropRepeats = require('xstream/extra/dropRepeats');
-
-var _dropRepeats2 = _interopRequireDefault(_dropRepeats);
-
-var _isolate = require('@cycle/isolate');
-
-var _isolate2 = _interopRequireDefault(_isolate);
-
-var _adapt = require('@cycle/run/lib/adapt');
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-var noop = Function.prototype;
-
-function isVtree(x) {
-  return x && typeof x.sel === 'string';
-}
-
-var _id = 0;
-
-function id() {
-  return _id++;
-}
-
-function makeItem(component, sources) {
-  var newId = id();
-
-  var newItem = (0, _isolate2.default)(component, newId.toString())(sources);
-
-  newItem._id = newId;
-  newItem._name = component.name;
-
-  return newItem;
-}
-
-function makeCollection() {
-  function collection(options) {
-    var items = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-    var component = options.component,
-        sources = options.sources,
-        removeSelector = options.removeSelector;
-
-
-    return {
-      add: function add() {
-        var additionalSources = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-        var newItem = makeItem(component, _extends({}, sources, additionalSources));
-        var selectedSink = removeSelector(newItem) || _xstream2.default.empty();
-        var removeSink = _xstream2.default.fromObservable(selectedSink);
-        newItem._remove$ = removeSink.take(1).mapTo(newItem);
-
-        return collection(options, [].concat(_toConsumableArray(items), [newItem]));
-      },
-      remove: function remove(itemForRemoval) {
-        return collection(options, items.filter(function (item) {
-          return item !== itemForRemoval;
-        }));
-      },
-      asArray: function asArray() {
-        return items.slice(); // returns a copy of items to avoid mutation
-      }
-    };
-  }
-
-  function Collection(component) {
-    var sources = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-    var sourceAdd$ = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : _xstream2.default.empty();
-    var removeSelector = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : noop;
-
-    var removeProxy$ = _xstream2.default.create();
-    var add$ = _xstream2.default.fromObservable(sourceAdd$);
-    var addReducer$ = add$.map(function (sourcesList) {
-      return function (collection) {
-        if (Array.isArray(sourcesList)) {
-          // multiple items
-          return sourcesList.reduce(function (collection, sources) {
-            return collection.add(sources);
-          }, collection);
-        } else {
-          // single item
-          return collection.add(sourcesList);
-        }
-      };
-    });
-    var removeReducer$ = removeProxy$.map(function (item) {
-      return function (collection) {
-        return collection.remove(item);
-      };
-    });
-    var reducer$ = _xstream2.default.merge(removeReducer$, addReducer$);
-
-    var emptyCollection = collection({ component: component, sources: sources, removeSelector: removeSelector });
-    var collection$ = reducer$.fold(function (collection, reducer) {
-      return reducer(collection);
-    }, emptyCollection).map(function (collection) {
-      return collection.asArray();
-    });
-
-    var remove$ = Collection.merge(collection$, function (item) {
-      return item._remove$;
-    }, true);
-    removeProxy$.imitate(remove$);
-
-    return (0, _adapt.adapt)(collection$);
-  }
-
-  Collection.pluck = function pluck(sourceCollection$, pluckSelector) {
-    var sinks = {};
-
-    function sink$(item) {
-      var key = item._id;
-
-      if (sinks[key] === undefined) {
-        var selectedSink = _xstream2.default.fromObservable(pluckSelector(item));
-        var sink = selectedSink.map(function (x) {
-          return isVtree(x) && x.key == null ? _extends({}, x, { key: key }) : x;
-        });
-        sinks[key] = sink.remember();
-      }
-
-      return sinks[key];
-    }
-
-    var collection$ = _xstream2.default.fromObservable(sourceCollection$);
-    var outputCollection$ = collection$.map(function (items) {
-      return items.map(function (item) {
-        return sink$(item);
-      });
-    }).map(function (sinkStreams) {
-      return _xstream2.default.combine.apply(_xstream2.default, _toConsumableArray(sinkStreams));
-    }).flatten().startWith([]);
-    return (0, _adapt.adapt)(outputCollection$);
-  };
-
-  Collection.merge = function merge(sourceCollection$, mergeSelector) {
-    var internal = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-
-    var sinks = {};
-
-    function sink$(item) {
-      var key = item._id;
-
-      if (sinks[key] === undefined) {
-        var selectedSink = _xstream2.default.fromObservable(mergeSelector(item));
-        var sink = selectedSink.map(function (x) {
-          return isVtree(x) && x.key == null ? _extends({}, x, { key: key }) : x;
-        });
-        // prevent sink from early completion and reinitialization
-        sinks[key] = _xstream2.default.merge(sink, _xstream2.default.never());
-      }
-
-      return sinks[key];
-    }
-
-    var collection$ = _xstream2.default.fromObservable(sourceCollection$);
-    var outputCollection$ = collection$.map(function (items) {
-      return items.map(function (item) {
-        return sink$(item);
-      });
-    }).map(function (sinkStreams) {
-      return _xstream2.default.merge.apply(_xstream2.default, _toConsumableArray(sinkStreams));
-    }).flatten();
-    return internal ? outputCollection$ : (0, _adapt.adapt)(outputCollection$);
-  };
-
-  // convert a stream of items' sources snapshots into a stream of collections
-  Collection.gather = function gather(component, sources, sourceItems$) {
-    var idAttribute = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'id';
-    var transformKey = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : null;
-
-    function makeDestroyable(component) {
-      return function (sources) {
-        return _extends({}, component(sources), {
-          _destroy$: sources._destroy$
-        });
-      };
-    }
-
-    // finds items not present in previous snapshot
-    function findNewItems(_ref, items) {
-      var prevIds = _ref.prevIds;
-
-      return {
-        prevIds: items.map(function (item) {
-          return item[idAttribute];
-        }),
-        addedItems: items.filter(function (item) {
-          return prevIds.indexOf(item[idAttribute]) === -1;
-        })
-      };
-    }
-
-    function compareJSON(value, nextValue) {
-      if (value === nextValue) {
-        return true;
-      }
-      try {
-        if (JSON.stringify(value) === JSON.stringify(nextValue)) {
-          return true;
-        }
-      } catch (e) {}
-      // if not equal or not serializable
-      return false;
-    }
-
-    // turn a new item into a hash of source streams, tracking all the future updates
-    function itemToSourceStreams(addedItem, itemsState$) {
-      var itemStateInfinite$ = itemsState$.map(function (items) {
-        return items.find(function (item) {
-          return item[idAttribute] === addedItem[idAttribute];
-        });
-      });
-      // if an item isn't present if a new snapshot, it shall be destroyed
-      var _destroy$ = itemStateInfinite$.filter(function (item) {
-        return !item;
-      }).take(1);
-      var itemState$ = itemStateInfinite$.endWhen(_destroy$);
-
-      return Object.keys(addedItem).reduce(function (sources, key) {
-        // skip idAttribute
-        if (key === idAttribute) {
-          return sources;
-        }
-
-        var stream$ = itemState$.map(function (state) {
-          return state[key];
-        }).startWith(addedItem[key])
-        // skip the snapshot if the value didn't change
-        .compose((0, _dropRepeats2.default)(compareJSON)).remember();
-
-        var sourceKey = transformKey ? transformKey(key) : key;
-
-        return _extends({}, sources, _defineProperty({}, sourceKey, (0, _adapt.adapt)(stream$)));
-      }, {
-        _destroy$: _destroy$
-      });
-    }
-
-    var items$ = _xstream2.default.fromObservable(sourceItems$);
-    var itemsState$ = items$.remember();
-
-    var add$ = itemsState$
-    // get the added items at each step
-    .fold(findNewItems, { prevIds: [], addedItems: [] }).map(function (_ref2) {
-      var addedItems = _ref2.addedItems;
-      return addedItems;
-    }).filter(function (addedItems) {
-      return addedItems.length;
-    }).map(function (addedItems) {
-      return addedItems.map(function (item) {
-        return itemToSourceStreams(item, itemsState$);
-      });
-    });
-
-    return Collection(makeDestroyable(component), sources, add$, function (item) {
-      return item._destroy$;
-    });
-  };
-
-  return Collection;
-}
-
-var Collection = makeCollection();
-
-exports.default = Collection;
-exports.makeCollection = makeCollection;
-  })();
-});
-
-require.register("@cycle/isolate/lib/index.js", function(exports, require, module) {
-  require = __makeRelativeRequire(require, {}, "@cycle/isolate");
-  (function() {
-    "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-function checkIsolateArgs(dataflowComponent, scope) {
-    if (typeof dataflowComponent !== "function") {
-        throw new Error("First argument given to isolate() must be a " +
-            "'dataflowComponent' function");
-    }
-    if (scope === null) {
-        throw new Error("Second argument given to isolate() must not be null");
-    }
-}
-function normalizeScopes(sources, scopes, randomScope) {
-    var perChannel = {};
-    Object.keys(sources).forEach(function (channel) {
-        if (typeof scopes === 'string') {
-            perChannel[channel] = scopes;
-            return;
-        }
-        var candidate = scopes[channel];
-        if (typeof candidate !== 'undefined') {
-            perChannel[channel] = candidate;
-            return;
-        }
-        var wildcard = scopes['*'];
-        if (typeof wildcard !== 'undefined') {
-            perChannel[channel] = wildcard;
-            return;
-        }
-        perChannel[channel] = randomScope;
-    });
-    return perChannel;
-}
-function isolateAllSources(outerSources, scopes) {
-    var innerSources = {};
-    for (var channel in outerSources) {
-        var outerSource = outerSources[channel];
-        if (outerSources.hasOwnProperty(channel)
-            && outerSource
-            && typeof outerSource.isolateSource === 'function') {
-            innerSources[channel] = outerSource.isolateSource(outerSource, scopes[channel]);
-        }
-        else if (outerSources.hasOwnProperty(channel)) {
-            innerSources[channel] = outerSources[channel];
-        }
-    }
-    return innerSources;
-}
-function isolateAllSinks(sources, innerSinks, scopes) {
-    var outerSinks = {};
-    for (var channel in innerSinks) {
-        var source = sources[channel];
-        var innerSink = innerSinks[channel];
-        if (innerSinks.hasOwnProperty(channel)
-            && source
-            && typeof source.isolateSink === 'function') {
-            outerSinks[channel] = source.isolateSink(innerSink, scopes[channel]);
-        }
-        else if (innerSinks.hasOwnProperty(channel)) {
-            outerSinks[channel] = innerSinks[channel];
-        }
-    }
-    return outerSinks;
-}
-var counter = 0;
-function newScope() {
-    return "cycle" + ++counter;
-}
-/**
- * Takes a `component` function and an optional `scope` string, and returns a
- * scoped version of the `component` function.
- *
- * When the scoped component is invoked, each source provided to the scoped
- * component is isolated to the given `scope` using
- * `source.isolateSource(source, scope)`, if possible. Likewise, the sinks
- * returned from the scoped component are isolated to the `scope` using
- * `source.isolateSink(sink, scope)`.
- *
- * If the `scope` is not provided, a new scope will be automatically created.
- * This means that while **`isolate(component, scope)` is pure**
- * (referentially transparent), **`isolate(component)` is impure**
- * (not referentially transparent). Two calls to `isolate(Foo, bar)` will
- * generate the same component. But, two calls to `isolate(Foo)` will generate
- * two distinct components.
- *
- * Note that both `isolateSource()` and `isolateSink()` are static members of
- * `source`. The reason for this is that drivers produce `source` while the
- * application produces `sink`, and it's the driver's responsibility to
- * implement `isolateSource()` and `isolateSink()`.
- *
- * @param {Function} component a function that takes `sources` as input
- * and outputs a collection of `sinks`.
- * @param {String} scope an optional string that is used to isolate each
- * `sources` and `sinks` when the returned scoped component is invoked.
- * @return {Function} the scoped component function that, as the original
- * `component` function, takes `sources` and returns `sinks`.
- * @function isolate
- */
-function isolate(component, scope) {
-    if (scope === void 0) { scope = newScope(); }
-    checkIsolateArgs(component, scope);
-    var randomScope = typeof scope === 'object' ? newScope() : '';
-    var scopes = typeof scope === 'string' || typeof scope === 'object' ?
-        scope :
-        scope.toString();
-    return function wrappedComponent(outerSources) {
-        var rest = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            rest[_i - 1] = arguments[_i];
-        }
-        var scopesPerChannel = normalizeScopes(outerSources, scopes, randomScope);
-        var innerSources = isolateAllSources(outerSources, scopesPerChannel);
-        var innerSinks = component.apply(void 0, [innerSources].concat(rest));
-        var outerSinks = isolateAllSinks(outerSources, innerSinks, scopesPerChannel);
-        return outerSinks;
-    };
-}
-isolate.reset = function () { return counter = 0; };
-exports.default = isolate;
-//# sourceMappingURL=index.js.map
-  })();
-});
-
-require.register("@cycle/collection/node_modules/xstream/extra/dropRepeats.js", function(exports, require, module) {
-  require = __makeRelativeRequire(require, {}, "@cycle/collection/node_modules/xstream");
-  (function() {
-    "use strict";
-var index_1 = require("../index");
-var empty = {};
-var DropRepeatsOperator = (function () {
-    function DropRepeatsOperator(ins, fn) {
-        this.ins = ins;
-        this.fn = fn;
-        this.type = 'dropRepeats';
-        this.out = null;
-        this.v = empty;
-    }
-    DropRepeatsOperator.prototype._start = function (out) {
-        this.out = out;
-        this.ins._add(this);
-    };
-    DropRepeatsOperator.prototype._stop = function () {
-        this.ins._remove(this);
-        this.out = null;
-        this.v = empty;
-    };
-    DropRepeatsOperator.prototype.isEq = function (x, y) {
-        return this.fn ? this.fn(x, y) : x === y;
-    };
-    DropRepeatsOperator.prototype._n = function (t) {
-        var u = this.out;
-        if (!u)
-            return;
-        var v = this.v;
-        if (v !== empty && this.isEq(t, v))
-            return;
-        this.v = t;
-        u._n(t);
-    };
-    DropRepeatsOperator.prototype._e = function (err) {
-        var u = this.out;
-        if (!u)
-            return;
-        u._e(err);
-    };
-    DropRepeatsOperator.prototype._c = function () {
-        var u = this.out;
-        if (!u)
-            return;
-        u._c();
-    };
-    return DropRepeatsOperator;
-}());
-exports.DropRepeatsOperator = DropRepeatsOperator;
-/**
- * Drops consecutive duplicate values in a stream.
- *
- * Marble diagram:
- *
- * ```text
- * --1--2--1--1--1--2--3--4--3--3|
- *     dropRepeats
- * --1--2--1--------2--3--4--3---|
- * ```
- *
- * Example:
- *
- * ```js
- * import dropRepeats from 'xstream/extra/dropRepeats'
- *
- * const stream = xs.of(1, 2, 1, 1, 1, 2, 3, 4, 3, 3)
- *   .compose(dropRepeats())
- *
- * stream.addListener({
- *   next: i => console.log(i),
- *   error: err => console.error(err),
- *   complete: () => console.log('completed')
- * })
- * ```
- *
- * ```text
- * > 1
- * > 2
- * > 1
- * > 2
- * > 3
- * > 4
- * > 3
- * > completed
- * ```
- *
- * Example with a custom isEqual function:
- *
- * ```js
- * import dropRepeats from 'xstream/extra/dropRepeats'
- *
- * const stream = xs.of('a', 'b', 'a', 'A', 'B', 'b')
- *   .compose(dropRepeats((x, y) => x.toLowerCase() === y.toLowerCase()))
- *
- * stream.addListener({
- *   next: i => console.log(i),
- *   error: err => console.error(err),
- *   complete: () => console.log('completed')
- * })
- * ```
- *
- * ```text
- * > a
- * > b
- * > a
- * > B
- * > completed
- * ```
- *
- * @param {Function} isEqual An optional function of type
- * `(x: T, y: T) => boolean` that takes an event from the input stream and
- * checks if it is equal to previous event, by returning a boolean.
- * @return {Stream}
- */
-function dropRepeats(isEqual) {
-    if (isEqual === void 0) { isEqual = void 0; }
-    return function dropRepeatsOperator(ins) {
-        return new index_1.Stream(new DropRepeatsOperator(ins, isEqual));
-    };
-}
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.default = dropRepeats;
-//# sourceMappingURL=dropRepeats.js.map
-  })();
-});
-
-require.register("@cycle/collection/node_modules/xstream/index.js", function(exports, require, module) {
-  require = __makeRelativeRequire(require, {}, "@cycle/collection/node_modules/xstream");
-  (function() {
-    "use strict";
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
-var symbol_observable_1 = require("symbol-observable");
-var NO = {};
-exports.NO = NO;
-function noop() { }
-function cp(a) {
-    var l = a.length;
-    var b = Array(l);
-    for (var i = 0; i < l; ++i)
-        b[i] = a[i];
-    return b;
-}
-function and(f1, f2) {
-    return function andFn(t) {
-        return f1(t) && f2(t);
-    };
-}
-function _try(c, t, u) {
-    try {
-        return c.f(t);
-    }
-    catch (e) {
-        u._e(e);
-        return NO;
-    }
-}
-var NO_IL = {
-    _n: noop,
-    _e: noop,
-    _c: noop,
-};
-exports.NO_IL = NO_IL;
-// mutates the input
-function internalizeProducer(producer) {
-    producer._start = function _start(il) {
-        il.next = il._n;
-        il.error = il._e;
-        il.complete = il._c;
-        this.start(il);
-    };
-    producer._stop = producer.stop;
-}
-var StreamSub = (function () {
-    function StreamSub(_stream, _listener) {
-        this._stream = _stream;
-        this._listener = _listener;
-    }
-    StreamSub.prototype.unsubscribe = function () {
-        this._stream.removeListener(this._listener);
-    };
-    return StreamSub;
-}());
-var Observer = (function () {
-    function Observer(_listener) {
-        this._listener = _listener;
-    }
-    Observer.prototype.next = function (value) {
-        this._listener._n(value);
-    };
-    Observer.prototype.error = function (err) {
-        this._listener._e(err);
-    };
-    Observer.prototype.complete = function () {
-        this._listener._c();
-    };
-    return Observer;
-}());
-var FromObservable = (function () {
-    function FromObservable(observable) {
-        this.type = 'fromObservable';
-        this.ins = observable;
-        this.active = false;
-    }
-    FromObservable.prototype._start = function (out) {
-        this.out = out;
-        this.active = true;
-        this._sub = this.ins.subscribe(new Observer(out));
-        if (!this.active)
-            this._sub.unsubscribe();
-    };
-    FromObservable.prototype._stop = function () {
-        if (this._sub)
-            this._sub.unsubscribe();
-        this.active = false;
-    };
-    return FromObservable;
-}());
-var Merge = (function () {
-    function Merge(insArr) {
-        this.type = 'merge';
-        this.insArr = insArr;
-        this.out = NO;
-        this.ac = 0;
-    }
-    Merge.prototype._start = function (out) {
-        this.out = out;
-        var s = this.insArr;
-        var L = s.length;
-        this.ac = L;
-        for (var i = 0; i < L; i++)
-            s[i]._add(this);
-    };
-    Merge.prototype._stop = function () {
-        var s = this.insArr;
-        var L = s.length;
-        for (var i = 0; i < L; i++)
-            s[i]._remove(this);
-        this.out = NO;
-    };
-    Merge.prototype._n = function (t) {
-        var u = this.out;
-        if (u === NO)
-            return;
-        u._n(t);
-    };
-    Merge.prototype._e = function (err) {
-        var u = this.out;
-        if (u === NO)
-            return;
-        u._e(err);
-    };
-    Merge.prototype._c = function () {
-        if (--this.ac <= 0) {
-            var u = this.out;
-            if (u === NO)
-                return;
-            u._c();
-        }
-    };
-    return Merge;
-}());
-var CombineListener = (function () {
-    function CombineListener(i, out, p) {
-        this.i = i;
-        this.out = out;
-        this.p = p;
-        p.ils.push(this);
-    }
-    CombineListener.prototype._n = function (t) {
-        var p = this.p, out = this.out;
-        if (out === NO)
-            return;
-        if (p.up(t, this.i)) {
-            var a = p.vals;
-            var l = a.length;
-            var b = Array(l);
-            for (var i = 0; i < l; ++i)
-                b[i] = a[i];
-            out._n(b);
-        }
-    };
-    CombineListener.prototype._e = function (err) {
-        var out = this.out;
-        if (out === NO)
-            return;
-        out._e(err);
-    };
-    CombineListener.prototype._c = function () {
-        var p = this.p;
-        if (p.out === NO)
-            return;
-        if (--p.Nc === 0)
-            p.out._c();
-    };
-    return CombineListener;
-}());
-var Combine = (function () {
-    function Combine(insArr) {
-        this.type = 'combine';
-        this.insArr = insArr;
-        this.out = NO;
-        this.ils = [];
-        this.Nc = this.Nn = 0;
-        this.vals = [];
-    }
-    Combine.prototype.up = function (t, i) {
-        var v = this.vals[i];
-        var Nn = !this.Nn ? 0 : v === NO ? --this.Nn : this.Nn;
-        this.vals[i] = t;
-        return Nn === 0;
-    };
-    Combine.prototype._start = function (out) {
-        this.out = out;
-        var s = this.insArr;
-        var n = this.Nc = this.Nn = s.length;
-        var vals = this.vals = new Array(n);
-        if (n === 0) {
-            out._n([]);
-            out._c();
-        }
-        else {
-            for (var i = 0; i < n; i++) {
-                vals[i] = NO;
-                s[i]._add(new CombineListener(i, out, this));
-            }
-        }
-    };
-    Combine.prototype._stop = function () {
-        var s = this.insArr;
-        var n = s.length;
-        var ils = this.ils;
-        for (var i = 0; i < n; i++)
-            s[i]._remove(ils[i]);
-        this.out = NO;
-        this.ils = [];
-        this.vals = [];
-    };
-    return Combine;
-}());
-var FromArray = (function () {
-    function FromArray(a) {
-        this.type = 'fromArray';
-        this.a = a;
-    }
-    FromArray.prototype._start = function (out) {
-        var a = this.a;
-        for (var i = 0, n = a.length; i < n; i++)
-            out._n(a[i]);
-        out._c();
-    };
-    FromArray.prototype._stop = function () {
-    };
-    return FromArray;
-}());
-var FromPromise = (function () {
-    function FromPromise(p) {
-        this.type = 'fromPromise';
-        this.on = false;
-        this.p = p;
-    }
-    FromPromise.prototype._start = function (out) {
-        var prod = this;
-        this.on = true;
-        this.p.then(function (v) {
-            if (prod.on) {
-                out._n(v);
-                out._c();
-            }
-        }, function (e) {
-            out._e(e);
-        }).then(noop, function (err) {
-            setTimeout(function () { throw err; });
-        });
-    };
-    FromPromise.prototype._stop = function () {
-        this.on = false;
-    };
-    return FromPromise;
-}());
-var Periodic = (function () {
-    function Periodic(period) {
-        this.type = 'periodic';
-        this.period = period;
-        this.intervalID = -1;
-        this.i = 0;
-    }
-    Periodic.prototype._start = function (out) {
-        var self = this;
-        function intervalHandler() { out._n(self.i++); }
-        this.intervalID = setInterval(intervalHandler, this.period);
-    };
-    Periodic.prototype._stop = function () {
-        if (this.intervalID !== -1)
-            clearInterval(this.intervalID);
-        this.intervalID = -1;
-        this.i = 0;
-    };
-    return Periodic;
-}());
-var Debug = (function () {
-    function Debug(ins, arg) {
-        this.type = 'debug';
-        this.ins = ins;
-        this.out = NO;
-        this.s = noop;
-        this.l = '';
-        if (typeof arg === 'string')
-            this.l = arg;
-        else if (typeof arg === 'function')
-            this.s = arg;
-    }
-    Debug.prototype._start = function (out) {
-        this.out = out;
-        this.ins._add(this);
-    };
-    Debug.prototype._stop = function () {
-        this.ins._remove(this);
-        this.out = NO;
-    };
-    Debug.prototype._n = function (t) {
-        var u = this.out;
-        if (u === NO)
-            return;
-        var s = this.s, l = this.l;
-        if (s !== noop) {
-            try {
-                s(t);
-            }
-            catch (e) {
-                u._e(e);
-            }
-        }
-        else if (l)
-            console.log(l + ':', t);
-        else
-            console.log(t);
-        u._n(t);
-    };
-    Debug.prototype._e = function (err) {
-        var u = this.out;
-        if (u === NO)
-            return;
-        u._e(err);
-    };
-    Debug.prototype._c = function () {
-        var u = this.out;
-        if (u === NO)
-            return;
-        u._c();
-    };
-    return Debug;
-}());
-var Drop = (function () {
-    function Drop(max, ins) {
-        this.type = 'drop';
-        this.ins = ins;
-        this.out = NO;
-        this.max = max;
-        this.dropped = 0;
-    }
-    Drop.prototype._start = function (out) {
-        this.out = out;
-        this.dropped = 0;
-        this.ins._add(this);
-    };
-    Drop.prototype._stop = function () {
-        this.ins._remove(this);
-        this.out = NO;
-    };
-    Drop.prototype._n = function (t) {
-        var u = this.out;
-        if (u === NO)
-            return;
-        if (this.dropped++ >= this.max)
-            u._n(t);
-    };
-    Drop.prototype._e = function (err) {
-        var u = this.out;
-        if (u === NO)
-            return;
-        u._e(err);
-    };
-    Drop.prototype._c = function () {
-        var u = this.out;
-        if (u === NO)
-            return;
-        u._c();
-    };
-    return Drop;
-}());
-var EndWhenListener = (function () {
-    function EndWhenListener(out, op) {
-        this.out = out;
-        this.op = op;
-    }
-    EndWhenListener.prototype._n = function () {
-        this.op.end();
-    };
-    EndWhenListener.prototype._e = function (err) {
-        this.out._e(err);
-    };
-    EndWhenListener.prototype._c = function () {
-        this.op.end();
-    };
-    return EndWhenListener;
-}());
-var EndWhen = (function () {
-    function EndWhen(o, ins) {
-        this.type = 'endWhen';
-        this.ins = ins;
-        this.out = NO;
-        this.o = o;
-        this.oil = NO_IL;
-    }
-    EndWhen.prototype._start = function (out) {
-        this.out = out;
-        this.o._add(this.oil = new EndWhenListener(out, this));
-        this.ins._add(this);
-    };
-    EndWhen.prototype._stop = function () {
-        this.ins._remove(this);
-        this.o._remove(this.oil);
-        this.out = NO;
-        this.oil = NO_IL;
-    };
-    EndWhen.prototype.end = function () {
-        var u = this.out;
-        if (u === NO)
-            return;
-        u._c();
-    };
-    EndWhen.prototype._n = function (t) {
-        var u = this.out;
-        if (u === NO)
-            return;
-        u._n(t);
-    };
-    EndWhen.prototype._e = function (err) {
-        var u = this.out;
-        if (u === NO)
-            return;
-        u._e(err);
-    };
-    EndWhen.prototype._c = function () {
-        this.end();
-    };
-    return EndWhen;
-}());
-var Filter = (function () {
-    function Filter(passes, ins) {
-        this.type = 'filter';
-        this.ins = ins;
-        this.out = NO;
-        this.f = passes;
-    }
-    Filter.prototype._start = function (out) {
-        this.out = out;
-        this.ins._add(this);
-    };
-    Filter.prototype._stop = function () {
-        this.ins._remove(this);
-        this.out = NO;
-    };
-    Filter.prototype._n = function (t) {
-        var u = this.out;
-        if (u === NO)
-            return;
-        var r = _try(this, t, u);
-        if (r === NO || !r)
-            return;
-        u._n(t);
-    };
-    Filter.prototype._e = function (err) {
-        var u = this.out;
-        if (u === NO)
-            return;
-        u._e(err);
-    };
-    Filter.prototype._c = function () {
-        var u = this.out;
-        if (u === NO)
-            return;
-        u._c();
-    };
-    return Filter;
-}());
-var FlattenListener = (function () {
-    function FlattenListener(out, op) {
-        this.out = out;
-        this.op = op;
-    }
-    FlattenListener.prototype._n = function (t) {
-        this.out._n(t);
-    };
-    FlattenListener.prototype._e = function (err) {
-        this.out._e(err);
-    };
-    FlattenListener.prototype._c = function () {
-        this.op.inner = NO;
-        this.op.less();
-    };
-    return FlattenListener;
-}());
-var Flatten = (function () {
-    function Flatten(ins) {
-        this.type = 'flatten';
-        this.ins = ins;
-        this.out = NO;
-        this.open = true;
-        this.inner = NO;
-        this.il = NO_IL;
-    }
-    Flatten.prototype._start = function (out) {
-        this.out = out;
-        this.open = true;
-        this.inner = NO;
-        this.il = NO_IL;
-        this.ins._add(this);
-    };
-    Flatten.prototype._stop = function () {
-        this.ins._remove(this);
-        if (this.inner !== NO)
-            this.inner._remove(this.il);
-        this.out = NO;
-        this.open = true;
-        this.inner = NO;
-        this.il = NO_IL;
-    };
-    Flatten.prototype.less = function () {
-        var u = this.out;
-        if (u === NO)
-            return;
-        if (!this.open && this.inner === NO)
-            u._c();
-    };
-    Flatten.prototype._n = function (s) {
-        var u = this.out;
-        if (u === NO)
-            return;
-        var _a = this, inner = _a.inner, il = _a.il;
-        if (inner !== NO && il !== NO_IL)
-            inner._remove(il);
-        (this.inner = s)._add(this.il = new FlattenListener(u, this));
-    };
-    Flatten.prototype._e = function (err) {
-        var u = this.out;
-        if (u === NO)
-            return;
-        u._e(err);
-    };
-    Flatten.prototype._c = function () {
-        this.open = false;
-        this.less();
-    };
-    return Flatten;
-}());
-var Fold = (function () {
-    function Fold(f, seed, ins) {
-        var _this = this;
-        this.type = 'fold';
-        this.ins = ins;
-        this.out = NO;
-        this.f = function (t) { return f(_this.acc, t); };
-        this.acc = this.seed = seed;
-    }
-    Fold.prototype._start = function (out) {
-        this.out = out;
-        this.acc = this.seed;
-        out._n(this.acc);
-        this.ins._add(this);
-    };
-    Fold.prototype._stop = function () {
-        this.ins._remove(this);
-        this.out = NO;
-        this.acc = this.seed;
-    };
-    Fold.prototype._n = function (t) {
-        var u = this.out;
-        if (u === NO)
-            return;
-        var r = _try(this, t, u);
-        if (r === NO)
-            return;
-        u._n(this.acc = r);
-    };
-    Fold.prototype._e = function (err) {
-        var u = this.out;
-        if (u === NO)
-            return;
-        u._e(err);
-    };
-    Fold.prototype._c = function () {
-        var u = this.out;
-        if (u === NO)
-            return;
-        u._c();
-    };
-    return Fold;
-}());
-var Last = (function () {
-    function Last(ins) {
-        this.type = 'last';
-        this.ins = ins;
-        this.out = NO;
-        this.has = false;
-        this.val = NO;
-    }
-    Last.prototype._start = function (out) {
-        this.out = out;
-        this.has = false;
-        this.ins._add(this);
-    };
-    Last.prototype._stop = function () {
-        this.ins._remove(this);
-        this.out = NO;
-        this.val = NO;
-    };
-    Last.prototype._n = function (t) {
-        this.has = true;
-        this.val = t;
-    };
-    Last.prototype._e = function (err) {
-        var u = this.out;
-        if (u === NO)
-            return;
-        u._e(err);
-    };
-    Last.prototype._c = function () {
-        var u = this.out;
-        if (u === NO)
-            return;
-        if (this.has) {
-            u._n(this.val);
-            u._c();
-        }
-        else
-            u._e(new Error('last() failed because input stream completed'));
-    };
-    return Last;
-}());
-var MapOp = (function () {
-    function MapOp(project, ins) {
-        this.type = 'map';
-        this.ins = ins;
-        this.out = NO;
-        this.f = project;
-    }
-    MapOp.prototype._start = function (out) {
-        this.out = out;
-        this.ins._add(this);
-    };
-    MapOp.prototype._stop = function () {
-        this.ins._remove(this);
-        this.out = NO;
-    };
-    MapOp.prototype._n = function (t) {
-        var u = this.out;
-        if (u === NO)
-            return;
-        var r = _try(this, t, u);
-        if (r === NO)
-            return;
-        u._n(r);
-    };
-    MapOp.prototype._e = function (err) {
-        var u = this.out;
-        if (u === NO)
-            return;
-        u._e(err);
-    };
-    MapOp.prototype._c = function () {
-        var u = this.out;
-        if (u === NO)
-            return;
-        u._c();
-    };
-    return MapOp;
-}());
-var Remember = (function () {
-    function Remember(ins) {
-        this.type = 'remember';
-        this.ins = ins;
-        this.out = NO;
-    }
-    Remember.prototype._start = function (out) {
-        this.out = out;
-        this.ins._add(out);
-    };
-    Remember.prototype._stop = function () {
-        this.ins._remove(this.out);
-        this.out = NO;
-    };
-    return Remember;
-}());
-var ReplaceError = (function () {
-    function ReplaceError(replacer, ins) {
-        this.type = 'replaceError';
-        this.ins = ins;
-        this.out = NO;
-        this.f = replacer;
-    }
-    ReplaceError.prototype._start = function (out) {
-        this.out = out;
-        this.ins._add(this);
-    };
-    ReplaceError.prototype._stop = function () {
-        this.ins._remove(this);
-        this.out = NO;
-    };
-    ReplaceError.prototype._n = function (t) {
-        var u = this.out;
-        if (u === NO)
-            return;
-        u._n(t);
-    };
-    ReplaceError.prototype._e = function (err) {
-        var u = this.out;
-        if (u === NO)
-            return;
-        try {
-            this.ins._remove(this);
-            (this.ins = this.f(err))._add(this);
-        }
-        catch (e) {
-            u._e(e);
-        }
-    };
-    ReplaceError.prototype._c = function () {
-        var u = this.out;
-        if (u === NO)
-            return;
-        u._c();
-    };
-    return ReplaceError;
-}());
-var StartWith = (function () {
-    function StartWith(ins, val) {
-        this.type = 'startWith';
-        this.ins = ins;
-        this.out = NO;
-        this.val = val;
-    }
-    StartWith.prototype._start = function (out) {
-        this.out = out;
-        this.out._n(this.val);
-        this.ins._add(out);
-    };
-    StartWith.prototype._stop = function () {
-        this.ins._remove(this.out);
-        this.out = NO;
-    };
-    return StartWith;
-}());
-var Take = (function () {
-    function Take(max, ins) {
-        this.type = 'take';
-        this.ins = ins;
-        this.out = NO;
-        this.max = max;
-        this.taken = 0;
-    }
-    Take.prototype._start = function (out) {
-        this.out = out;
-        this.taken = 0;
-        if (this.max <= 0)
-            out._c();
-        else
-            this.ins._add(this);
-    };
-    Take.prototype._stop = function () {
-        this.ins._remove(this);
-        this.out = NO;
-    };
-    Take.prototype._n = function (t) {
-        var u = this.out;
-        if (u === NO)
-            return;
-        var m = ++this.taken;
-        if (m < this.max)
-            u._n(t);
-        else if (m === this.max) {
-            u._n(t);
-            u._c();
-        }
-    };
-    Take.prototype._e = function (err) {
-        var u = this.out;
-        if (u === NO)
-            return;
-        u._e(err);
-    };
-    Take.prototype._c = function () {
-        var u = this.out;
-        if (u === NO)
-            return;
-        u._c();
-    };
-    return Take;
-}());
-var Stream = (function () {
-    function Stream(producer) {
-        this._prod = producer || NO;
-        this._ils = [];
-        this._stopID = NO;
-        this._dl = NO;
-        this._d = false;
-        this._target = NO;
-        this._err = NO;
-    }
-    Stream.prototype._n = function (t) {
-        var a = this._ils;
-        var L = a.length;
-        if (this._d)
-            this._dl._n(t);
-        if (L == 1)
-            a[0]._n(t);
-        else if (L == 0)
-            return;
-        else {
-            var b = cp(a);
-            for (var i = 0; i < L; i++)
-                b[i]._n(t);
-        }
-    };
-    Stream.prototype._e = function (err) {
-        if (this._err !== NO)
-            return;
-        this._err = err;
-        var a = this._ils;
-        var L = a.length;
-        this._x();
-        if (this._d)
-            this._dl._e(err);
-        if (L == 1)
-            a[0]._e(err);
-        else if (L == 0)
-            return;
-        else {
-            var b = cp(a);
-            for (var i = 0; i < L; i++)
-                b[i]._e(err);
-        }
-        if (!this._d && L == 0)
-            throw this._err;
-    };
-    Stream.prototype._c = function () {
-        var a = this._ils;
-        var L = a.length;
-        this._x();
-        if (this._d)
-            this._dl._c();
-        if (L == 1)
-            a[0]._c();
-        else if (L == 0)
-            return;
-        else {
-            var b = cp(a);
-            for (var i = 0; i < L; i++)
-                b[i]._c();
-        }
-    };
-    Stream.prototype._x = function () {
-        if (this._ils.length === 0)
-            return;
-        if (this._prod !== NO)
-            this._prod._stop();
-        this._err = NO;
-        this._ils = [];
-    };
-    Stream.prototype._stopNow = function () {
-        // WARNING: code that calls this method should
-        // first check if this._prod is valid (not `NO`)
-        this._prod._stop();
-        this._err = NO;
-        this._stopID = NO;
-    };
-    Stream.prototype._add = function (il) {
-        var ta = this._target;
-        if (ta !== NO)
-            return ta._add(il);
-        var a = this._ils;
-        a.push(il);
-        if (a.length > 1)
-            return;
-        if (this._stopID !== NO) {
-            clearTimeout(this._stopID);
-            this._stopID = NO;
-        }
-        else {
-            var p = this._prod;
-            if (p !== NO)
-                p._start(this);
-        }
-    };
-    Stream.prototype._remove = function (il) {
-        var _this = this;
-        var ta = this._target;
-        if (ta !== NO)
-            return ta._remove(il);
-        var a = this._ils;
-        var i = a.indexOf(il);
-        if (i > -1) {
-            a.splice(i, 1);
-            if (this._prod !== NO && a.length <= 0) {
-                this._err = NO;
-                this._stopID = setTimeout(function () { return _this._stopNow(); });
-            }
-            else if (a.length === 1) {
-                this._pruneCycles();
-            }
-        }
-    };
-    // If all paths stemming from `this` stream eventually end at `this`
-    // stream, then we remove the single listener of `this` stream, to
-    // force it to end its execution and dispose resources. This method
-    // assumes as a precondition that this._ils has just one listener.
-    Stream.prototype._pruneCycles = function () {
-        if (this._hasNoSinks(this, []))
-            this._remove(this._ils[0]);
-    };
-    // Checks whether *there is no* path starting from `x` that leads to an end
-    // listener (sink) in the stream graph, following edges A->B where B is a
-    // listener of A. This means these paths constitute a cycle somehow. Is given
-    // a trace of all visited nodes so far.
-    Stream.prototype._hasNoSinks = function (x, trace) {
-        if (trace.indexOf(x) !== -1)
-            return true;
-        else if (x.out === this)
-            return true;
-        else if (x.out && x.out !== NO)
-            return this._hasNoSinks(x.out, trace.concat(x));
-        else if (x._ils) {
-            for (var i = 0, N = x._ils.length; i < N; i++)
-                if (!this._hasNoSinks(x._ils[i], trace.concat(x)))
-                    return false;
-            return true;
-        }
-        else
-            return false;
-    };
-    Stream.prototype.ctor = function () {
-        return this instanceof MemoryStream ? MemoryStream : Stream;
-    };
-    /**
-     * Adds a Listener to the Stream.
-     *
-     * @param {Listener} listener
-     */
-    Stream.prototype.addListener = function (listener) {
-        listener._n = listener.next || noop;
-        listener._e = listener.error || noop;
-        listener._c = listener.complete || noop;
-        this._add(listener);
-    };
-    /**
-     * Removes a Listener from the Stream, assuming the Listener was added to it.
-     *
-     * @param {Listener<T>} listener
-     */
-    Stream.prototype.removeListener = function (listener) {
-        this._remove(listener);
-    };
-    /**
-     * Adds a Listener to the Stream returning a Subscription to remove that
-     * listener.
-     *
-     * @param {Listener} listener
-     * @returns {Subscription}
-     */
-    Stream.prototype.subscribe = function (listener) {
-        this.addListener(listener);
-        return new StreamSub(this, listener);
-    };
-    /**
-     * Add interop between most.js and RxJS 5
-     *
-     * @returns {Stream}
-     */
-    Stream.prototype[symbol_observable_1.default] = function () {
-        return this;
-    };
-    /**
-     * Creates a new Stream given a Producer.
-     *
-     * @factory true
-     * @param {Producer} producer An optional Producer that dictates how to
-     * start, generate events, and stop the Stream.
-     * @return {Stream}
-     */
-    Stream.create = function (producer) {
-        if (producer) {
-            if (typeof producer.start !== 'function'
-                || typeof producer.stop !== 'function')
-                throw new Error('producer requires both start and stop functions');
-            internalizeProducer(producer); // mutates the input
-        }
-        return new Stream(producer);
-    };
-    /**
-     * Creates a new MemoryStream given a Producer.
-     *
-     * @factory true
-     * @param {Producer} producer An optional Producer that dictates how to
-     * start, generate events, and stop the Stream.
-     * @return {MemoryStream}
-     */
-    Stream.createWithMemory = function (producer) {
-        if (producer)
-            internalizeProducer(producer); // mutates the input
-        return new MemoryStream(producer);
-    };
-    /**
-     * Creates a Stream that does nothing when started. It never emits any event.
-     *
-     * Marble diagram:
-     *
-     * ```text
-     *          never
-     * -----------------------
-     * ```
-     *
-     * @factory true
-     * @return {Stream}
-     */
-    Stream.never = function () {
-        return new Stream({ _start: noop, _stop: noop });
-    };
-    /**
-     * Creates a Stream that immediately emits the "complete" notification when
-     * started, and that's it.
-     *
-     * Marble diagram:
-     *
-     * ```text
-     * empty
-     * -|
-     * ```
-     *
-     * @factory true
-     * @return {Stream}
-     */
-    Stream.empty = function () {
-        return new Stream({
-            _start: function (il) { il._c(); },
-            _stop: noop,
-        });
-    };
-    /**
-     * Creates a Stream that immediately emits an "error" notification with the
-     * value you passed as the `error` argument when the stream starts, and that's
-     * it.
-     *
-     * Marble diagram:
-     *
-     * ```text
-     * throw(X)
-     * -X
-     * ```
-     *
-     * @factory true
-     * @param error The error event to emit on the created stream.
-     * @return {Stream}
-     */
-    Stream.throw = function (error) {
-        return new Stream({
-            _start: function (il) { il._e(error); },
-            _stop: noop,
-        });
-    };
-    /**
-     * Creates a stream from an Array, Promise, or an Observable.
-     *
-     * @factory true
-     * @param {Array|PromiseLike|Observable} input The input to make a stream from.
-     * @return {Stream}
-     */
-    Stream.from = function (input) {
-        if (typeof input[symbol_observable_1.default] === 'function')
-            return Stream.fromObservable(input);
-        else if (typeof input.then === 'function')
-            return Stream.fromPromise(input);
-        else if (Array.isArray(input))
-            return Stream.fromArray(input);
-        throw new TypeError("Type of input to from() must be an Array, Promise, or Observable");
-    };
-    /**
-     * Creates a Stream that immediately emits the arguments that you give to
-     * *of*, then completes.
-     *
-     * Marble diagram:
-     *
-     * ```text
-     * of(1,2,3)
-     * 123|
-     * ```
-     *
-     * @factory true
-     * @param a The first value you want to emit as an event on the stream.
-     * @param b The second value you want to emit as an event on the stream. One
-     * or more of these values may be given as arguments.
-     * @return {Stream}
-     */
-    Stream.of = function () {
-        var items = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            items[_i] = arguments[_i];
-        }
-        return Stream.fromArray(items);
-    };
-    /**
-     * Converts an array to a stream. The returned stream will emit synchronously
-     * all the items in the array, and then complete.
-     *
-     * Marble diagram:
-     *
-     * ```text
-     * fromArray([1,2,3])
-     * 123|
-     * ```
-     *
-     * @factory true
-     * @param {Array} array The array to be converted as a stream.
-     * @return {Stream}
-     */
-    Stream.fromArray = function (array) {
-        return new Stream(new FromArray(array));
-    };
-    /**
-     * Converts a promise to a stream. The returned stream will emit the resolved
-     * value of the promise, and then complete. However, if the promise is
-     * rejected, the stream will emit the corresponding error.
-     *
-     * Marble diagram:
-     *
-     * ```text
-     * fromPromise( ----42 )
-     * -----------------42|
-     * ```
-     *
-     * @factory true
-     * @param {PromiseLike} promise The promise to be converted as a stream.
-     * @return {Stream}
-     */
-    Stream.fromPromise = function (promise) {
-        return new Stream(new FromPromise(promise));
-    };
-    /**
-     * Converts an Observable into a Stream.
-     *
-     * @factory true
-     * @param {any} observable The observable to be converted as a stream.
-     * @return {Stream}
-     */
-    Stream.fromObservable = function (obs) {
-        if (obs.endWhen)
-            return obs;
-        return new Stream(new FromObservable(obs));
-    };
-    /**
-     * Creates a stream that periodically emits incremental numbers, every
-     * `period` milliseconds.
-     *
-     * Marble diagram:
-     *
-     * ```text
-     *     periodic(1000)
-     * ---0---1---2---3---4---...
-     * ```
-     *
-     * @factory true
-     * @param {number} period The interval in milliseconds to use as a rate of
-     * emission.
-     * @return {Stream}
-     */
-    Stream.periodic = function (period) {
-        return new Stream(new Periodic(period));
-    };
-    Stream.prototype._map = function (project) {
-        return new (this.ctor())(new MapOp(project, this));
-    };
-    /**
-     * Transforms each event from the input Stream through a `project` function,
-     * to get a Stream that emits those transformed events.
-     *
-     * Marble diagram:
-     *
-     * ```text
-     * --1---3--5-----7------
-     *    map(i => i * 10)
-     * --10--30-50----70-----
-     * ```
-     *
-     * @param {Function} project A function of type `(t: T) => U` that takes event
-     * `t` of type `T` from the input Stream and produces an event of type `U`, to
-     * be emitted on the output Stream.
-     * @return {Stream}
-     */
-    Stream.prototype.map = function (project) {
-        return this._map(project);
-    };
-    /**
-     * It's like `map`, but transforms each input event to always the same
-     * constant value on the output Stream.
-     *
-     * Marble diagram:
-     *
-     * ```text
-     * --1---3--5-----7-----
-     *       mapTo(10)
-     * --10--10-10----10----
-     * ```
-     *
-     * @param projectedValue A value to emit on the output Stream whenever the
-     * input Stream emits any value.
-     * @return {Stream}
-     */
-    Stream.prototype.mapTo = function (projectedValue) {
-        var s = this.map(function () { return projectedValue; });
-        var op = s._prod;
-        op.type = 'mapTo';
-        return s;
-    };
-    /**
-     * Only allows events that pass the test given by the `passes` argument.
-     *
-     * Each event from the input stream is given to the `passes` function. If the
-     * function returns `true`, the event is forwarded to the output stream,
-     * otherwise it is ignored and not forwarded.
-     *
-     * Marble diagram:
-     *
-     * ```text
-     * --1---2--3-----4-----5---6--7-8--
-     *     filter(i => i % 2 === 0)
-     * ------2--------4---------6----8--
-     * ```
-     *
-     * @param {Function} passes A function of type `(t: T) +> boolean` that takes
-     * an event from the input stream and checks if it passes, by returning a
-     * boolean.
-     * @return {Stream}
-     */
-    Stream.prototype.filter = function (passes) {
-        var p = this._prod;
-        if (p instanceof Filter)
-            return new Stream(new Filter(and(p.f, passes), p.ins));
-        return new Stream(new Filter(passes, this));
-    };
-    /**
-     * Lets the first `amount` many events from the input stream pass to the
-     * output stream, then makes the output stream complete.
-     *
-     * Marble diagram:
-     *
-     * ```text
-     * --a---b--c----d---e--
-     *    take(3)
-     * --a---b--c|
-     * ```
-     *
-     * @param {number} amount How many events to allow from the input stream
-     * before completing the output stream.
-     * @return {Stream}
-     */
-    Stream.prototype.take = function (amount) {
-        return new (this.ctor())(new Take(amount, this));
-    };
-    /**
-     * Ignores the first `amount` many events from the input stream, and then
-     * after that starts forwarding events from the input stream to the output
-     * stream.
-     *
-     * Marble diagram:
-     *
-     * ```text
-     * --a---b--c----d---e--
-     *       drop(3)
-     * --------------d---e--
-     * ```
-     *
-     * @param {number} amount How many events to ignore from the input stream
-     * before forwarding all events from the input stream to the output stream.
-     * @return {Stream}
-     */
-    Stream.prototype.drop = function (amount) {
-        return new Stream(new Drop(amount, this));
-    };
-    /**
-     * When the input stream completes, the output stream will emit the last event
-     * emitted by the input stream, and then will also complete.
-     *
-     * Marble diagram:
-     *
-     * ```text
-     * --a---b--c--d----|
-     *       last()
-     * -----------------d|
-     * ```
-     *
-     * @return {Stream}
-     */
-    Stream.prototype.last = function () {
-        return new Stream(new Last(this));
-    };
-    /**
-     * Prepends the given `initial` value to the sequence of events emitted by the
-     * input stream. The returned stream is a MemoryStream, which means it is
-     * already `remember()`'d.
-     *
-     * Marble diagram:
-     *
-     * ```text
-     * ---1---2-----3---
-     *   startWith(0)
-     * 0--1---2-----3---
-     * ```
-     *
-     * @param initial The value or event to prepend.
-     * @return {MemoryStream}
-     */
-    Stream.prototype.startWith = function (initial) {
-        return new MemoryStream(new StartWith(this, initial));
-    };
-    /**
-     * Uses another stream to determine when to complete the current stream.
-     *
-     * When the given `other` stream emits an event or completes, the output
-     * stream will complete. Before that happens, the output stream will behaves
-     * like the input stream.
-     *
-     * Marble diagram:
-     *
-     * ```text
-     * ---1---2-----3--4----5----6---
-     *   endWhen( --------a--b--| )
-     * ---1---2-----3--4--|
-     * ```
-     *
-     * @param other Some other stream that is used to know when should the output
-     * stream of this operator complete.
-     * @return {Stream}
-     */
-    Stream.prototype.endWhen = function (other) {
-        return new (this.ctor())(new EndWhen(other, this));
-    };
-    /**
-     * "Folds" the stream onto itself.
-     *
-     * Combines events from the past throughout
-     * the entire execution of the input stream, allowing you to accumulate them
-     * together. It's essentially like `Array.prototype.reduce`. The returned
-     * stream is a MemoryStream, which means it is already `remember()`'d.
-     *
-     * The output stream starts by emitting the `seed` which you give as argument.
-     * Then, when an event happens on the input stream, it is combined with that
-     * seed value through the `accumulate` function, and the output value is
-     * emitted on the output stream. `fold` remembers that output value as `acc`
-     * ("accumulator"), and then when a new input event `t` happens, `acc` will be
-     * combined with that to produce the new `acc` and so forth.
-     *
-     * Marble diagram:
-     *
-     * ```text
-     * ------1-----1--2----1----1------
-     *   fold((acc, x) => acc + x, 3)
-     * 3-----4-----5--7----8----9------
-     * ```
-     *
-     * @param {Function} accumulate A function of type `(acc: R, t: T) => R` that
-     * takes the previous accumulated value `acc` and the incoming event from the
-     * input stream and produces the new accumulated value.
-     * @param seed The initial accumulated value, of type `R`.
-     * @return {MemoryStream}
-     */
-    Stream.prototype.fold = function (accumulate, seed) {
-        return new MemoryStream(new Fold(accumulate, seed, this));
-    };
-    /**
-     * Replaces an error with another stream.
-     *
-     * When (and if) an error happens on the input stream, instead of forwarding
-     * that error to the output stream, *replaceError* will call the `replace`
-     * function which returns the stream that the output stream will replicate.
-     * And, in case that new stream also emits an error, `replace` will be called
-     * again to get another stream to start replicating.
-     *
-     * Marble diagram:
-     *
-     * ```text
-     * --1---2-----3--4-----X
-     *   replaceError( () => --10--| )
-     * --1---2-----3--4--------10--|
-     * ```
-     *
-     * @param {Function} replace A function of type `(err) => Stream` that takes
-     * the error that occurred on the input stream or on the previous replacement
-     * stream and returns a new stream. The output stream will behave like the
-     * stream that this function returns.
-     * @return {Stream}
-     */
-    Stream.prototype.replaceError = function (replace) {
-        return new (this.ctor())(new ReplaceError(replace, this));
-    };
-    /**
-     * Flattens a "stream of streams", handling only one nested stream at a time
-     * (no concurrency).
-     *
-     * If the input stream is a stream that emits streams, then this operator will
-     * return an output stream which is a flat stream: emits regular events. The
-     * flattening happens without concurrency. It works like this: when the input
-     * stream emits a nested stream, *flatten* will start imitating that nested
-     * one. However, as soon as the next nested stream is emitted on the input
-     * stream, *flatten* will forget the previous nested one it was imitating, and
-     * will start imitating the new nested one.
-     *
-     * Marble diagram:
-     *
-     * ```text
-     * --+--------+---------------
-     *   \        \
-     *    \       ----1----2---3--
-     *    --a--b----c----d--------
-     *           flatten
-     * -----a--b------1----2---3--
-     * ```
-     *
-     * @return {Stream}
-     */
-    Stream.prototype.flatten = function () {
-        var p = this._prod;
-        return new Stream(new Flatten(this));
-    };
-    /**
-     * Passes the input stream to a custom operator, to produce an output stream.
-     *
-     * *compose* is a handy way of using an existing function in a chained style.
-     * Instead of writing `outStream = f(inStream)` you can write
-     * `outStream = inStream.compose(f)`.
-     *
-     * @param {function} operator A function that takes a stream as input and
-     * returns a stream as well.
-     * @return {Stream}
-     */
-    Stream.prototype.compose = function (operator) {
-        return operator(this);
-    };
-    /**
-     * Returns an output stream that behaves like the input stream, but also
-     * remembers the most recent event that happens on the input stream, so that a
-     * newly added listener will immediately receive that memorised event.
-     *
-     * @return {MemoryStream}
-     */
-    Stream.prototype.remember = function () {
-        return new MemoryStream(new Remember(this));
-    };
-    /**
-     * Returns an output stream that identically behaves like the input stream,
-     * but also runs a `spy` function fo each event, to help you debug your app.
-     *
-     * *debug* takes a `spy` function as argument, and runs that for each event
-     * happening on the input stream. If you don't provide the `spy` argument,
-     * then *debug* will just `console.log` each event. This helps you to
-     * understand the flow of events through some operator chain.
-     *
-     * Please note that if the output stream has no listeners, then it will not
-     * start, which means `spy` will never run because no actual event happens in
-     * that case.
-     *
-     * Marble diagram:
-     *
-     * ```text
-     * --1----2-----3-----4--
-     *         debug
-     * --1----2-----3-----4--
-     * ```
-     *
-     * @param {function} labelOrSpy A string to use as the label when printing
-     * debug information on the console, or a 'spy' function that takes an event
-     * as argument, and does not need to return anything.
-     * @return {Stream}
-     */
-    Stream.prototype.debug = function (labelOrSpy) {
-        return new (this.ctor())(new Debug(this, labelOrSpy));
-    };
-    /**
-     * *imitate* changes this current Stream to emit the same events that the
-     * `other` given Stream does. This method returns nothing.
-     *
-     * This method exists to allow one thing: **circular dependency of streams**.
-     * For instance, let's imagine that for some reason you need to create a
-     * circular dependency where stream `first$` depends on stream `second$`
-     * which in turn depends on `first$`:
-     *
-     * <!-- skip-example -->
-     * ```js
-     * import delay from 'xstream/extra/delay'
-     *
-     * var first$ = second$.map(x => x * 10).take(3);
-     * var second$ = first$.map(x => x + 1).startWith(1).compose(delay(100));
-     * ```
-     *
-     * However, that is invalid JavaScript, because `second$` is undefined
-     * on the first line. This is how *imitate* can help solve it:
-     *
-     * ```js
-     * import delay from 'xstream/extra/delay'
-     *
-     * var secondProxy$ = xs.create();
-     * var first$ = secondProxy$.map(x => x * 10).take(3);
-     * var second$ = first$.map(x => x + 1).startWith(1).compose(delay(100));
-     * secondProxy$.imitate(second$);
-     * ```
-     *
-     * We create `secondProxy$` before the others, so it can be used in the
-     * declaration of `first$`. Then, after both `first$` and `second$` are
-     * defined, we hook `secondProxy$` with `second$` with `imitate()` to tell
-     * that they are "the same". `imitate` will not trigger the start of any
-     * stream, it just binds `secondProxy$` and `second$` together.
-     *
-     * The following is an example where `imitate()` is important in Cycle.js
-     * applications. A parent component contains some child components. A child
-     * has an action stream which is given to the parent to define its state:
-     *
-     * <!-- skip-example -->
-     * ```js
-     * const childActionProxy$ = xs.create();
-     * const parent = Parent({...sources, childAction$: childActionProxy$});
-     * const childAction$ = parent.state$.map(s => s.child.action$).flatten();
-     * childActionProxy$.imitate(childAction$);
-     * ```
-     *
-     * Note, though, that **`imitate()` does not support MemoryStreams**. If we
-     * would attempt to imitate a MemoryStream in a circular dependency, we would
-     * either get a race condition (where the symptom would be "nothing happens")
-     * or an infinite cyclic emission of values. It's useful to think about
-     * MemoryStreams as cells in a spreadsheet. It doesn't make any sense to
-     * define a spreadsheet cell `A1` with a formula that depends on `B1` and
-     * cell `B1` defined with a formula that depends on `A1`.
-     *
-     * If you find yourself wanting to use `imitate()` with a
-     * MemoryStream, you should rework your code around `imitate()` to use a
-     * Stream instead. Look for the stream in the circular dependency that
-     * represents an event stream, and that would be a candidate for creating a
-     * proxy Stream which then imitates the target Stream.
-     *
-     * @param {Stream} target The other stream to imitate on the current one. Must
-     * not be a MemoryStream.
-     */
-    Stream.prototype.imitate = function (target) {
-        if (target instanceof MemoryStream)
-            throw new Error('A MemoryStream was given to imitate(), but it only ' +
-                'supports a Stream. Read more about this restriction here: ' +
-                'https://github.com/staltz/xstream#faq');
-        this._target = target;
-        for (var ils = this._ils, N = ils.length, i = 0; i < N; i++)
-            target._add(ils[i]);
-        this._ils = [];
-    };
-    /**
-     * Forces the Stream to emit the given value to its listeners.
-     *
-     * As the name indicates, if you use this, you are most likely doing something
-     * The Wrong Way. Please try to understand the reactive way before using this
-     * method. Use it only when you know what you are doing.
-     *
-     * @param value The "next" value you want to broadcast to all listeners of
-     * this Stream.
-     */
-    Stream.prototype.shamefullySendNext = function (value) {
-        this._n(value);
-    };
-    /**
-     * Forces the Stream to emit the given error to its listeners.
-     *
-     * As the name indicates, if you use this, you are most likely doing something
-     * The Wrong Way. Please try to understand the reactive way before using this
-     * method. Use it only when you know what you are doing.
-     *
-     * @param {any} error The error you want to broadcast to all the listeners of
-     * this Stream.
-     */
-    Stream.prototype.shamefullySendError = function (error) {
-        this._e(error);
-    };
-    /**
-     * Forces the Stream to emit the "completed" event to its listeners.
-     *
-     * As the name indicates, if you use this, you are most likely doing something
-     * The Wrong Way. Please try to understand the reactive way before using this
-     * method. Use it only when you know what you are doing.
-     */
-    Stream.prototype.shamefullySendComplete = function () {
-        this._c();
-    };
-    /**
-     * Adds a "debug" listener to the stream. There can only be one debug
-     * listener, that's why this is 'setDebugListener'. To remove the debug
-     * listener, just call setDebugListener(null).
-     *
-     * A debug listener is like any other listener. The only difference is that a
-     * debug listener is "stealthy": its presence/absence does not trigger the
-     * start/stop of the stream (or the producer inside the stream). This is
-     * useful so you can inspect what is going on without changing the behavior
-     * of the program. If you have an idle stream and you add a normal listener to
-     * it, the stream will start executing. But if you set a debug listener on an
-     * idle stream, it won't start executing (not until the first normal listener
-     * is added).
-     *
-     * As the name indicates, we don't recommend using this method to build app
-     * logic. In fact, in most cases the debug operator works just fine. Only use
-     * this one if you know what you're doing.
-     *
-     * @param {Listener<T>} listener
-     */
-    Stream.prototype.setDebugListener = function (listener) {
-        if (!listener) {
-            this._d = false;
-            this._dl = NO;
-        }
-        else {
-            this._d = true;
-            listener._n = listener.next || noop;
-            listener._e = listener.error || noop;
-            listener._c = listener.complete || noop;
-            this._dl = listener;
-        }
-    };
-    return Stream;
-}());
-/**
- * Blends multiple streams together, emitting events from all of them
- * concurrently.
- *
- * *merge* takes multiple streams as arguments, and creates a stream that
- * behaves like each of the argument streams, in parallel.
- *
- * Marble diagram:
- *
- * ```text
- * --1----2-----3--------4---
- * ----a-----b----c---d------
- *            merge
- * --1-a--2--b--3-c---d--4---
- * ```
- *
- * @factory true
- * @param {Stream} stream1 A stream to merge together with other streams.
- * @param {Stream} stream2 A stream to merge together with other streams. Two
- * or more streams may be given as arguments.
- * @return {Stream}
- */
-Stream.merge = function merge() {
-    var streams = [];
-    for (var _i = 0; _i < arguments.length; _i++) {
-        streams[_i] = arguments[_i];
-    }
-    return new Stream(new Merge(streams));
-};
-/**
- * Combines multiple input streams together to return a stream whose events
- * are arrays that collect the latest events from each input stream.
- *
- * *combine* internally remembers the most recent event from each of the input
- * streams. When any of the input streams emits an event, that event together
- * with all the other saved events are combined into an array. That array will
- * be emitted on the output stream. It's essentially a way of joining together
- * the events from multiple streams.
- *
- * Marble diagram:
- *
- * ```text
- * --1----2-----3--------4---
- * ----a-----b-----c--d------
- *          combine
- * ----1a-2a-2b-3b-3c-3d-4d--
- * ```
- *
- * Note: to minimize garbage collection, *combine* uses the same array
- * instance for each emission.  If you need to compare emissions over time,
- * cache the values with `map` first:
- *
- * ```js
- * import pairwise from 'xstream/extra/pairwise'
- *
- * const stream1 = xs.of(1);
- * const stream2 = xs.of(2);
- *
- * xs.combine(stream1, stream2).map(
- *   combinedEmissions => ([ ...combinedEmissions ])
- * ).compose(pairwise)
- * ```
- *
- * @factory true
- * @param {Stream} stream1 A stream to combine together with other streams.
- * @param {Stream} stream2 A stream to combine together with other streams.
- * Multiple streams, not just two, may be given as arguments.
- * @return {Stream}
- */
-Stream.combine = function combine() {
-    var streams = [];
-    for (var _i = 0; _i < arguments.length; _i++) {
-        streams[_i] = arguments[_i];
-    }
-    return new Stream(new Combine(streams));
-};
-exports.Stream = Stream;
-var MemoryStream = (function (_super) {
-    __extends(MemoryStream, _super);
-    function MemoryStream(producer) {
-        var _this = _super.call(this, producer) || this;
-        _this._has = false;
-        return _this;
-    }
-    MemoryStream.prototype._n = function (x) {
-        this._v = x;
-        this._has = true;
-        _super.prototype._n.call(this, x);
-    };
-    MemoryStream.prototype._add = function (il) {
-        var ta = this._target;
-        if (ta !== NO)
-            return ta._add(il);
-        var a = this._ils;
-        a.push(il);
-        if (a.length > 1) {
-            if (this._has)
-                il._n(this._v);
-            return;
-        }
-        if (this._stopID !== NO) {
-            if (this._has)
-                il._n(this._v);
-            clearTimeout(this._stopID);
-            this._stopID = NO;
-        }
-        else if (this._has)
-            il._n(this._v);
-        else {
-            var p = this._prod;
-            if (p !== NO)
-                p._start(this);
-        }
-    };
-    MemoryStream.prototype._stopNow = function () {
-        this._has = false;
-        _super.prototype._stopNow.call(this);
-    };
-    MemoryStream.prototype._x = function () {
-        this._has = false;
-        _super.prototype._x.call(this);
-    };
-    MemoryStream.prototype.map = function (project) {
-        return this._map(project);
-    };
-    MemoryStream.prototype.mapTo = function (projectedValue) {
-        return _super.prototype.mapTo.call(this, projectedValue);
-    };
-    MemoryStream.prototype.take = function (amount) {
-        return _super.prototype.take.call(this, amount);
-    };
-    MemoryStream.prototype.endWhen = function (other) {
-        return _super.prototype.endWhen.call(this, other);
-    };
-    MemoryStream.prototype.replaceError = function (replace) {
-        return _super.prototype.replaceError.call(this, replace);
-    };
-    MemoryStream.prototype.remember = function () {
-        return this;
-    };
-    MemoryStream.prototype.debug = function (labelOrSpy) {
-        return _super.prototype.debug.call(this, labelOrSpy);
-    };
-    return MemoryStream;
-}(Stream));
-exports.MemoryStream = MemoryStream;
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.default = Stream;
-//# sourceMappingURL=index.js.map
-  })();
-});
-
 require.register("@cycle/dom/lib/BodyDOMSource.js", function(exports, require, module) {
   require = __makeRelativeRequire(require, {}, "@cycle/dom");
   (function() {
@@ -4784,6 +2481,283 @@ function vnode(sel, data, children, text, elm) {
 exports.vnode = vnode;
 exports.default = vnode;
 //# sourceMappingURL=vnode.js.map
+  })();
+});
+
+require.register("@cycle/history/lib/captureClicks.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "@cycle/history");
+  (function() {
+    "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var xstream_1 = require("xstream");
+var CLICK_EVENT = typeof document !== 'undefined' && document.ontouchstart ?
+    'touchstart' :
+    'click';
+function which(ev) {
+    if (typeof window === 'undefined') {
+        return false;
+    }
+    var e = ev || window.event;
+    return e.which === null ? e.button : e.which;
+}
+function sameOrigin(href) {
+    if (typeof window === 'undefined') {
+        return false;
+    }
+    return href && href.indexOf(window.location.origin) === 0;
+}
+function makeClickListener(push) {
+    return function clickListener(event) {
+        if (which(event) !== 1) {
+            return;
+        }
+        if (event.metaKey || event.ctrlKey || event.shiftKey) {
+            return;
+        }
+        if (event.defaultPrevented) {
+            return;
+        }
+        var element = event.target;
+        while (element && element.nodeName !== 'A') {
+            element = element.parentNode;
+        }
+        if (!element || element.nodeName !== 'A') {
+            return;
+        }
+        if (element.hasAttribute('download') ||
+            element.getAttribute('rel') === 'external') {
+            return;
+        }
+        if (element.target) {
+            return;
+        }
+        var link = element.getAttribute('href');
+        if (link && link.indexOf('mailto:') > -1 || link.charAt(0) === '#') {
+            return;
+        }
+        if (!sameOrigin(element.href)) {
+            return;
+        }
+        event.preventDefault();
+        var pathname = element.pathname, search = element.search, _a = element.hash, hash = _a === void 0 ? '' : _a;
+        push(pathname + search + hash);
+    };
+}
+function captureAnchorClicks(push) {
+    var listener = makeClickListener(push);
+    if (typeof window !== 'undefined') {
+        document.addEventListener(CLICK_EVENT, listener, false);
+    }
+}
+function captureClicks(historyDriver) {
+    return function historyDriverWithClickCapture(sink$) {
+        var internalSink$ = xstream_1.default.create();
+        captureAnchorClicks(function (pathname) {
+            internalSink$._n({ type: 'push', pathname: pathname });
+        });
+        sink$._add(internalSink$);
+        return historyDriver(internalSink$);
+    };
+}
+exports.captureClicks = captureClicks;
+//# sourceMappingURL=captureClicks.js.map
+  })();
+});
+
+require.register("@cycle/history/lib/createHistory$.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "@cycle/history");
+  (function() {
+    "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var xstream_1 = require("xstream");
+function createHistory$(history, sink$) {
+    var history$ = xstream_1.default.createWithMemory().startWith(history.location);
+    var call = makeCallOnHistory(history);
+    var unlisten = history.listen(function (loc) { history$._n(loc); });
+    var sub = sink$.subscribe(createObserver(call, unlisten));
+    history$.dispose = function () { sub.unsubscribe(); unlisten(); };
+    return history$;
+}
+exports.createHistory$ = createHistory$;
+;
+function makeCallOnHistory(history) {
+    return function call(input) {
+        if (input.type === 'push') {
+            history.push(input.pathname, input.state);
+        }
+        if (input.type === 'replace') {
+            history.replace(input.pathname, input.state);
+        }
+        if (input.type === 'go') {
+            history.go(input.amount);
+        }
+        if (input.type === 'goBack') {
+            history.goBack();
+        }
+        if (input.type === 'goForward') {
+            history.goForward();
+        }
+    };
+}
+function createObserver(call, unlisten) {
+    return {
+        next: function (input) {
+            if (typeof input === 'string') {
+                call({ type: 'push', pathname: input });
+            }
+            else {
+                call(input);
+            }
+        },
+        error: function (err) { unlisten(); },
+        complete: function () { setTimeout(unlisten); },
+    };
+}
+//# sourceMappingURL=createHistory$.js.map
+  })();
+});
+
+require.register("@cycle/history/lib/drivers.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "@cycle/history");
+  (function() {
+    "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var history_1 = require("history");
+var createHistory_1 = require("./createHistory$");
+function makeHistoryDriver(options) {
+    var history;
+    if (options && options.hasOwnProperty('createHref')) {
+        history = options;
+    }
+    else {
+        history = history_1.createBrowserHistory(options);
+    }
+    return function historyDriver(sink$) {
+        return createHistory_1.createHistory$(history, sink$);
+    };
+}
+exports.makeHistoryDriver = makeHistoryDriver;
+function makeServerHistoryDriver(options) {
+    var history = history_1.createMemoryHistory(options);
+    return function serverHistoryDriver(sink$) {
+        return createHistory_1.createHistory$(history, sink$);
+    };
+}
+exports.makeServerHistoryDriver = makeServerHistoryDriver;
+function makeHashHistoryDriver(options) {
+    var history = history_1.createHashHistory(options);
+    return function hashHistoryDriver(sink$) {
+        return createHistory_1.createHistory$(history, sink$);
+    };
+}
+exports.makeHashHistoryDriver = makeHashHistoryDriver;
+//# sourceMappingURL=drivers.js.map
+  })();
+});
+
+require.register("@cycle/history/lib/index.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "@cycle/history");
+  (function() {
+    "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * Create a History Driver to be used in the browser.
+ *
+ * This is a function which, when called, returns a History Driver for Cycle.js
+ * apps. The driver is also a function, and it takes a stream of new locations
+ * (strings representing pathnames or location objects) as input, and outputs
+ * another stream of locations that were applied. Example:
+ *
+ * ```js
+ * import {run} from '@cycle/run';
+ * import {makeHistoryDriver} from '@cycle/history';
+ *
+ * function main(sources){
+ *   return {
+ *     // updates the browser URL every 500ms
+ *     history: xs.periodic(500).map(i => `url-${i}`)
+ *   };
+ * }
+ *
+ * const drivers = {
+ *   history: makeHistoryDriver()
+ * };
+ *
+ * run(main, drivers);
+ * ```
+ *
+ * @param {object|History|MemoryHistory} options an object with some options specific to
+ * this driver. These options are the same as for the corresponding
+ * `createBrowserHistory()` function in History v4. Check its
+ * [docs](https://github.com/mjackson/history/tree/v4.5.1#usage) for a good
+ * description on the options. Alternatively, a History object can also be sent
+ * in case the external consumer needs direct access to any of the direct History
+ * methods
+ * @return {Function} the History Driver function
+ * @function makeHistoryDriver
+ */
+var drivers_1 = require("./drivers");
+exports.makeHistoryDriver = drivers_1.makeHistoryDriver;
+/**
+ * Create a History Driver for older browsers using hash routing.
+ *
+ * This is a function which, when called, returns a History Driver for Cycle.js
+ * apps. The driver is also a function, and it takes a stream of new locations
+ * (strings representing pathnames or location objects) as input, and outputs
+ * another stream of locations that were applied.
+ *
+ * @param {object} options an object with some options specific to
+ * this driver. These options are the same as for the corresponding
+ * `createHashHistory()` function in History v4. Check its
+ * [docs](https://github.com/mjackson/history/tree/v4.5.1#usage) for a good
+ * description on the options.
+ * @return {Function} the History Driver function
+ * @function makeHashHistoryDriver
+ */
+var drivers_2 = require("./drivers");
+exports.makeHashHistoryDriver = drivers_2.makeHashHistoryDriver;
+/**
+ * Wraps a History Driver to add "click capturing" functionality.
+ *
+ * If you want to intercept and handle any click event that leads to a link,
+ * like on an `<a>` element, you pass your existing driver (e.g. created from
+ * `makeHistoryDriver()`) as argument and this function will return another
+ * driver of the same nature, but including click capturing logic. Example:
+ *
+ * ```js
+ * import {captureClicks, makeHistoryDriver} from '@cycle/history';
+ *
+ * const drivers = {
+ *   history: captureClicks(makeHistoryDriver())
+ * };
+ * ```
+ *
+ * @param {Function} driver an existing History Driver function.
+ * @return {Function} a History Driver function
+ * @function captureClicks
+ */
+var captureClicks_1 = require("./captureClicks");
+exports.captureClicks = captureClicks_1.captureClicks;
+/**
+ * Create a History Driver to be used in non-browser enviroments such as
+ * server-side Node.js.
+ *
+ * This is a function which, when called, returns a History Driver for Cycle.js
+ * apps. The driver is also a function, and it takes a stream of new locations
+ * (strings representing pathnames or location objects) as input, and outputs
+ * another stream of locations that were applied.
+ *
+ * @param {object} options an object with some options specific to
+ * this driver. These options are the same as for the corresponding
+ * `createMemoryHistory()` function in History v4. Check its
+ * [docs](https://github.com/mjackson/history/tree/v4.5.1#usage) for a good
+ * description on the options.
+ * @return {Function} the History Driver function
+ * @function makeServerHistoryDriver
+ */
+var drivers_3 = require("./drivers");
+exports.makeServerHistoryDriver = drivers_3.makeServerHistoryDriver;
+//# sourceMappingURL=index.js.map
   })();
 });
 
@@ -8931,8 +6905,123 @@ Emitter.prototype.hasListeners = function(event){
   })();
 });
 
-require.register("cycle-onionify/lib/index.js", function(exports, require, module) {
-  require = __makeRelativeRequire(require, {}, "cycle-onionify");
+require.register("cyclic-router/lib/RouterSource.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "cyclic-router");
+  (function() {
+    "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var util = require("./util");
+var adapt_1 = require("@cycle/run/lib/adapt");
+function isStrictlyInScope(namespace, path) {
+    var pathParts = util.splitPath(path);
+    return namespace.every(function (v, i) {
+        return pathParts[i] === v;
+    });
+}
+function getFilteredPath(namespace, path) {
+    var pathParts = util.splitPath(path);
+    return '/' + util.filterPath(pathParts, namespace);
+}
+var RouterSource = (function () {
+    function RouterSource(_history$, _namespace, _createHref, _routeMatcher) {
+        this._history$ = _history$;
+        this._namespace = _namespace;
+        this._createHref = _createHref;
+        this._routeMatcher = _routeMatcher;
+        this.history$ = adapt_1.adapt(this._history$);
+    }
+    RouterSource.prototype.path = function (pathname) {
+        var scopedNamespace = this._namespace.concat(util.splitPath(pathname));
+        var scopedHistory$ = this._history$
+            .filter(function (_a) {
+            var _path = _a.pathname;
+            return isStrictlyInScope(scopedNamespace, _path);
+        })
+            .remember();
+        var createHref = this._createHref;
+        return new RouterSource(scopedHistory$, scopedNamespace, createHref, this._routeMatcher);
+    };
+    RouterSource.prototype.define = function (routes, routeMatcher) {
+        var _this = this;
+        var namespace = this._namespace;
+        var _createHref = this._createHref;
+        var createHref = util.makeCreateHref(namespace, _createHref);
+        var match$ = this._history$
+            .map(function (location) {
+            var matcher = routeMatcher || _this._routeMatcher;
+            var filteredPath = getFilteredPath(namespace, location.pathname);
+            var _a = matcher(filteredPath, routes), path = _a.path, value = _a.value;
+            return { path: path, value: value, location: location, createHref: createHref };
+        })
+            .remember();
+        var out$ = adapt_1.adapt(match$);
+        out$.createHref = createHref;
+        return out$;
+    };
+    RouterSource.prototype.createHref = function (path) {
+        return util.makeCreateHref(this._namespace, this._createHref)(path);
+    };
+    return RouterSource;
+}());
+exports.RouterSource = RouterSource;
+//# sourceMappingURL=RouterSource.js.map
+  })();
+});
+
+require.register("cyclic-router/lib/index.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "cyclic-router");
+  (function() {
+    "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var makeRouterDriver_1 = require("./makeRouterDriver");
+exports.makeRouterDriver = makeRouterDriver_1.makeRouterDriver;
+var RouterSource_1 = require("./RouterSource");
+exports.RouterSource = RouterSource_1.RouterSource;
+//# sourceMappingURL=index.js.map
+  })();
+});
+
+require.register("cyclic-router/lib/makeRouterDriver.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "cyclic-router");
+  (function() {
+    "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var history_1 = require("@cycle/history");
+var RouterSource_1 = require("./RouterSource");
+/**
+ * Instantiates an new router driver function using the same arguments required
+ * by @cycle/history.
+ * @public
+ * @method makeRouterDriver
+ * @return {routerDriver} The router driver function
+ */
+function makeRouterDriver(history, routeMatcher) {
+    if (!history) {
+        throw new Error('Cyclic router must be given a history object');
+    }
+    var historyDriver = history_1.makeHistoryDriver(history);
+    /**
+     * The actual router driver.
+     * @public
+     * @typedef {routerDriver}
+     * @name routerDriver
+     * @method routerDriver
+     * @param  {Stream<string|Location>} sink$ - This is the same input that the
+     * history driver would expect.
+     * @return {routerAPI}
+     */
+    return function routerDriver(sink$) {
+        var history$ = historyDriver(sink$).remember();
+        return new RouterSource_1.RouterSource(history$, [], history.createHref, routeMatcher);
+    };
+}
+exports.makeRouterDriver = makeRouterDriver;
+//# sourceMappingURL=makeRouterDriver.js.map
+  })();
+});
+
+require.register("cyclic-router/lib/util.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "cyclic-router");
   (function() {
     "use strict";
 var __assign = (this && this.__assign) || Object.assign || function(t) {
@@ -8944,133 +7033,50 @@ var __assign = (this && this.__assign) || Object.assign || function(t) {
     return t;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var xstream_1 = require("xstream");
-var dropRepeats_1 = require("xstream/extra/dropRepeats");
-var adapt_1 = require("@cycle/run/lib/adapt");
-function pick(selector) {
-    if (typeof selector === 'string') {
-        return function pickWithString(sinksArray$) {
-            return adapt_1.adapt(xstream_1.default.fromObservable(sinksArray$)
-                .map(function (sinksArray) { return sinksArray.map(function (sinks) { return sinks[selector]; }); }));
-        };
-    }
-    else {
-        return function pickWithFunction(sinksArray$) {
-            return adapt_1.adapt(xstream_1.default.fromObservable(sinksArray$)
-                .map(function (sinksArray) { return sinksArray.map(selector); }));
-        };
-    }
+function splitPath(path) {
+    return path.split('/').filter(function (p) { return p.length > 0; });
 }
-exports.pick = pick;
-function mix(aggregator) {
-    return function mixOperator(streamArray$) {
-        return adapt_1.adapt(xstream_1.default.fromObservable(streamArray$)
-            .map(function (streamArray) { return aggregator.apply(void 0, streamArray); })
-            .flatten());
+exports.splitPath = splitPath;
+function filterPath(pathParts, namespace) {
+    return pathParts.filter(function (part) { return namespace.indexOf(part) < 0; }).join('/');
+}
+exports.filterPath = filterPath;
+var startsWith = function (param, value) { return param[0] === value; };
+var startsWith2 = function (param, value1, value2) {
+    return param[0] === value1 && param[1] === value2;
+};
+function makeCreateHref(namespace, _createHref) {
+    /**
+     * Function used to create HREFs that are properly namespaced
+     * @typedef {createHref}
+     * @name createHref
+     * @method createHref
+     * @param  {string} path - the HREF that will be appended to the current
+     * namespace
+     * @return {string} a fully qualified HREF composed from the current
+     * namespace and the path provided
+     */
+    return function createHref(location) {
+        if (typeof location === 'object' && location !== null) {
+            var fullPath = "" + namespace.join('/') + location.pathname;
+            return startsWith(fullPath, '/') || startsWith2(fullPath, '#', '/')
+                ? _createHref(__assign({}, location, { pathname: fullPath }))
+                : _createHref(__assign({}, location, { pathname: '/' + fullPath }));
+        }
+        else if (typeof location === 'string') {
+            var fullPath = "" + namespace.join('/') + location;
+            return startsWith(fullPath, '/') || startsWith2(fullPath, '#', '/')
+                ? _createHref({
+                    pathname: fullPath
+                })
+                : _createHref({
+                    pathname: '/' + fullPath
+                });
+        }
     };
 }
-exports.mix = mix;
-function makeGetter(scope) {
-    if (typeof scope === 'string' || typeof scope === 'number') {
-        return function lensGet(state) {
-            if (typeof state === 'undefined') {
-                return void 0;
-            }
-            else {
-                return state[scope];
-            }
-        };
-    }
-    else {
-        return scope.get;
-    }
-}
-function makeSetter(scope) {
-    if (typeof scope === 'string' || typeof scope === 'number') {
-        return function lensSet(state, childState) {
-            if (Array.isArray(state)) {
-                return updateArrayEntry(state, scope, childState);
-            }
-            else if (typeof state === 'undefined') {
-                return _a = {}, _a[scope] = childState, _a;
-            }
-            else {
-                return __assign({}, state, (_b = {}, _b[scope] = childState, _b));
-            }
-            var _a, _b;
-        };
-    }
-    else {
-        return scope.set;
-    }
-}
-function updateArrayEntry(array, scope, newVal) {
-    if (newVal === array[scope]) {
-        return array;
-    }
-    var index = parseInt(scope);
-    if (typeof newVal === 'undefined') {
-        return array.filter(function (val, i) { return i !== index; });
-    }
-    return array.map(function (val, i) { return i === index ? newVal : val; });
-}
-function isolateSource(source, scope) {
-    return source.select(scope);
-}
-exports.isolateSource = isolateSource;
-function isolateSink(innerReducer$, scope) {
-    var get = makeGetter(scope);
-    var set = makeSetter(scope);
-    return innerReducer$
-        .map(function (innerReducer) { return function outerReducer(outer) {
-        var prevInner = get(outer);
-        var nextInner = innerReducer(prevInner);
-        if (prevInner === nextInner) {
-            return outer;
-        }
-        else {
-            return set(outer, nextInner);
-        }
-    }; });
-}
-exports.isolateSink = isolateSink;
-var StateSource = (function () {
-    function StateSource(stream, name) {
-        this.isolateSource = isolateSource;
-        this.isolateSink = isolateSink;
-        this._name = name;
-        this._state$ = stream.compose(dropRepeats_1.default()).remember();
-        this.state$ = adapt_1.adapt(this._state$);
-        if (!name) {
-            return;
-        }
-        this._state$._isCycleSource = name;
-    }
-    StateSource.prototype.select = function (scope) {
-        var get = makeGetter(scope);
-        return new StateSource(this._state$.map(get).filter(function (s) { return typeof s !== 'undefined'; }), null);
-    };
-    return StateSource;
-}());
-exports.StateSource = StateSource;
-function onionify(main, name) {
-    if (name === void 0) { name = 'onion'; }
-    return function mainOnionified(sources) {
-        var reducerMimic$ = xstream_1.default.create();
-        var state$ = reducerMimic$
-            .fold(function (state, reducer) { return reducer(state); }, void 0)
-            .drop(1);
-        sources[name] = new StateSource(state$, name);
-        var sinks = main(sources);
-        if (sinks[name]) {
-            var stream$ = xstream_1.default.fromObservable(sinks[name]);
-            reducerMimic$.imitate(stream$);
-        }
-        return sinks;
-    };
-}
-exports.default = onionify;
-//# sourceMappingURL=index.js.map
+exports.makeCreateHref = makeCreateHref;
+//# sourceMappingURL=util.js.map
   })();
 });
 
@@ -10780,6 +8786,1186 @@ exports.methods = methods;
   })();
 });
 
+require.register("history/DOMUtils.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {"transform":["loose-envify"]}, "history");
+  (function() {
+    'use strict';
+
+exports.__esModule = true;
+var canUseDOM = exports.canUseDOM = !!(typeof window !== 'undefined' && window.document && window.document.createElement);
+
+var addEventListener = exports.addEventListener = function addEventListener(node, event, listener) {
+  return node.addEventListener ? node.addEventListener(event, listener, false) : node.attachEvent('on' + event, listener);
+};
+
+var removeEventListener = exports.removeEventListener = function removeEventListener(node, event, listener) {
+  return node.removeEventListener ? node.removeEventListener(event, listener, false) : node.detachEvent('on' + event, listener);
+};
+
+var getConfirmation = exports.getConfirmation = function getConfirmation(message, callback) {
+  return callback(window.confirm(message));
+}; // eslint-disable-line no-alert
+
+/**
+ * Returns true if the HTML5 history API is supported. Taken from Modernizr.
+ *
+ * https://github.com/Modernizr/Modernizr/blob/master/LICENSE
+ * https://github.com/Modernizr/Modernizr/blob/master/feature-detects/history.js
+ * changed to avoid false negatives for Windows Phones: https://github.com/reactjs/react-router/issues/586
+ */
+var supportsHistory = exports.supportsHistory = function supportsHistory() {
+  var ua = window.navigator.userAgent;
+
+  if ((ua.indexOf('Android 2.') !== -1 || ua.indexOf('Android 4.0') !== -1) && ua.indexOf('Mobile Safari') !== -1 && ua.indexOf('Chrome') === -1 && ua.indexOf('Windows Phone') === -1) return false;
+
+  return window.history && 'pushState' in window.history;
+};
+
+/**
+ * Returns true if browser fires popstate on hash change.
+ * IE10 and IE11 do not.
+ */
+var supportsPopStateOnHashChange = exports.supportsPopStateOnHashChange = function supportsPopStateOnHashChange() {
+  return window.navigator.userAgent.indexOf('Trident') === -1;
+};
+
+/**
+ * Returns false if using go(n) with hash history causes a full page reload.
+ */
+var supportsGoWithoutReloadUsingHash = exports.supportsGoWithoutReloadUsingHash = function supportsGoWithoutReloadUsingHash() {
+  return window.navigator.userAgent.indexOf('Firefox') === -1;
+};
+
+/**
+ * Returns true if a given popstate event is an extraneous WebKit event.
+ * Accounts for the fact that Chrome on iOS fires real popstate events
+ * containing undefined state when pressing the back button.
+ */
+var isExtraneousPopstateEvent = exports.isExtraneousPopstateEvent = function isExtraneousPopstateEvent(event) {
+  return event.state === undefined && navigator.userAgent.indexOf('CriOS') === -1;
+};
+  })();
+});
+
+require.register("history/LocationUtils.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {"transform":["loose-envify"]}, "history");
+  (function() {
+    'use strict';
+
+exports.__esModule = true;
+exports.locationsAreEqual = exports.createLocation = undefined;
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _resolvePathname = require('resolve-pathname');
+
+var _resolvePathname2 = _interopRequireDefault(_resolvePathname);
+
+var _valueEqual = require('value-equal');
+
+var _valueEqual2 = _interopRequireDefault(_valueEqual);
+
+var _PathUtils = require('./PathUtils');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var createLocation = exports.createLocation = function createLocation(path, state, key, currentLocation) {
+  var location = void 0;
+  if (typeof path === 'string') {
+    // Two-arg form: push(path, state)
+    location = (0, _PathUtils.parsePath)(path);
+    location.state = state;
+  } else {
+    // One-arg form: push(location)
+    location = _extends({}, path);
+
+    if (location.pathname === undefined) location.pathname = '';
+
+    if (location.search) {
+      if (location.search.charAt(0) !== '?') location.search = '?' + location.search;
+    } else {
+      location.search = '';
+    }
+
+    if (location.hash) {
+      if (location.hash.charAt(0) !== '#') location.hash = '#' + location.hash;
+    } else {
+      location.hash = '';
+    }
+
+    if (state !== undefined && location.state === undefined) location.state = state;
+  }
+
+  try {
+    location.pathname = decodeURI(location.pathname);
+  } catch (e) {
+    if (e instanceof URIError) {
+      throw new URIError('Pathname "' + location.pathname + '" could not be decoded. ' + 'This is likely caused by an invalid percent-encoding.');
+    } else {
+      throw e;
+    }
+  }
+
+  if (key) location.key = key;
+
+  if (currentLocation) {
+    // Resolve incomplete/relative pathname relative to current location.
+    if (!location.pathname) {
+      location.pathname = currentLocation.pathname;
+    } else if (location.pathname.charAt(0) !== '/') {
+      location.pathname = (0, _resolvePathname2.default)(location.pathname, currentLocation.pathname);
+    }
+  } else {
+    // When there is no prior location and pathname is empty, set it to /
+    if (!location.pathname) {
+      location.pathname = '/';
+    }
+  }
+
+  return location;
+};
+
+var locationsAreEqual = exports.locationsAreEqual = function locationsAreEqual(a, b) {
+  return a.pathname === b.pathname && a.search === b.search && a.hash === b.hash && a.key === b.key && (0, _valueEqual2.default)(a.state, b.state);
+};
+  })();
+});
+
+require.register("history/PathUtils.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {"transform":["loose-envify"]}, "history");
+  (function() {
+    'use strict';
+
+exports.__esModule = true;
+var addLeadingSlash = exports.addLeadingSlash = function addLeadingSlash(path) {
+  return path.charAt(0) === '/' ? path : '/' + path;
+};
+
+var stripLeadingSlash = exports.stripLeadingSlash = function stripLeadingSlash(path) {
+  return path.charAt(0) === '/' ? path.substr(1) : path;
+};
+
+var hasBasename = exports.hasBasename = function hasBasename(path, prefix) {
+  return new RegExp('^' + prefix + '(\\/|\\?|#|$)', 'i').test(path);
+};
+
+var stripBasename = exports.stripBasename = function stripBasename(path, prefix) {
+  return hasBasename(path, prefix) ? path.substr(prefix.length) : path;
+};
+
+var stripTrailingSlash = exports.stripTrailingSlash = function stripTrailingSlash(path) {
+  return path.charAt(path.length - 1) === '/' ? path.slice(0, -1) : path;
+};
+
+var parsePath = exports.parsePath = function parsePath(path) {
+  var pathname = path || '/';
+  var search = '';
+  var hash = '';
+
+  var hashIndex = pathname.indexOf('#');
+  if (hashIndex !== -1) {
+    hash = pathname.substr(hashIndex);
+    pathname = pathname.substr(0, hashIndex);
+  }
+
+  var searchIndex = pathname.indexOf('?');
+  if (searchIndex !== -1) {
+    search = pathname.substr(searchIndex);
+    pathname = pathname.substr(0, searchIndex);
+  }
+
+  return {
+    pathname: pathname,
+    search: search === '?' ? '' : search,
+    hash: hash === '#' ? '' : hash
+  };
+};
+
+var createPath = exports.createPath = function createPath(location) {
+  var pathname = location.pathname,
+      search = location.search,
+      hash = location.hash;
+
+
+  var path = pathname || '/';
+
+  if (search && search !== '?') path += search.charAt(0) === '?' ? search : '?' + search;
+
+  if (hash && hash !== '#') path += hash.charAt(0) === '#' ? hash : '#' + hash;
+
+  return path;
+};
+  })();
+});
+
+require.register("history/createBrowserHistory.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {"transform":["loose-envify"]}, "history");
+  (function() {
+    'use strict';
+
+exports.__esModule = true;
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _warning = require('warning');
+
+var _warning2 = _interopRequireDefault(_warning);
+
+var _invariant = require('invariant');
+
+var _invariant2 = _interopRequireDefault(_invariant);
+
+var _LocationUtils = require('./LocationUtils');
+
+var _PathUtils = require('./PathUtils');
+
+var _createTransitionManager = require('./createTransitionManager');
+
+var _createTransitionManager2 = _interopRequireDefault(_createTransitionManager);
+
+var _DOMUtils = require('./DOMUtils');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var PopStateEvent = 'popstate';
+var HashChangeEvent = 'hashchange';
+
+var getHistoryState = function getHistoryState() {
+  try {
+    return window.history.state || {};
+  } catch (e) {
+    // IE 11 sometimes throws when accessing window.history.state
+    // See https://github.com/ReactTraining/history/pull/289
+    return {};
+  }
+};
+
+/**
+ * Creates a history object that uses the HTML5 history API including
+ * pushState, replaceState, and the popstate event.
+ */
+var createBrowserHistory = function createBrowserHistory() {
+  var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+  (0, _invariant2.default)(_DOMUtils.canUseDOM, 'Browser history needs a DOM');
+
+  var globalHistory = window.history;
+  var canUseHistory = (0, _DOMUtils.supportsHistory)();
+  var needsHashChangeListener = !(0, _DOMUtils.supportsPopStateOnHashChange)();
+
+  var _props$forceRefresh = props.forceRefresh,
+      forceRefresh = _props$forceRefresh === undefined ? false : _props$forceRefresh,
+      _props$getUserConfirm = props.getUserConfirmation,
+      getUserConfirmation = _props$getUserConfirm === undefined ? _DOMUtils.getConfirmation : _props$getUserConfirm,
+      _props$keyLength = props.keyLength,
+      keyLength = _props$keyLength === undefined ? 6 : _props$keyLength;
+
+  var basename = props.basename ? (0, _PathUtils.stripTrailingSlash)((0, _PathUtils.addLeadingSlash)(props.basename)) : '';
+
+  var getDOMLocation = function getDOMLocation(historyState) {
+    var _ref = historyState || {},
+        key = _ref.key,
+        state = _ref.state;
+
+    var _window$location = window.location,
+        pathname = _window$location.pathname,
+        search = _window$location.search,
+        hash = _window$location.hash;
+
+
+    var path = pathname + search + hash;
+
+    (0, _warning2.default)(!basename || (0, _PathUtils.hasBasename)(path, basename), 'You are attempting to use a basename on a page whose URL path does not begin ' + 'with the basename. Expected path "' + path + '" to begin with "' + basename + '".');
+
+    if (basename) path = (0, _PathUtils.stripBasename)(path, basename);
+
+    return (0, _LocationUtils.createLocation)(path, state, key);
+  };
+
+  var createKey = function createKey() {
+    return Math.random().toString(36).substr(2, keyLength);
+  };
+
+  var transitionManager = (0, _createTransitionManager2.default)();
+
+  var setState = function setState(nextState) {
+    _extends(history, nextState);
+
+    history.length = globalHistory.length;
+
+    transitionManager.notifyListeners(history.location, history.action);
+  };
+
+  var handlePopState = function handlePopState(event) {
+    // Ignore extraneous popstate events in WebKit.
+    if ((0, _DOMUtils.isExtraneousPopstateEvent)(event)) return;
+
+    handlePop(getDOMLocation(event.state));
+  };
+
+  var handleHashChange = function handleHashChange() {
+    handlePop(getDOMLocation(getHistoryState()));
+  };
+
+  var forceNextPop = false;
+
+  var handlePop = function handlePop(location) {
+    if (forceNextPop) {
+      forceNextPop = false;
+      setState();
+    } else {
+      var action = 'POP';
+
+      transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+        if (ok) {
+          setState({ action: action, location: location });
+        } else {
+          revertPop(location);
+        }
+      });
+    }
+  };
+
+  var revertPop = function revertPop(fromLocation) {
+    var toLocation = history.location;
+
+    // TODO: We could probably make this more reliable by
+    // keeping a list of keys we've seen in sessionStorage.
+    // Instead, we just default to 0 for keys we don't know.
+
+    var toIndex = allKeys.indexOf(toLocation.key);
+
+    if (toIndex === -1) toIndex = 0;
+
+    var fromIndex = allKeys.indexOf(fromLocation.key);
+
+    if (fromIndex === -1) fromIndex = 0;
+
+    var delta = toIndex - fromIndex;
+
+    if (delta) {
+      forceNextPop = true;
+      go(delta);
+    }
+  };
+
+  var initialLocation = getDOMLocation(getHistoryState());
+  var allKeys = [initialLocation.key];
+
+  // Public interface
+
+  var createHref = function createHref(location) {
+    return basename + (0, _PathUtils.createPath)(location);
+  };
+
+  var push = function push(path, state) {
+    (0, _warning2.default)(!((typeof path === 'undefined' ? 'undefined' : _typeof(path)) === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to push when the 1st ' + 'argument is a location-like object that already has state; it is ignored');
+
+    var action = 'PUSH';
+    var location = (0, _LocationUtils.createLocation)(path, state, createKey(), history.location);
+
+    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+      if (!ok) return;
+
+      var href = createHref(location);
+      var key = location.key,
+          state = location.state;
+
+
+      if (canUseHistory) {
+        globalHistory.pushState({ key: key, state: state }, null, href);
+
+        if (forceRefresh) {
+          window.location.href = href;
+        } else {
+          var prevIndex = allKeys.indexOf(history.location.key);
+          var nextKeys = allKeys.slice(0, prevIndex === -1 ? 0 : prevIndex + 1);
+
+          nextKeys.push(location.key);
+          allKeys = nextKeys;
+
+          setState({ action: action, location: location });
+        }
+      } else {
+        (0, _warning2.default)(state === undefined, 'Browser history cannot push state in browsers that do not support HTML5 history');
+
+        window.location.href = href;
+      }
+    });
+  };
+
+  var replace = function replace(path, state) {
+    (0, _warning2.default)(!((typeof path === 'undefined' ? 'undefined' : _typeof(path)) === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to replace when the 1st ' + 'argument is a location-like object that already has state; it is ignored');
+
+    var action = 'REPLACE';
+    var location = (0, _LocationUtils.createLocation)(path, state, createKey(), history.location);
+
+    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+      if (!ok) return;
+
+      var href = createHref(location);
+      var key = location.key,
+          state = location.state;
+
+
+      if (canUseHistory) {
+        globalHistory.replaceState({ key: key, state: state }, null, href);
+
+        if (forceRefresh) {
+          window.location.replace(href);
+        } else {
+          var prevIndex = allKeys.indexOf(history.location.key);
+
+          if (prevIndex !== -1) allKeys[prevIndex] = location.key;
+
+          setState({ action: action, location: location });
+        }
+      } else {
+        (0, _warning2.default)(state === undefined, 'Browser history cannot replace state in browsers that do not support HTML5 history');
+
+        window.location.replace(href);
+      }
+    });
+  };
+
+  var go = function go(n) {
+    globalHistory.go(n);
+  };
+
+  var goBack = function goBack() {
+    return go(-1);
+  };
+
+  var goForward = function goForward() {
+    return go(1);
+  };
+
+  var listenerCount = 0;
+
+  var checkDOMListeners = function checkDOMListeners(delta) {
+    listenerCount += delta;
+
+    if (listenerCount === 1) {
+      (0, _DOMUtils.addEventListener)(window, PopStateEvent, handlePopState);
+
+      if (needsHashChangeListener) (0, _DOMUtils.addEventListener)(window, HashChangeEvent, handleHashChange);
+    } else if (listenerCount === 0) {
+      (0, _DOMUtils.removeEventListener)(window, PopStateEvent, handlePopState);
+
+      if (needsHashChangeListener) (0, _DOMUtils.removeEventListener)(window, HashChangeEvent, handleHashChange);
+    }
+  };
+
+  var isBlocked = false;
+
+  var block = function block() {
+    var prompt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
+    var unblock = transitionManager.setPrompt(prompt);
+
+    if (!isBlocked) {
+      checkDOMListeners(1);
+      isBlocked = true;
+    }
+
+    return function () {
+      if (isBlocked) {
+        isBlocked = false;
+        checkDOMListeners(-1);
+      }
+
+      return unblock();
+    };
+  };
+
+  var listen = function listen(listener) {
+    var unlisten = transitionManager.appendListener(listener);
+    checkDOMListeners(1);
+
+    return function () {
+      checkDOMListeners(-1);
+      unlisten();
+    };
+  };
+
+  var history = {
+    length: globalHistory.length,
+    action: 'POP',
+    location: initialLocation,
+    createHref: createHref,
+    push: push,
+    replace: replace,
+    go: go,
+    goBack: goBack,
+    goForward: goForward,
+    block: block,
+    listen: listen
+  };
+
+  return history;
+};
+
+exports.default = createBrowserHistory;
+  })();
+});
+
+require.register("history/createHashHistory.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {"transform":["loose-envify"]}, "history");
+  (function() {
+    'use strict';
+
+exports.__esModule = true;
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _warning = require('warning');
+
+var _warning2 = _interopRequireDefault(_warning);
+
+var _invariant = require('invariant');
+
+var _invariant2 = _interopRequireDefault(_invariant);
+
+var _LocationUtils = require('./LocationUtils');
+
+var _PathUtils = require('./PathUtils');
+
+var _createTransitionManager = require('./createTransitionManager');
+
+var _createTransitionManager2 = _interopRequireDefault(_createTransitionManager);
+
+var _DOMUtils = require('./DOMUtils');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var HashChangeEvent = 'hashchange';
+
+var HashPathCoders = {
+  hashbang: {
+    encodePath: function encodePath(path) {
+      return path.charAt(0) === '!' ? path : '!/' + (0, _PathUtils.stripLeadingSlash)(path);
+    },
+    decodePath: function decodePath(path) {
+      return path.charAt(0) === '!' ? path.substr(1) : path;
+    }
+  },
+  noslash: {
+    encodePath: _PathUtils.stripLeadingSlash,
+    decodePath: _PathUtils.addLeadingSlash
+  },
+  slash: {
+    encodePath: _PathUtils.addLeadingSlash,
+    decodePath: _PathUtils.addLeadingSlash
+  }
+};
+
+var getHashPath = function getHashPath() {
+  // We can't use window.location.hash here because it's not
+  // consistent across browsers - Firefox will pre-decode it!
+  var href = window.location.href;
+  var hashIndex = href.indexOf('#');
+  return hashIndex === -1 ? '' : href.substring(hashIndex + 1);
+};
+
+var pushHashPath = function pushHashPath(path) {
+  return window.location.hash = path;
+};
+
+var replaceHashPath = function replaceHashPath(path) {
+  var hashIndex = window.location.href.indexOf('#');
+
+  window.location.replace(window.location.href.slice(0, hashIndex >= 0 ? hashIndex : 0) + '#' + path);
+};
+
+var createHashHistory = function createHashHistory() {
+  var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+  (0, _invariant2.default)(_DOMUtils.canUseDOM, 'Hash history needs a DOM');
+
+  var globalHistory = window.history;
+  var canGoWithoutReload = (0, _DOMUtils.supportsGoWithoutReloadUsingHash)();
+
+  var _props$getUserConfirm = props.getUserConfirmation,
+      getUserConfirmation = _props$getUserConfirm === undefined ? _DOMUtils.getConfirmation : _props$getUserConfirm,
+      _props$hashType = props.hashType,
+      hashType = _props$hashType === undefined ? 'slash' : _props$hashType;
+
+  var basename = props.basename ? (0, _PathUtils.stripTrailingSlash)((0, _PathUtils.addLeadingSlash)(props.basename)) : '';
+
+  var _HashPathCoders$hashT = HashPathCoders[hashType],
+      encodePath = _HashPathCoders$hashT.encodePath,
+      decodePath = _HashPathCoders$hashT.decodePath;
+
+
+  var getDOMLocation = function getDOMLocation() {
+    var path = decodePath(getHashPath());
+
+    (0, _warning2.default)(!basename || (0, _PathUtils.hasBasename)(path, basename), 'You are attempting to use a basename on a page whose URL path does not begin ' + 'with the basename. Expected path "' + path + '" to begin with "' + basename + '".');
+
+    if (basename) path = (0, _PathUtils.stripBasename)(path, basename);
+
+    return (0, _LocationUtils.createLocation)(path);
+  };
+
+  var transitionManager = (0, _createTransitionManager2.default)();
+
+  var setState = function setState(nextState) {
+    _extends(history, nextState);
+
+    history.length = globalHistory.length;
+
+    transitionManager.notifyListeners(history.location, history.action);
+  };
+
+  var forceNextPop = false;
+  var ignorePath = null;
+
+  var handleHashChange = function handleHashChange() {
+    var path = getHashPath();
+    var encodedPath = encodePath(path);
+
+    if (path !== encodedPath) {
+      // Ensure we always have a properly-encoded hash.
+      replaceHashPath(encodedPath);
+    } else {
+      var location = getDOMLocation();
+      var prevLocation = history.location;
+
+      if (!forceNextPop && (0, _LocationUtils.locationsAreEqual)(prevLocation, location)) return; // A hashchange doesn't always == location change.
+
+      if (ignorePath === (0, _PathUtils.createPath)(location)) return; // Ignore this change; we already setState in push/replace.
+
+      ignorePath = null;
+
+      handlePop(location);
+    }
+  };
+
+  var handlePop = function handlePop(location) {
+    if (forceNextPop) {
+      forceNextPop = false;
+      setState();
+    } else {
+      var action = 'POP';
+
+      transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+        if (ok) {
+          setState({ action: action, location: location });
+        } else {
+          revertPop(location);
+        }
+      });
+    }
+  };
+
+  var revertPop = function revertPop(fromLocation) {
+    var toLocation = history.location;
+
+    // TODO: We could probably make this more reliable by
+    // keeping a list of paths we've seen in sessionStorage.
+    // Instead, we just default to 0 for paths we don't know.
+
+    var toIndex = allPaths.lastIndexOf((0, _PathUtils.createPath)(toLocation));
+
+    if (toIndex === -1) toIndex = 0;
+
+    var fromIndex = allPaths.lastIndexOf((0, _PathUtils.createPath)(fromLocation));
+
+    if (fromIndex === -1) fromIndex = 0;
+
+    var delta = toIndex - fromIndex;
+
+    if (delta) {
+      forceNextPop = true;
+      go(delta);
+    }
+  };
+
+  // Ensure the hash is encoded properly before doing anything else.
+  var path = getHashPath();
+  var encodedPath = encodePath(path);
+
+  if (path !== encodedPath) replaceHashPath(encodedPath);
+
+  var initialLocation = getDOMLocation();
+  var allPaths = [(0, _PathUtils.createPath)(initialLocation)];
+
+  // Public interface
+
+  var createHref = function createHref(location) {
+    return '#' + encodePath(basename + (0, _PathUtils.createPath)(location));
+  };
+
+  var push = function push(path, state) {
+    (0, _warning2.default)(state === undefined, 'Hash history cannot push state; it is ignored');
+
+    var action = 'PUSH';
+    var location = (0, _LocationUtils.createLocation)(path, undefined, undefined, history.location);
+
+    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+      if (!ok) return;
+
+      var path = (0, _PathUtils.createPath)(location);
+      var encodedPath = encodePath(basename + path);
+      var hashChanged = getHashPath() !== encodedPath;
+
+      if (hashChanged) {
+        // We cannot tell if a hashchange was caused by a PUSH, so we'd
+        // rather setState here and ignore the hashchange. The caveat here
+        // is that other hash histories in the page will consider it a POP.
+        ignorePath = path;
+        pushHashPath(encodedPath);
+
+        var prevIndex = allPaths.lastIndexOf((0, _PathUtils.createPath)(history.location));
+        var nextPaths = allPaths.slice(0, prevIndex === -1 ? 0 : prevIndex + 1);
+
+        nextPaths.push(path);
+        allPaths = nextPaths;
+
+        setState({ action: action, location: location });
+      } else {
+        (0, _warning2.default)(false, 'Hash history cannot PUSH the same path; a new entry will not be added to the history stack');
+
+        setState();
+      }
+    });
+  };
+
+  var replace = function replace(path, state) {
+    (0, _warning2.default)(state === undefined, 'Hash history cannot replace state; it is ignored');
+
+    var action = 'REPLACE';
+    var location = (0, _LocationUtils.createLocation)(path, undefined, undefined, history.location);
+
+    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+      if (!ok) return;
+
+      var path = (0, _PathUtils.createPath)(location);
+      var encodedPath = encodePath(basename + path);
+      var hashChanged = getHashPath() !== encodedPath;
+
+      if (hashChanged) {
+        // We cannot tell if a hashchange was caused by a REPLACE, so we'd
+        // rather setState here and ignore the hashchange. The caveat here
+        // is that other hash histories in the page will consider it a POP.
+        ignorePath = path;
+        replaceHashPath(encodedPath);
+      }
+
+      var prevIndex = allPaths.indexOf((0, _PathUtils.createPath)(history.location));
+
+      if (prevIndex !== -1) allPaths[prevIndex] = path;
+
+      setState({ action: action, location: location });
+    });
+  };
+
+  var go = function go(n) {
+    (0, _warning2.default)(canGoWithoutReload, 'Hash history go(n) causes a full page reload in this browser');
+
+    globalHistory.go(n);
+  };
+
+  var goBack = function goBack() {
+    return go(-1);
+  };
+
+  var goForward = function goForward() {
+    return go(1);
+  };
+
+  var listenerCount = 0;
+
+  var checkDOMListeners = function checkDOMListeners(delta) {
+    listenerCount += delta;
+
+    if (listenerCount === 1) {
+      (0, _DOMUtils.addEventListener)(window, HashChangeEvent, handleHashChange);
+    } else if (listenerCount === 0) {
+      (0, _DOMUtils.removeEventListener)(window, HashChangeEvent, handleHashChange);
+    }
+  };
+
+  var isBlocked = false;
+
+  var block = function block() {
+    var prompt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
+    var unblock = transitionManager.setPrompt(prompt);
+
+    if (!isBlocked) {
+      checkDOMListeners(1);
+      isBlocked = true;
+    }
+
+    return function () {
+      if (isBlocked) {
+        isBlocked = false;
+        checkDOMListeners(-1);
+      }
+
+      return unblock();
+    };
+  };
+
+  var listen = function listen(listener) {
+    var unlisten = transitionManager.appendListener(listener);
+    checkDOMListeners(1);
+
+    return function () {
+      checkDOMListeners(-1);
+      unlisten();
+    };
+  };
+
+  var history = {
+    length: globalHistory.length,
+    action: 'POP',
+    location: initialLocation,
+    createHref: createHref,
+    push: push,
+    replace: replace,
+    go: go,
+    goBack: goBack,
+    goForward: goForward,
+    block: block,
+    listen: listen
+  };
+
+  return history;
+};
+
+exports.default = createHashHistory;
+  })();
+});
+
+require.register("history/createMemoryHistory.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {"transform":["loose-envify"]}, "history");
+  (function() {
+    'use strict';
+
+exports.__esModule = true;
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _warning = require('warning');
+
+var _warning2 = _interopRequireDefault(_warning);
+
+var _PathUtils = require('./PathUtils');
+
+var _LocationUtils = require('./LocationUtils');
+
+var _createTransitionManager = require('./createTransitionManager');
+
+var _createTransitionManager2 = _interopRequireDefault(_createTransitionManager);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var clamp = function clamp(n, lowerBound, upperBound) {
+  return Math.min(Math.max(n, lowerBound), upperBound);
+};
+
+/**
+ * Creates a history object that stores locations in memory.
+ */
+var createMemoryHistory = function createMemoryHistory() {
+  var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  var getUserConfirmation = props.getUserConfirmation,
+      _props$initialEntries = props.initialEntries,
+      initialEntries = _props$initialEntries === undefined ? ['/'] : _props$initialEntries,
+      _props$initialIndex = props.initialIndex,
+      initialIndex = _props$initialIndex === undefined ? 0 : _props$initialIndex,
+      _props$keyLength = props.keyLength,
+      keyLength = _props$keyLength === undefined ? 6 : _props$keyLength;
+
+
+  var transitionManager = (0, _createTransitionManager2.default)();
+
+  var setState = function setState(nextState) {
+    _extends(history, nextState);
+
+    history.length = history.entries.length;
+
+    transitionManager.notifyListeners(history.location, history.action);
+  };
+
+  var createKey = function createKey() {
+    return Math.random().toString(36).substr(2, keyLength);
+  };
+
+  var index = clamp(initialIndex, 0, initialEntries.length - 1);
+  var entries = initialEntries.map(function (entry) {
+    return typeof entry === 'string' ? (0, _LocationUtils.createLocation)(entry, undefined, createKey()) : (0, _LocationUtils.createLocation)(entry, undefined, entry.key || createKey());
+  });
+
+  // Public interface
+
+  var createHref = _PathUtils.createPath;
+
+  var push = function push(path, state) {
+    (0, _warning2.default)(!((typeof path === 'undefined' ? 'undefined' : _typeof(path)) === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to push when the 1st ' + 'argument is a location-like object that already has state; it is ignored');
+
+    var action = 'PUSH';
+    var location = (0, _LocationUtils.createLocation)(path, state, createKey(), history.location);
+
+    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+      if (!ok) return;
+
+      var prevIndex = history.index;
+      var nextIndex = prevIndex + 1;
+
+      var nextEntries = history.entries.slice(0);
+      if (nextEntries.length > nextIndex) {
+        nextEntries.splice(nextIndex, nextEntries.length - nextIndex, location);
+      } else {
+        nextEntries.push(location);
+      }
+
+      setState({
+        action: action,
+        location: location,
+        index: nextIndex,
+        entries: nextEntries
+      });
+    });
+  };
+
+  var replace = function replace(path, state) {
+    (0, _warning2.default)(!((typeof path === 'undefined' ? 'undefined' : _typeof(path)) === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to replace when the 1st ' + 'argument is a location-like object that already has state; it is ignored');
+
+    var action = 'REPLACE';
+    var location = (0, _LocationUtils.createLocation)(path, state, createKey(), history.location);
+
+    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+      if (!ok) return;
+
+      history.entries[history.index] = location;
+
+      setState({ action: action, location: location });
+    });
+  };
+
+  var go = function go(n) {
+    var nextIndex = clamp(history.index + n, 0, history.entries.length - 1);
+
+    var action = 'POP';
+    var location = history.entries[nextIndex];
+
+    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+      if (ok) {
+        setState({
+          action: action,
+          location: location,
+          index: nextIndex
+        });
+      } else {
+        // Mimic the behavior of DOM histories by
+        // causing a render after a cancelled POP.
+        setState();
+      }
+    });
+  };
+
+  var goBack = function goBack() {
+    return go(-1);
+  };
+
+  var goForward = function goForward() {
+    return go(1);
+  };
+
+  var canGo = function canGo(n) {
+    var nextIndex = history.index + n;
+    return nextIndex >= 0 && nextIndex < history.entries.length;
+  };
+
+  var block = function block() {
+    var prompt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+    return transitionManager.setPrompt(prompt);
+  };
+
+  var listen = function listen(listener) {
+    return transitionManager.appendListener(listener);
+  };
+
+  var history = {
+    length: entries.length,
+    action: 'POP',
+    location: entries[index],
+    index: index,
+    entries: entries,
+    createHref: createHref,
+    push: push,
+    replace: replace,
+    go: go,
+    goBack: goBack,
+    goForward: goForward,
+    canGo: canGo,
+    block: block,
+    listen: listen
+  };
+
+  return history;
+};
+
+exports.default = createMemoryHistory;
+  })();
+});
+
+require.register("history/createTransitionManager.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {"transform":["loose-envify"]}, "history");
+  (function() {
+    'use strict';
+
+exports.__esModule = true;
+
+var _warning = require('warning');
+
+var _warning2 = _interopRequireDefault(_warning);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var createTransitionManager = function createTransitionManager() {
+  var prompt = null;
+
+  var setPrompt = function setPrompt(nextPrompt) {
+    (0, _warning2.default)(prompt == null, 'A history supports only one prompt at a time');
+
+    prompt = nextPrompt;
+
+    return function () {
+      if (prompt === nextPrompt) prompt = null;
+    };
+  };
+
+  var confirmTransitionTo = function confirmTransitionTo(location, action, getUserConfirmation, callback) {
+    // TODO: If another transition starts while we're still confirming
+    // the previous one, we may end up in a weird state. Figure out the
+    // best way to handle this.
+    if (prompt != null) {
+      var result = typeof prompt === 'function' ? prompt(location, action) : prompt;
+
+      if (typeof result === 'string') {
+        if (typeof getUserConfirmation === 'function') {
+          getUserConfirmation(result, callback);
+        } else {
+          (0, _warning2.default)(false, 'A history needs a getUserConfirmation function in order to use a prompt message');
+
+          callback(true);
+        }
+      } else {
+        // Return false from a transition hook to cancel the transition.
+        callback(result !== false);
+      }
+    } else {
+      callback(true);
+    }
+  };
+
+  var listeners = [];
+
+  var appendListener = function appendListener(fn) {
+    var isActive = true;
+
+    var listener = function listener() {
+      if (isActive) fn.apply(undefined, arguments);
+    };
+
+    listeners.push(listener);
+
+    return function () {
+      isActive = false;
+      listeners = listeners.filter(function (item) {
+        return item !== listener;
+      });
+    };
+  };
+
+  var notifyListeners = function notifyListeners() {
+    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    listeners.forEach(function (listener) {
+      return listener.apply(undefined, args);
+    });
+  };
+
+  return {
+    setPrompt: setPrompt,
+    confirmTransitionTo: confirmTransitionTo,
+    appendListener: appendListener,
+    notifyListeners: notifyListeners
+  };
+};
+
+exports.default = createTransitionManager;
+  })();
+});
+
+require.register("history/index.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {"transform":["loose-envify"]}, "history");
+  (function() {
+    'use strict';
+
+exports.__esModule = true;
+exports.createPath = exports.parsePath = exports.locationsAreEqual = exports.createLocation = exports.createMemoryHistory = exports.createHashHistory = exports.createBrowserHistory = undefined;
+
+var _LocationUtils = require('./LocationUtils');
+
+Object.defineProperty(exports, 'createLocation', {
+  enumerable: true,
+  get: function get() {
+    return _LocationUtils.createLocation;
+  }
+});
+Object.defineProperty(exports, 'locationsAreEqual', {
+  enumerable: true,
+  get: function get() {
+    return _LocationUtils.locationsAreEqual;
+  }
+});
+
+var _PathUtils = require('./PathUtils');
+
+Object.defineProperty(exports, 'parsePath', {
+  enumerable: true,
+  get: function get() {
+    return _PathUtils.parsePath;
+  }
+});
+Object.defineProperty(exports, 'createPath', {
+  enumerable: true,
+  get: function get() {
+    return _PathUtils.createPath;
+  }
+});
+
+var _createBrowserHistory2 = require('./createBrowserHistory');
+
+var _createBrowserHistory3 = _interopRequireDefault(_createBrowserHistory2);
+
+var _createHashHistory2 = require('./createHashHistory');
+
+var _createHashHistory3 = _interopRequireDefault(_createHashHistory2);
+
+var _createMemoryHistory2 = require('./createMemoryHistory');
+
+var _createMemoryHistory3 = _interopRequireDefault(_createMemoryHistory2);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.createBrowserHistory = _createBrowserHistory3.default;
+exports.createHashHistory = _createHashHistory3.default;
+exports.createMemoryHistory = _createMemoryHistory3.default;
+  })();
+});
+
 require.register("ieee754/index.js", function(exports, require, module) {
   require = __makeRelativeRequire(require, {}, "ieee754");
   (function() {
@@ -10867,6 +10053,63 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
   buffer[offset + i - d] |= s * 128
 }
+  })();
+});
+
+require.register("invariant/browser.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "invariant");
+  (function() {
+    /**
+ * Copyright 2013-2015, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ */
+
+'use strict';
+
+/**
+ * Use invariant() to assert state which your program assumes to be true.
+ *
+ * Provide sprintf-style format (only %s is supported) and arguments
+ * to provide information about what broke and what you were
+ * expecting.
+ *
+ * The invariant message will be stripped in production, but the invariant
+ * will remain to ensure logic does not differ in production.
+ */
+
+var invariant = function(condition, format, a, b, c, d, e, f) {
+  if ('development' !== 'production') {
+    if (format === undefined) {
+      throw new Error('invariant requires an error message argument');
+    }
+  }
+
+  if (!condition) {
+    var error;
+    if (format === undefined) {
+      error = new Error(
+        'Minified exception occurred; use the non-minified dev environment ' +
+        'for the full error message and additional helpful warnings.'
+      );
+    } else {
+      var args = [a, b, c, d, e, f];
+      var argIndex = 0;
+      error = new Error(
+        format.replace(/%s/g, function() { return args[argIndex++]; })
+      );
+      error.name = 'Invariant Violation';
+    }
+
+    error.framesToPop = 1; // we don't care about invariant's own frame
+    throw error;
+  }
+};
+
+module.exports = invariant;
   })();
 });
 
@@ -28162,6 +27405,82 @@ process.umask = function() { return 0; };
   })();
 });
 
+require.register("resolve-pathname/index.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "resolve-pathname");
+  (function() {
+    'use strict';
+
+var isAbsolute = function isAbsolute(pathname) {
+  return pathname.charAt(0) === '/';
+};
+
+// About 1.5x faster than the two-arg version of Array#splice()
+var spliceOne = function spliceOne(list, index) {
+  for (var i = index, k = i + 1, n = list.length; k < n; i += 1, k += 1) {
+    list[i] = list[k];
+  }list.pop();
+};
+
+// This implementation is based heavily on node's url.parse
+var resolvePathname = function resolvePathname(to) {
+  var from = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
+
+  var toParts = to && to.split('/') || [];
+  var fromParts = from && from.split('/') || [];
+
+  var isToAbs = to && isAbsolute(to);
+  var isFromAbs = from && isAbsolute(from);
+  var mustEndAbs = isToAbs || isFromAbs;
+
+  if (to && isAbsolute(to)) {
+    // to is absolute
+    fromParts = toParts;
+  } else if (toParts.length) {
+    // to is relative, drop the filename
+    fromParts.pop();
+    fromParts = fromParts.concat(toParts);
+  }
+
+  if (!fromParts.length) return '/';
+
+  var hasTrailingSlash = void 0;
+  if (fromParts.length) {
+    var last = fromParts[fromParts.length - 1];
+    hasTrailingSlash = last === '.' || last === '..' || last === '';
+  } else {
+    hasTrailingSlash = false;
+  }
+
+  var up = 0;
+  for (var i = fromParts.length; i >= 0; i--) {
+    var part = fromParts[i];
+
+    if (part === '.') {
+      spliceOne(fromParts, i);
+    } else if (part === '..') {
+      spliceOne(fromParts, i);
+      up++;
+    } else if (up) {
+      spliceOne(fromParts, i);
+      up--;
+    }
+  }
+
+  if (!mustEndAbs) for (; up--; up) {
+    fromParts.unshift('..');
+  }if (mustEndAbs && fromParts[0] !== '' && (!fromParts[0] || !isAbsolute(fromParts[0]))) fromParts.unshift('');
+
+  var result = fromParts.join('/');
+
+  if (hasTrailingSlash && result.substr(-1) !== '/') result += '/';
+
+  return result;
+};
+
+module.exports = resolvePathname;
+  })();
+});
+
 require.register("snabbdom-jsx/snabbdom-jsx.js", function(exports, require, module) {
   require = __makeRelativeRequire(require, {}, "snabbdom-jsx");
   (function() {
@@ -30108,6 +29427,153 @@ exports.cleanHeader = function(header, shouldStripCookie){
   })();
 });
 
+require.register("switch-path/lib/commonjs/index.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "switch-path");
+  (function() {
+    "use strict";
+var util_1 = require("./util");
+function switchPathInputGuard(path, routes) {
+    if (!util_1.isPattern(path)) {
+        throw new Error("First parameter to switchPath must be a route path.");
+    }
+    if (!util_1.isRouteDefinition(routes)) {
+        throw new Error("Second parameter to switchPath must be an object " +
+            "containing route patterns.");
+    }
+}
+function validatePath(sourcePath, matchedPath) {
+    var sourceParts = util_1.splitPath(sourcePath);
+    var matchedParts = util_1.splitPath(matchedPath);
+    for (var i = 0; i < matchedParts.length; ++i) {
+        if (matchedParts[i] !== sourceParts[i]) {
+            return null;
+        }
+    }
+    return "/" + util_1.extractPartial(sourcePath, matchedPath);
+}
+function betterMatch(candidate, reference) {
+    if (!util_1.isNotNull(candidate)) {
+        return false;
+    }
+    if (!util_1.isNotNull(reference)) {
+        return true;
+    }
+    if (!validatePath(candidate, reference)) {
+        return false;
+    }
+    return candidate.length >= reference.length;
+}
+function matchesWithParams(sourcePath, pattern) {
+    var sourceParts = util_1.splitPath(sourcePath);
+    var patternParts = util_1.splitPath(pattern);
+    var params = patternParts
+        .map(function (part, i) { return util_1.isParam(part) ? sourceParts[i] : null; })
+        .filter(util_1.isNotNull);
+    var matched = patternParts
+        .every(function (part, i) { return util_1.isParam(part) || part === sourceParts[i]; });
+    return matched ? params : [];
+}
+function getParamFnValue(paramFn, params) {
+    var _paramFn = util_1.isRouteDefinition(paramFn) ? paramFn["/"] : paramFn;
+    return typeof _paramFn === "function" ? _paramFn.apply(void 0, params) : _paramFn;
+}
+function validate(_a) {
+    var sourcePath = _a.sourcePath, matchedPath = _a.matchedPath, matchedValue = _a.matchedValue, routes = _a.routes;
+    var path = matchedPath ? validatePath(sourcePath, matchedPath) : null;
+    var value = matchedValue;
+    if (!path) {
+        path = routes["*"] ? sourcePath : null;
+        value = path ? routes["*"] : null;
+    }
+    return { path: path, value: value };
+}
+function switchPath(sourcePath, routes) {
+    switchPathInputGuard(sourcePath, routes);
+    var matchedPath = null;
+    var matchedValue = null;
+    util_1.traverseRoutes(routes, function matchPattern(pattern) {
+        if (sourcePath.search(pattern) === 0 && betterMatch(pattern, matchedPath)) {
+            matchedPath = pattern;
+            matchedValue = routes[pattern];
+        }
+        var params = matchesWithParams(sourcePath, pattern).filter(Boolean);
+        if (params.length > 0 && betterMatch(sourcePath, matchedPath)) {
+            matchedPath = util_1.extractPartial(sourcePath, pattern);
+            matchedValue = getParamFnValue(routes[pattern], params);
+        }
+        if (util_1.isRouteDefinition(routes[pattern]) && params.length === 0) {
+            if (sourcePath !== "/") {
+                var child = switchPath(util_1.unprefixed(sourcePath, pattern) || "/", routes[pattern]);
+                var nestedPath = pattern + child.path;
+                if (child.path !== null &&
+                    betterMatch(nestedPath, matchedPath)) {
+                    matchedPath = nestedPath;
+                    matchedValue = child.value;
+                }
+            }
+        }
+    });
+    return validate({ sourcePath: sourcePath, matchedPath: matchedPath, matchedValue: matchedValue, routes: routes });
+}
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = switchPath;
+//# sourceMappingURL=index.js.map
+  })();
+});
+
+require.register("switch-path/lib/commonjs/util.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "switch-path");
+  (function() {
+    "use strict";
+function isPattern(candidate) {
+    return candidate.charAt(0) === "/" || candidate === "*";
+}
+exports.isPattern = isPattern;
+function isRouteDefinition(candidate) {
+    return !candidate || typeof candidate !== "object" ?
+        false : isPattern(Object.keys(candidate)[0]);
+}
+exports.isRouteDefinition = isRouteDefinition;
+function traverseRoutes(routes, callback) {
+    var keys = Object.keys(routes);
+    for (var i = 0; i < keys.length; ++i) {
+        var pattern = keys[i];
+        if (pattern === "*")
+            continue;
+        callback(pattern);
+    }
+}
+exports.traverseRoutes = traverseRoutes;
+function isNotNull(candidate) {
+    return candidate !== null;
+}
+exports.isNotNull = isNotNull;
+function splitPath(path) {
+    return path.split("/").filter(function (s) { return !!s; });
+}
+exports.splitPath = splitPath;
+function isParam(candidate) {
+    return candidate.match(/:\w+/) !== null;
+}
+exports.isParam = isParam;
+function extractPartial(sourcePath, pattern) {
+    var patternParts = splitPath(pattern);
+    var sourceParts = splitPath(sourcePath);
+    var matchedParts = [];
+    for (var i = 0; i < patternParts.length; ++i) {
+        matchedParts.push(sourceParts[i]);
+    }
+    return matchedParts.filter(isNotNull).join("/");
+}
+exports.extractPartial = extractPartial;
+function unprefixed(fullString, prefix) {
+    return fullString.split(prefix)[1];
+}
+exports.unprefixed = unprefixed;
+//# sourceMappingURL=util.js.map
+  })();
+});
+
 require.register("symbol-observable/index.js", function(exports, require, module) {
   require = __makeRelativeRequire(require, {}, "symbol-observable");
   (function() {
@@ -30176,6 +29642,118 @@ function symbolObservablePonyfill(root) {
 
 	return result;
 };
+  })();
+});
+
+require.register("value-equal/index.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "value-equal");
+  (function() {
+    'use strict';
+
+exports.__esModule = true;
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+var valueEqual = function valueEqual(a, b) {
+  if (a === b) return true;
+
+  if (a == null || b == null) return false;
+
+  if (Array.isArray(a)) return Array.isArray(b) && a.length === b.length && a.every(function (item, index) {
+    return valueEqual(item, b[index]);
+  });
+
+  var aType = typeof a === 'undefined' ? 'undefined' : _typeof(a);
+  var bType = typeof b === 'undefined' ? 'undefined' : _typeof(b);
+
+  if (aType !== bType) return false;
+
+  if (aType === 'object') {
+    var aValue = a.valueOf();
+    var bValue = b.valueOf();
+
+    if (aValue !== a || bValue !== b) return valueEqual(aValue, bValue);
+
+    var aKeys = Object.keys(a);
+    var bKeys = Object.keys(b);
+
+    if (aKeys.length !== bKeys.length) return false;
+
+    return aKeys.every(function (key) {
+      return valueEqual(a[key], b[key]);
+    });
+  }
+
+  return false;
+};
+
+exports.default = valueEqual;
+  })();
+});
+
+require.register("warning/browser.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "warning");
+  (function() {
+    /**
+ * Copyright 2014-2015, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ */
+
+'use strict';
+
+/**
+ * Similar to invariant but only logs a warning if the condition is not met.
+ * This can be used to log issues in development environments in critical
+ * paths. Removing the logging code for production environments will keep the
+ * same logic and follow the same code paths.
+ */
+
+var warning = function() {};
+
+if ('development' !== 'production') {
+  warning = function(condition, format, args) {
+    var len = arguments.length;
+    args = new Array(len > 2 ? len - 2 : 0);
+    for (var key = 2; key < len; key++) {
+      args[key - 2] = arguments[key];
+    }
+    if (format === undefined) {
+      throw new Error(
+        '`warning(condition, format, ...args)` requires a warning ' +
+        'message argument'
+      );
+    }
+
+    if (format.length < 10 || (/^[s\W]*$/).test(format)) {
+      throw new Error(
+        'The warning format should be able to uniquely identify this ' +
+        'warning. Please, use a more descriptive format than: ' + format
+      );
+    }
+
+    if (!condition) {
+      var argIndex = 0;
+      var message = 'Warning: ' +
+        format.replace(/%s/g, function() {
+          return args[argIndex++];
+        });
+      if (typeof console !== 'undefined') {
+        console.error(message);
+      }
+      try {
+        // This error was thrown as a convenience so that you can use this stack
+        // to find the callsite that caused this warning to fire.
+        throw new Error(message);
+      } catch(x) {}
+    }
+  };
+}
+
+module.exports = warning;
   })();
 });
 
@@ -32379,19 +31957,22 @@ exports.default = Stream;
 //# sourceMappingURL=index.js.map
   })();
 });
-require.alias("@cycle/collection/lib/collection.js", "@cycle/collection");
 require.alias("@cycle/dom/lib/index.js", "@cycle/dom");
 require.alias("@cycle/dom/node_modules/snabbdom/snabbdom.js", "@cycle/dom/node_modules/snabbdom");
+require.alias("@cycle/history/lib/index.js", "@cycle/history");
 require.alias("@cycle/http/lib/index.js", "@cycle/http");
 require.alias("@cycle/isolate/lib/index.js", "@cycle/isolate");
 require.alias("@cycle/run/lib/index.js", "@cycle/run");
-require.alias("cycle-onionify/lib/index.js", "cycle-onionify");
+require.alias("cyclic-router/lib/index.js", "cyclic-router");
+require.alias("invariant/browser.js", "invariant");
 require.alias("lodash/lodash.js", "lodash");
 require.alias("process/browser.js", "process");
 require.alias("snabbdom-jsx/snabbdom-jsx.js", "snabbdom-jsx");
 require.alias("superagent/lib/client.js", "superagent");
 require.alias("superagent/lib/client.js", "superagent/lib/node/index");
-require.alias("superagent/lib/client.js", "superagent/lib/node/index.js");require.register("___globals___", function(exports, require, module) {
+require.alias("superagent/lib/client.js", "superagent/lib/node/index.js");
+require.alias("switch-path/lib/commonjs/index.js", "switch-path");
+require.alias("warning/browser.js", "warning");require.register("___globals___", function(exports, require, module) {
   
 });})();require('___globals___');
 
