@@ -20,7 +20,7 @@ function main(sources) {
   const match$ = sources.router.define({
     '/game': MainGame,
     '/end': EndGame,
-    // '*': NotFound,
+     '*': NotFound,
   });
   
   const page$ = match$.map(({path, value}) =>
