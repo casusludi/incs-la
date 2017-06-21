@@ -33,8 +33,8 @@ function main(sources) {
 
   const sinks = {
     DOM: page$.map(c => c.DOM).flatten(),
-    router: page$.map(c => c.router).flatten().startWith('/game'),
-    HTTP: page$.map(c => c.HTTP).flatten(),
+    router: page$.map(c => c.router).flatten(),//.startWith('/game'),
+    HTTP: page$.filter(c => c.HTTP).map(c => c.HTTP).flatten(),
   };
   
   return sinks;
