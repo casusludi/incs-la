@@ -1,6 +1,5 @@
 import xs from 'xstream';
 import { run } from '@cycle/run';
-import isolate from '@cycle/isolate';
 import { html } from 'snabbdom-jsx';
 import { formatLinks } from '../utils';
 import _ from 'lodash';
@@ -49,7 +48,7 @@ function view(value$) {
         );
 }
 
-function _Witness(sources) {
+export function Witness(sources) {
     const { props$, DOM } = sources;
     const action$ = intent(DOM);
     const value$ = model(props$, action$);
@@ -62,5 +61,3 @@ function _Witness(sources) {
 
     return sinks;
 }
-
-export function Witness(sources) {  return isolate(_Witness)(sources) };
