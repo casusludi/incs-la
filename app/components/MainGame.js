@@ -116,7 +116,7 @@ function _MainGame(sources) {
   const witnesses$ = xs.combine(witnessesData$, path$, currentLocation$, progression$)
   .map(([witnessesData, path, currentLocation, progression]) => 
     Object.keys(witnessesData).map((key, value) =>
-      Witness({
+      isolate(Witness,key)({
         DOM: sources.DOM, 
         props$: xs.of(Object.assign(
           {}, 
