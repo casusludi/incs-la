@@ -32,9 +32,10 @@ function _MainGame(sources) {
   const jsonRequest$ = jsonSinks.request;
   const jsonResponse$ = jsonSinks.JSON;
 
-  const locations$ = jsonResponse$.map( jsonResponse => jsonResponse.locations);
-  const path$ = jsonResponse$.map(jsonResponse => jsonResponse.path);
   const settings$ = jsonResponse$.map(jsonResponse => jsonResponse.settings);
+  const texts$ = jsonResponse$.map(jsonResponse => jsonResponse.texts);
+  const path$ = jsonResponse$.map(jsonResponse => jsonResponse.path);
+  const locations$ = jsonResponse$.map( jsonResponse => jsonResponse.locations);
 
   // Locations management
   const changeLocationProxy$ = xs.create();
@@ -148,32 +149,51 @@ function _MainGame(sources) {
   ).flatten();
   const linksVTree$ = currentLocationLinks$.map(links => xs.combine(...links.map(link => link.DOM))).flatten();
   const TimeManagerVTree$ = timeManagerSinks.DOM;
-  const MapVTree$ = mapSinks.DOM;
+  const mapVTree$ = mapSinks.DOM;
 
-  const DOMSink$ = xs.combine(linksVTree$, changeLocation$, witnessesVTree$, progression$, TimeManagerVTree$, MapVTree$).map(
-      ([linksVTree, changeLocation, witnessesVTree, progression, TimeManagerVTree, MapVTree]) =>
-        <div>
-          <h1>Progression : {progression}</h1>
-          <h2>Elapsed time : {TimeManagerVTree}</h2>
-          <div>
-            {witnessesVTree}
-          </div>
-          <footer>
-            <div class-travel-panel="true">
-              <p>
-                {changeLocation.name ? 'Current : ' + changeLocation.name : ''}
-              </p>
-              <h1></h1>
-              <div selector=".items">
-                {linksVTree}
+  const DOMSink$ = xs.combine(linksVTree$, currentLocation$, witnessesVTree$, progression$, TimeManagerVTree$, mapVTree$, texts$, witnessQuestionned$).map(
+      ([linksVTree, currentLocation, witnessesVTree, progression, TimeManagerVTree, mapVTree, texts, witnessQuestionned]) => {
+        // return <section className="city" style={{backgroundImage: 'url(coucou.png)}} >
+        return (
+          <section className="city" style={{backgroundImage: "url("+currentLocation.image+")"}} >
+            <section className="col-main">
+              <header>
+                <h1>{currentLocation.name}</h1>
+              </header>
+              <section className="place-list" >
+                {witnessesVTree}
+              </section>
+		          <aside className="aside">
+                <div classNames="city-desc scrollable-panel panel">
+                  {currentLocation.desc}
+                </div>
+                <div classNames="panel scrollable-panel">
+                  {texts.gameDescription}
+                </div>
+                <div classNames="game-time panel red-panel">
+                  {TimeManagerVTree}
+                </div>
+              </aside>
+            </section>
+            <footer>
+              <div className="travel-panel">
+                {witnessQuestionned ?
+                  <div>
+                    <div className="travel-labem">{texts.travelLabel}</div>
+                    <nav>
+                      {linksVTree}
+                    </nav>
+                  </div> :
+                  <div>
+                    {texts.travelDescription}
+                  </div>
+                }
               </div>
-              {MapVTree}
-            </div>
-          </footer>
-          <br/>
-          <button selector=".end">END</button>
-        </div>
-    );
+            </footer>
+            {mapVTree}
+          </section>
+        )
+      });
 
   const sinks = {
     DOM: DOMSink$,

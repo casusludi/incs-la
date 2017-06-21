@@ -7,6 +7,13 @@ import {Landmark} from './Landmark';
 
 function intent(DOM){
 
+    const click$ = DOM
+        .select('.js-show-map')
+        .events('click');
+
+    const showMap$ = click$.fold((acc, x) => acc ? false : true, false);
+
+    return showMap$;
 }
 
 function model(props$, DOM){
@@ -47,15 +54,21 @@ function model(props$, DOM){
     return landmarks$;
 }
 
-function view(value$, props$){
+function view(value$, props$, action$){
     const landmarksVTree$ = value$.map(landmarks =>
         xs.combine(...landmarks.map(landmark => landmark.DOM))
     ).flatten();
     
-    const vdom$ = xs.combine(value$, landmarksVTree$, props$).map(([value, landmarksVTree, [settings, locations, currentLinksValues]]) => (
-        <div class-map="true">
-            <img src={settings.images.map} style={ ({position: 'relative', top: '0', left: '0'}) } />
-            {landmarksVTree}
+    const vdom$ = xs.combine(value$, landmarksVTree$, props$, action$).map(([value, landmarksVTree, [settings, locations, currentLinksValues], showMap]) => (
+        <div>
+            <button selector=".js-show-map" type="button" >Show map</button>
+            {showMap ?
+                <div class-map="true">
+                    <img src={settings.images.map} style={ ({position: 'relative', top: '0', left: '0'}) } />
+                    {landmarksVTree}
+                </div>
+                : ""
+            }
         </div>
     ));
 
@@ -71,7 +84,7 @@ function _Map(sources) {
         xs.merge(...landmarks.map(landmark => landmark.changeLocation$))
     ).flatten();
 
-    const vdom$ = view(value$, props$);
+    const vdom$ = view(value$, props$, action$);
 
     const sinks = {
         DOM: vdom$,

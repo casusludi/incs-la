@@ -1,4 +1,25 @@
-img.witness {
+html {
+    height: 100%;
+}
+
+body {
+    height: 100%;
+}
+
+div#app {
+    height: 100%;
+}
+
+section.city {
+    height: 100%;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+section.place-item figure img {
     max-width: 200px;
     max-height: 200px;
 }

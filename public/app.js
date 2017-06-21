@@ -559,14 +559,17 @@ function _MainGame(sources) {
   var jsonRequest$ = jsonSinks.request;
   var jsonResponse$ = jsonSinks.JSON;
 
-  var locations$ = jsonResponse$.map(function (jsonResponse) {
-    return jsonResponse.locations;
+  var settings$ = jsonResponse$.map(function (jsonResponse) {
+    return jsonResponse.settings;
+  });
+  var texts$ = jsonResponse$.map(function (jsonResponse) {
+    return jsonResponse.texts;
   });
   var path$ = jsonResponse$.map(function (jsonResponse) {
     return jsonResponse.path;
   });
-  var settings$ = jsonResponse$.map(function (jsonResponse) {
-    return jsonResponse.settings;
+  var locations$ = jsonResponse$.map(function (jsonResponse) {
+    return jsonResponse.locations;
   });
 
   // Locations management
@@ -673,7 +676,7 @@ function _MainGame(sources) {
         progression = _ref12[3];
 
     return Object.keys(witnessesData).map(function (key, value) {
-      return (0, _Witness.Witness)({
+      return (0, _isolate2.default)(_Witness.Witness, key)({
         DOM: sources.DOM,
         props$: _xstream2.default.of(Object.assign({}, witnessesData[key], path[progression].location === currentLocation.id ? { clue: path[progression].clues[key] } : {}))
       });
@@ -710,63 +713,87 @@ function _MainGame(sources) {
     })));
   }).flatten();
   var TimeManagerVTree$ = timeManagerSinks.DOM;
-  var MapVTree$ = mapSinks.DOM;
+  var mapVTree$ = mapSinks.DOM;
 
-  var DOMSink$ = _xstream2.default.combine(linksVTree$, changeLocation$, witnessesVTree$, progression$, TimeManagerVTree$, MapVTree$).map(function (_ref15) {
-    var _ref16 = _slicedToArray(_ref15, 6),
+  var DOMSink$ = _xstream2.default.combine(linksVTree$, currentLocation$, witnessesVTree$, progression$, TimeManagerVTree$, mapVTree$, texts$, witnessQuestionned$).map(function (_ref15) {
+    var _ref16 = _slicedToArray(_ref15, 8),
         linksVTree = _ref16[0],
-        changeLocation = _ref16[1],
+        currentLocation = _ref16[1],
         witnessesVTree = _ref16[2],
         progression = _ref16[3],
         TimeManagerVTree = _ref16[4],
-        MapVTree = _ref16[5];
+        mapVTree = _ref16[5],
+        texts = _ref16[6],
+        witnessQuestionned = _ref16[7];
 
+    // return <section className="city" style={{backgroundImage: 'url(coucou.png)}} >
     return (0, _snabbdomJsx.html)(
-      'div',
-      null,
+      'section',
+      { className: 'city', style: { backgroundImage: "url(" + currentLocation.image + ")" } },
       (0, _snabbdomJsx.html)(
-        'h1',
-        null,
-        'Progression : ',
-        progression
-      ),
-      (0, _snabbdomJsx.html)(
-        'h2',
-        null,
-        'Elapsed time : ',
-        TimeManagerVTree
-      ),
-      (0, _snabbdomJsx.html)(
-        'div',
-        null,
-        witnessesVTree
+        'section',
+        { className: 'col-main' },
+        (0, _snabbdomJsx.html)(
+          'header',
+          null,
+          (0, _snabbdomJsx.html)(
+            'h1',
+            null,
+            currentLocation.name
+          )
+        ),
+        (0, _snabbdomJsx.html)(
+          'section',
+          { className: 'place-list' },
+          witnessesVTree
+        ),
+        (0, _snabbdomJsx.html)(
+          'aside',
+          { className: 'aside' },
+          (0, _snabbdomJsx.html)(
+            'div',
+            { classNames: 'city-desc scrollable-panel panel' },
+            currentLocation.desc
+          ),
+          (0, _snabbdomJsx.html)(
+            'div',
+            { classNames: 'panel scrollable-panel' },
+            texts.gameDescription
+          ),
+          (0, _snabbdomJsx.html)(
+            'div',
+            { classNames: 'game-time panel red-panel' },
+            TimeManagerVTree
+          )
+        )
       ),
       (0, _snabbdomJsx.html)(
         'footer',
         null,
         (0, _snabbdomJsx.html)(
           'div',
-          { 'class-travel-panel': 'true' },
-          (0, _snabbdomJsx.html)(
-            'p',
-            null,
-            changeLocation.name ? 'Current : ' + changeLocation.name : ''
-          ),
-          (0, _snabbdomJsx.html)('h1', null),
-          (0, _snabbdomJsx.html)(
+          { className: 'travel-panel' },
+          witnessQuestionned ? (0, _snabbdomJsx.html)(
             'div',
-            { selector: '.items' },
-            linksVTree
-          ),
-          MapVTree
+            null,
+            (0, _snabbdomJsx.html)(
+              'div',
+              { className: 'travel-labem' },
+              texts.travelLabel
+            ),
+            (0, _snabbdomJsx.html)(
+              'nav',
+              null,
+              linksVTree
+            )
+          ) : (0, _snabbdomJsx.html)(
+            'div',
+            null,
+            texts.travelDescription
+          )
         )
       ),
-      (0, _snabbdomJsx.html)('br', null),
-      (0, _snabbdomJsx.html)(
-        'button',
-        { selector: '.end' },
-        'END'
-      )
+      mapVTree
     );
   });
 
@@ -813,7 +840,16 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
-function intent(DOM) {}
+function intent(DOM) {
+
+    var click$ = DOM.select('.js-show-map').events('click');
+
+    var showMap$ = click$.fold(function (acc, x) {
+        return acc ? false : true;
+    }, false);
+
+    return showMap$;
+}
 
 function model(props$, DOM) {
     var propsWithPixelCoordinates$ = props$.map(function (_ref) {
@@ -858,27 +894,37 @@ function model(props$, DOM) {
     return landmarks$;
 }
 
-function view(value$, props$) {
+function view(value$, props$, action$) {
     var landmarksVTree$ = value$.map(function (landmarks) {
         return _xstream2.default.combine.apply(_xstream2.default, _toConsumableArray(landmarks.map(function (landmark) {
             return landmark.DOM;
         })));
     }).flatten();
 
-    var vdom$ = _xstream2.default.combine(value$, landmarksVTree$, props$).map(function (_ref3) {
-        var _ref4 = _slicedToArray(_ref3, 3),
+    var vdom$ = _xstream2.default.combine(value$, landmarksVTree$, props$, action$).map(function (_ref3) {
+        var _ref4 = _slicedToArray(_ref3, 4),
             value = _ref4[0],
             landmarksVTree = _ref4[1],
             _ref4$ = _slicedToArray(_ref4[2], 3),
             settings = _ref4$[0],
             locations = _ref4$[1],
-            currentLinksValues = _ref4$[2];
+            currentLinksValues = _ref4$[2],
+            showMap = _ref4[3];
 
         return (0, _snabbdomJsx.html)(
             'div',
-            { 'class-map': 'true' },
-            (0, _snabbdomJsx.html)('img', { src: settings.images.map, style: { position: 'relative', top: '0', left: '0' } }),
-            landmarksVTree
+            null,
+            (0, _snabbdomJsx.html)(
+                'button',
+                { selector: '.js-show-map', type: 'button' },
+                'Show map'
+            ),
+            showMap ? (0, _snabbdomJsx.html)(
+                'div',
+                { 'class-map': 'true' },
+                (0, _snabbdomJsx.html)('img', { src: settings.images.map, style: { position: 'relative', top: '0', left: '0' } }),
+                landmarksVTree
+            ) : ""
         );
     });
 
@@ -898,7 +944,7 @@ function _Map(sources) {
         })));
     }).flatten();
 
-    var vdom$ = view(value$, props$);
+    var vdom$ = view(value$, props$, action$);
 
     var sinks = {
         DOM: vdom$,
@@ -920,7 +966,7 @@ require.register("components/NotFound.js", function(exports, require, module) {
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.EndGame = EndGame;
+exports.NotFound = NotFound;
 
 var _xstream = require('xstream');
 
@@ -936,7 +982,7 @@ var _snabbdomJsx = require('snabbdom-jsx');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function EndGame(sources) {
+function NotFound(sources) {
     var previousPageClick$ = sources.DOM.select(".previous").events("click");
     var goBack$ = previousPageClick$.mapTo({ type: "goBack" });
 
@@ -1057,17 +1103,19 @@ var _xstream2 = _interopRequireDefault(_xstream);
 
 var _run = require('@cycle/run');
 
-var _isolate = require('@cycle/isolate');
-
-var _isolate2 = _interopRequireDefault(_isolate);
-
 var _snabbdomJsx = require('snabbdom-jsx');
+
+var _utils = require('../utils');
+
+var _lodash = require('lodash');
+
+var _lodash2 = _interopRequireDefault(_lodash);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function intent(DOM) {
 
-    var click$ = DOM.select('.js-question-witness').events('click').mapTo(true);
+    var click$ = DOM.select('.js-question-witness').events('click');
 
     return click$;
 }
@@ -1075,37 +1123,37 @@ function intent(DOM) {
 function model(props$, action$) {
     return props$.map(function (props) {
         return action$.map(function (action) {
-            return Object.assign(props, { showResult: action });
+            return Object.assign(props, { showResult: true });
         }).startWith(props);
     }).flatten().remember();
 }
 
 function view(value$) {
-    var RE = /\[([^\]]*)\]\(([^)]*)\)/g;
-
     return value$.map(function (value) {
         return (0, _snabbdomJsx.html)(
             'section',
-            { style: 'background: red;' },
+            { className: 'place-item' },
             value.showResult ? (0, _snabbdomJsx.html)(
                 'figure',
                 null,
-                (0, _snabbdomJsx.html)('img', { className: 'witness', src: value.image }),
+                (0, _snabbdomJsx.html)('img', { src: value.image }),
                 (0, _snabbdomJsx.html)(
                     'figcaption',
                     null,
-                    value.clue ? value.clue.text.replace(RE, '<a href="$2" target="_blank">$1</a>') : value.dialogs[0]
+                    (0, _snabbdomJsx.html)('span', { hook: { insert: function insert(vnode) {
+                                return vnode.elm.innerHTML = value.clue ? (0, _utils.formatLinks)(value.clue.text) : _lodash2.default.sample(value.dialogs);
+                            } } })
                 )
             ) : (0, _snabbdomJsx.html)(
                 'button',
-                { selector: '.js-question-witness', type: 'button' },
+                { classNames: 'js-question-witness button-3d', type: 'button' },
                 value.name
             )
         );
     });
 }
 
-function _Witness(sources) {
+function Witness(sources) {
     var props$ = sources.props$,
         DOM = sources.DOM;
 
@@ -1115,19 +1163,17 @@ function _Witness(sources) {
 
     var sinks = {
         DOM: vdom$,
-        questionned$: action$.mapTo(null)
+        questionned$: action$.fold(function (acc, x) {
+            return true;
+        }, false)
     };
 
     return sinks;
 }
 
-function Witness(sources) {
-    return (0, _isolate2.default)(_Witness)(sources);
-};
-
 });
 
-require.register("initialize.js", function(exports, require, module) {
+;require.register("initialize.js", function(exports, require, module) {
 'use strict';
 
 var _run = require('@cycle/run');
@@ -1163,8 +1209,8 @@ function main(sources) {
 
   var match$ = sources.router.define({
     '/game': _MainGame.MainGame,
-    '/end': _EndGame.EndGame
-    // '*': NotFound,
+    '/end': _EndGame.EndGame,
+    '*': _NotFound.NotFound
   });
 
   var page$ = match$.map(function (_ref) {
@@ -1179,8 +1225,10 @@ function main(sources) {
     }).flatten(),
     router: page$.map(function (c) {
       return c.router;
-    }).flatten().startWith('/game'),
-    HTTP: page$.map(function (c) {
+    }).flatten(), //.startWith('/game'),
+    HTTP: page$.filter(function (c) {
+      return c.HTTP;
+    }).map(function (c) {
       return c.HTTP;
     }).flatten()
   };
@@ -1198,7 +1246,22 @@ var drivers = {
 
 });
 
-require.register("___globals___", function(exports, require, module) {
+require.register("utils.js", function(exports, require, module) {
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.formatLinks = formatLinks;
+var RE = /\[([^\]]*)\]\(([^)]*)\)/g;
+
+function formatLinks(text) {
+  return text.replace(RE, '<a href="$2" target="_blank">$1</a>');
+}
+
+});
+
+;require.register("___globals___", function(exports, require, module) {
   
 });})();require('___globals___');
 
