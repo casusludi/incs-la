@@ -152,48 +152,45 @@ function _MainGame(sources) {
   const mapVTree$ = mapSinks.DOM;
 
   const DOMSink$ = xs.combine(linksVTree$, currentLocation$, witnessesVTree$, progression$, TimeManagerVTree$, mapVTree$, texts$, witnessQuestionned$).map(
-      ([linksVTree, currentLocation, witnessesVTree, progression, TimeManagerVTree, mapVTree, texts, witnessQuestionned]) => {
-        // return <section className="city" style={{backgroundImage: 'url(coucou.png)}} >
-        return (
-          <section className="city" style={{backgroundImage: "url("+currentLocation.image+")"}} >
-            <section className="col-main">
-              <header>
-                <h1>{currentLocation.name}</h1>
-              </header>
-              <section className="place-list" >
-                {witnessesVTree}
-              </section>
-		          <aside className="aside">
-                <div classNames="city-desc scrollable-panel panel">
-                  {currentLocation.desc}
-                </div>
-                <div classNames="panel scrollable-panel">
-                  {texts.gameDescription}
-                </div>
-                <div classNames="game-time panel red-panel">
-                  {TimeManagerVTree}
-                </div>
-              </aside>
+      ([linksVTree, currentLocation, witnessesVTree, progression, TimeManagerVTree, mapVTree, texts, witnessQuestionned]) =>
+        <section className="city" style={{backgroundImage: "url("+currentLocation.image+")"}} >
+          <section className="col-main">
+            <header>
+              <h1>{currentLocation.name}</h1>
+            </header>
+            <section className="place-list" >
+              {witnessesVTree}
             </section>
-            <footer>
-              <div className="travel-panel">
-                {witnessQuestionned ?
-                  <div>
-                    <div className="travel-labem">{texts.travelLabel}</div>
-                    <nav>
-                      {linksVTree}
-                    </nav>
-                  </div> :
-                  <div>
-                    {texts.travelDescription}
-                  </div>
-                }
+            <aside className="aside">
+              <div classNames="city-desc scrollable-panel panel">
+                {currentLocation.desc}
               </div>
-            </footer>
-            {mapVTree}
+              <div classNames="panel scrollable-panel">
+                {texts.gameDescription}
+              </div>
+              <div classNames="game-time panel red-panel">
+                {TimeManagerVTree}
+              </div>
+            </aside>
           </section>
-        )
-      });
+          <footer>
+            <div className="travel-panel">
+              {witnessQuestionned ?
+                <div>
+                  <div className="travel-labem">{texts.travelLabel}</div>
+                  <nav>
+                    {linksVTree}
+                  </nav>
+                </div> :
+                <div>
+                  {texts.travelDescription}
+                </div>
+              }
+            </div>
+          </footer>
+          {mapVTree}
+        </section>
+      );
 
   const sinks = {
     DOM: DOMSink$,

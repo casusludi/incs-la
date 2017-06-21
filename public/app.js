@@ -726,7 +726,6 @@ function _MainGame(sources) {
         texts = _ref16[6],
         witnessQuestionned = _ref16[7];
 
-    // return <section className="city" style={{backgroundImage: 'url(coucou.png)}} >
     return (0, _snabbdomJsx.html)(
       'section',
       { className: 'city', style: { backgroundImage: "url(" + currentLocation.image + ")" } },
