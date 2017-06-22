@@ -265,7 +265,91 @@ function EndGame(sources) {
 });
 
 require.register("components/IntroGame.js", function(exports, require, module) {
-"use strict";
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+				value: true
+});
+exports.IntroGame = IntroGame;
+
+var _xstream = require('xstream');
+
+var _xstream2 = _interopRequireDefault(_xstream);
+
+var _run = require('@cycle/run');
+
+var _isolate = require('@cycle/isolate');
+
+var _isolate2 = _interopRequireDefault(_isolate);
+
+var _snabbdomJsx = require('snabbdom-jsx');
+
+var _lodash = require('lodash');
+
+var _ = _interopRequireWildcard(_lodash);
+
+var _JSONReader = require('./JSONReader');
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function intent(DOM) {
+				var click$ = DOM.select('.button-3d').events('click');
+
+				return click$;
+}
+
+function view(value$) {
+				var vdom$ = value$.map(function (value) {
+								return (0, _snabbdomJsx.html)(
+												'div',
+												{ classNames: 'content intro', style: { backgroundImage: "url(" + value.settings.images.intro + ")" } },
+												(0, _snabbdomJsx.html)(
+																'div',
+																{ className: 'modal' },
+																(0, _snabbdomJsx.html)(
+																				'div',
+																				{ className: 'panel' },
+																				value.texts.intro
+																),
+																(0, _snabbdomJsx.html)(
+																				'a',
+																				{ className: 'button-3d' },
+																				value.texts.play
+																)
+												)
+								);
+				});
+
+				return vdom$;
+}
+
+function _IntroGame(sources) {
+				var HTTP = sources.HTTP,
+				    DOM = sources.DOM;
+
+				// JSON management
+
+				var jsonSinks = (0, _JSONReader.JSONReader)({ HTTP: HTTP });
+				var jsonRequest$ = jsonSinks.request;
+				var jsonResponse$ = jsonSinks.JSON;
+
+				var action$ = intent(DOM);
+				var vdom$ = view(jsonResponse$);
+
+				var sinks = {
+								DOM: vdom$,
+								HTTP: jsonRequest$,
+								router: action$.mapTo("/game")
+				};
+
+				return sinks;
+}
+
+function IntroGame(sources) {
+				return (0, _isolate2.default)(_IntroGame)(sources);
+};
 
 });
 
@@ -1204,6 +1288,8 @@ var _switchPath2 = _interopRequireDefault(_switchPath);
 
 var _history = require('history');
 
+var _IntroGame = require('./components/IntroGame');
+
 var _MainGame = require('./components/MainGame');
 
 var _EndGame = require('./components/EndGame');
@@ -1218,6 +1304,7 @@ function main(sources) {
 
 
   var match$ = sources.router.define({
+    '/': _IntroGame.IntroGame,
     '/game': _MainGame.MainGame,
     '/end': _EndGame.EndGame,
     '*': _NotFound.NotFound
@@ -1235,7 +1322,7 @@ function main(sources) {
     }).flatten(),
     router: page$.map(function (c) {
       return c.router;
-    }).flatten(), //.startWith('/game'),
+    }).flatten(),
     HTTP: page$.filter(function (c) {
       return c.HTTP;
     }).map(function (c) {
