@@ -1,5 +1,6 @@
 import xs from 'xstream';
 import { run } from '@cycle/run';
+import { div, svg } from '@cycle/dom';
 import isolate from '@cycle/isolate';
 import { html } from 'snabbdom-jsx';
 
@@ -19,8 +20,33 @@ function model(props$, action$){
 function view(props$, action$){
     const showInfos$ = action$.filter(action => action.type === "showInfos").fold((acc, x) => acc ? false : true, false);
 
-    return xs.combine(props$, showInfos$).map(([props, showInfos]) =>
-        <div>
+    return xs.combine(props$, showInfos$).map(([props, showInfos]) => { 
+
+        return svg.g({ attrs: { transform: "translate(" + props.pixelCoordinates.x + " " + props.pixelCoordinates.y + ")" } }, [
+            svg.image({ attrs: {
+                'xlink:href': 
+                    props.isCurrentLocation ? 
+                        props.settings.images.currentLocationLandmark : 
+                        (props.isReachableLandmark ? 
+                            props.settings.images.reachableLandmark : 
+                            props.settings.images.unreachableLandmark),
+                class: "js-show-info"
+            }}),
+            (showInfos ? 
+                svg.g({ attrs: { transform: "translate(0 -15)" } }, [
+                    svg.text(props.location.name),
+                    
+                    props.isReachableLandmark ?
+                        svg.text({ attrs: { x: "0",  y: "15", class: "js-change-location" }}, "Move to") :
+                        "",
+                ]) :
+                ""
+            ),
+        ])
+
+    }
+        
+        /*<div>
             <img 
                 // class-js-change-location={props.isReachableLandmark}
                 className="js-show-info"
@@ -53,7 +79,7 @@ function view(props$, action$){
                 </div> :
                 ""
             }
-        </div>
+        </div>*/
     );
 }
 

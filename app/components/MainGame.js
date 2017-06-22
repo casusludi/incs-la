@@ -25,6 +25,8 @@ import {Map} from './Map';
 
 function _MainGame(sources) {
 
+  // console.log(sources.router);
+
   const {HTTP, DOM} = sources;
 
   // JSON management
@@ -148,7 +150,7 @@ function _MainGame(sources) {
   const TimeManagerVTree$ = timeManagerSinks.DOM;
   const mapVTree$ = mapSinks.DOM;
 
-  const DOMSink$ = xs.combine(linksVTree$, currentLocation$, witnessesVTree$, progression$, TimeManagerVTree$, mapVTree$, texts$, witnessQuestionned$).map(
+  const DOMSink$ = xs.combine(linksVTree$, currentLocation$, witnessesVTree$, progression$, TimeManagerVTree$, mapVTree$, texts$, witnessQuestionned$.startWith(false)).map(
       ([linksVTree, currentLocation, witnessesVTree, progression, TimeManagerVTree, mapVTree, texts, witnessQuestionned]) =>
         <section className="city" style={{backgroundImage: "url("+currentLocation.image+")"}} >
           <section className="col-main">

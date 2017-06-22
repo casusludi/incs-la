@@ -57,7 +57,7 @@ export function Witness(sources) {
 
     const sinks = {
         DOM: vdom$,
-        questionned$: action$.fold((acc, x) => true, false),
+        questionned$: action$.mapTo(true),
     };
 
     return sinks;

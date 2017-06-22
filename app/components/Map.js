@@ -1,5 +1,6 @@
 import xs from 'xstream';
 import { run } from '@cycle/run';
+import { svg } from '@cycle/dom';
 import isolate from '@cycle/isolate';
 import { html } from 'snabbdom-jsx';
 
@@ -9,13 +10,9 @@ import * as _ from 'lodash';
 
 function intent(DOM){
 
-    const click$ = DOM
-        .select('.js-show-map')
-        .events('click');
-
-    const showMap$ = click$.fold((acc, x) => acc ? false : true, false);
-
-    return showMap$;
+    return xs.merge(
+        DOM.select('.js-show-map').events('click').fold((acc, x) => acc ? false : true, true).map(value => ({type: "showMap", value: value})),
+    );
 }
 
 function model(props$, DOM){
@@ -66,19 +63,34 @@ function model(props$, DOM){
 function view(value$, props$, action$){
     const landmarksVTree$ = value$.map(landmarks =>
         xs.combine(...landmarks.map(landmark => landmark.DOM))
-    ).flatten();
+    ).flatten().debug();
+
+    const showMap$ = action$.filter(action => action.type === "showMap").map(showMap => showMap.value);
     
-    const vdom$ = xs.combine(value$, landmarksVTree$, props$, action$).map(([value, landmarksVTree, [currentLocation, settings, locations, currentLinksValues], showMap]) => {
-        return (<div>
+    const vdom$ = xs.combine(value$, landmarksVTree$, props$, showMap$).map(([value, landmarksVTree, [currentLocation, settings, locations, currentLinksValues], showMap]) =>
+        /*
+        <svg attrs= {{ width: "792px", height: "574px" }}>
+            <image attrs={{ width: "100%", height: "100%", 'xlink:href': settings.images.map}} />
+        </svg>
+        */
+
+        <div>
             <button selector=".js-show-map" type="button" >Show map</button>
             {showMap ?
                 <div class-map="true">
-                    <img src={settings.images.map} style={ ({position: 'relative', top: '0', left: '0'}) } />
-                    {landmarksVTree}
+                    {/*<img src={settings.images.map} style={ ({position: 'relative', top: '0', left: '0'}) } />
+                    {landmarksVTree}*/}
+                    {
+                        svg({ attrs: { width: "792px", height: "574px", 'background-color': "green"}}, [
+                            svg.rect({ attrs: { width: "100%", height: "100%", fill:"red", "fill-opacity": "0.25"}}),
+                            svg.image({ attrs: { width: "100%", height: "100%", 'xlink:href': settings.images.map}}),
+                            ...landmarksVTree
+                        ])
+                    }
                 </div>
                 : ""
             }
-        </div>)}
+        </div>
     );
 
     return vdom$;

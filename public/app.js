@@ -552,6 +552,8 @@ var _xstream2 = _interopRequireDefault(_xstream);
 
 var _run = require('@cycle/run');
 
+var _dom = require('@cycle/dom');
+
 var _isolate = require('@cycle/isolate');
 
 var _isolate2 = _interopRequireDefault(_isolate);
@@ -588,38 +590,46 @@ function view(props$, action$) {
             props = _ref2[0],
             showInfos = _ref2[1];
 
-        return (0, _snabbdomJsx.html)(
-            'div',
-            null,
-            (0, _snabbdomJsx.html)('img', {
-                // class-js-change-location={props.isReachableLandmark}
-                className: 'js-show-info',
-                src: props.isCurrentLocation ? props.settings.images.currentLocationLandmark : props.isReachableLandmark ? props.settings.images.reachableLandmark : props.settings.images.unreachableLandmark,
-                style: {
-                    position: 'absolute',
+        return _dom.svg.g({ attrs: { transform: "translate(" + props.pixelCoordinates.x + " " + props.pixelCoordinates.y + ")" } }, [_dom.svg.image({ attrs: {
+                'xlink:href': props.isCurrentLocation ? props.settings.images.currentLocationLandmark : props.isReachableLandmark ? props.settings.images.reachableLandmark : props.settings.images.unreachableLandmark,
+                class: "js-show-info"
+            } }), showInfos ? _dom.svg.g({ attrs: { transform: "translate(0 -15)" } }, [_dom.svg.text(props.location.name), props.isReachableLandmark ? _dom.svg.text({ attrs: { x: "0", y: "15", class: "js-change-location" } }, "Move to") : ""]) : ""]);
+    }
+
+    /*<div>
+        <img 
+            // class-js-change-location={props.isReachableLandmark}
+            className="js-show-info"
+            src={props.isCurrentLocation ? 
+                    props.settings.images.currentLocationLandmark : 
+                    (props.isReachableLandmark ? 
+                        props.settings.images.reachableLandmark : 
+                        props.settings.images.unreachableLandmark)}
+            style={ ({
+                position: 'absolute',  
+                left: props.pixelCoordinates.x + "px",
+                top: props.pixelCoordinates.y + "px",
+            }) }
+        />
+        {showInfos ?
+            <div
+                style={ ({
+                    position: 'absolute',  
                     left: props.pixelCoordinates.x + "px",
-                    top: props.pixelCoordinates.y + "px"
+                    top: props.pixelCoordinates.y + 30 + "px",
+                    backgroundColor: "white",
+                }) }
+            >
+                {props.location.name}
+                  {props.isReachableLandmark ?
+                    <button selector=".js-change-location" type="button" >Move to</button> :
+                    ""
                 }
-            }),
-            showInfos ? (0, _snabbdomJsx.html)(
-                'div',
-                {
-                    style: {
-                        position: 'absolute',
-                        left: props.pixelCoordinates.x + "px",
-                        top: props.pixelCoordinates.y + 30 + "px",
-                        backgroundColor: "white"
-                    }
-                },
-                props.location.name,
-                props.isReachableLandmark ? (0, _snabbdomJsx.html)(
-                    'button',
-                    { selector: '.js-change-location', type: 'button' },
-                    'Move to'
-                ) : ""
-            ) : ""
-        );
-    });
+            </div> :
+            ""
+        }
+    </div>*/
+    );
 }
 
 function _Landmark(sources) {
@@ -716,6 +726,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 function _MainGame(sources) {
+
+  // console.log(sources.router);
+
   var HTTP = sources.HTTP,
       DOM = sources.DOM;
 
@@ -875,7 +888,7 @@ function _MainGame(sources) {
   var TimeManagerVTree$ = timeManagerSinks.DOM;
   var mapVTree$ = mapSinks.DOM;
 
-  var DOMSink$ = _xstream2.default.combine(linksVTree$, currentLocation$, witnessesVTree$, progression$, TimeManagerVTree$, mapVTree$, texts$, witnessQuestionned$).map(function (_ref13) {
+  var DOMSink$ = _xstream2.default.combine(linksVTree$, currentLocation$, witnessesVTree$, progression$, TimeManagerVTree$, mapVTree$, texts$, witnessQuestionned$.startWith(false)).map(function (_ref13) {
     var _ref14 = _slicedToArray(_ref13, 8),
         linksVTree = _ref14[0],
         currentLocation = _ref14[1],
@@ -987,6 +1000,8 @@ var _xstream2 = _interopRequireDefault(_xstream);
 
 var _run = require('@cycle/run');
 
+var _dom = require('@cycle/dom');
+
 var _isolate = require('@cycle/isolate');
 
 var _isolate2 = _interopRequireDefault(_isolate);
@@ -1007,13 +1022,11 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
 function intent(DOM) {
 
-    var click$ = DOM.select('.js-show-map').events('click');
-
-    var showMap$ = click$.fold(function (acc, x) {
+    return _xstream2.default.merge(DOM.select('.js-show-map').events('click').fold(function (acc, x) {
         return acc ? false : true;
-    }, false);
-
-    return showMap$;
+    }, true).map(function (value) {
+        return { type: "showMap", value: value };
+    }));
 }
 
 function model(props$, DOM) {
@@ -1074,9 +1087,15 @@ function view(value$, props$, action$) {
         return _xstream2.default.combine.apply(_xstream2.default, _toConsumableArray(landmarks.map(function (landmark) {
             return landmark.DOM;
         })));
-    }).flatten();
+    }).flatten().debug();
 
-    var vdom$ = _xstream2.default.combine(value$, landmarksVTree$, props$, action$).map(function (_ref3) {
+    var showMap$ = action$.filter(function (action) {
+        return action.type === "showMap";
+    }).map(function (showMap) {
+        return showMap.value;
+    });
+
+    var vdom$ = _xstream2.default.combine(value$, landmarksVTree$, props$, showMap$).map(function (_ref3) {
         var _ref4 = _slicedToArray(_ref3, 4),
             value = _ref4[0],
             landmarksVTree = _ref4[1],
@@ -1087,20 +1106,27 @@ function view(value$, props$, action$) {
             currentLinksValues = _ref4$[3],
             showMap = _ref4[3];
 
-        return (0, _snabbdomJsx.html)(
-            'div',
-            null,
+        return (
+            /*
+            <svg attrs= {{ width: "792px", height: "574px" }}>
+                <image attrs={{ width: "100%", height: "100%", 'xlink:href': settings.images.map}} />
+            </svg>
+            */
+
             (0, _snabbdomJsx.html)(
-                'button',
-                { selector: '.js-show-map', type: 'button' },
-                'Show map'
-            ),
-            showMap ? (0, _snabbdomJsx.html)(
                 'div',
-                { 'class-map': 'true' },
-                (0, _snabbdomJsx.html)('img', { src: settings.images.map, style: { position: 'relative', top: '0', left: '0' } }),
-                landmarksVTree
-            ) : ""
+                null,
+                (0, _snabbdomJsx.html)(
+                    'button',
+                    { selector: '.js-show-map', type: 'button' },
+                    'Show map'
+                ),
+                showMap ? (0, _snabbdomJsx.html)(
+                    'div',
+                    { 'class-map': 'true' },
+                    (0, _dom.svg)({ attrs: { width: "792px", height: "574px", 'background-color': "green" } }, [_dom.svg.rect({ attrs: { width: "100%", height: "100%", fill: "red", "fill-opacity": "0.25" } }), _dom.svg.image({ attrs: { width: "100%", height: "100%", 'xlink:href': settings.images.map } })].concat(_toConsumableArray(landmarksVTree)))
+                ) : ""
+            )
         );
     });
 
@@ -1219,13 +1245,15 @@ function model(sources) {
     var witnessQuestionned$ = sources.witnessQuestionned;
 
     var elapsedTime$ = settings$.map(function (settings) {
-        return _xstream2.default.merge(changeLocation$.mapTo(settings.cost.travel), witnessQuestionned$.mapTo(settings.cost.investigate));
+        return _xstream2.default.merge(changeLocation$.mapTo(settings.cost.travel), witnessQuestionned$.map(function (witnessQuestionned) {
+            return witnessQuestionned ? settings.cost.investigate : 0;
+        }));
     }).flatten().fold(function (acc, x) {
         return acc + x;
     }, 0);
 
     return elapsedTime$.map(function (elapsedTime) {
-        var hours = parseInt(elapsedTime % 24); //elapsedTime - elapsedTime % 1;
+        var hours = parseInt(elapsedTime % 24);
         var minutes = (elapsedTime % 24 - hours) * 60;
         return {
             raw: elapsedTime,
@@ -1339,9 +1367,7 @@ function Witness(sources) {
 
     var sinks = {
         DOM: vdom$,
-        questionned$: action$.fold(function (acc, x) {
-            return true;
-        }, false)
+        questionned$: action$.mapTo(true)
     };
 
     return sinks;
