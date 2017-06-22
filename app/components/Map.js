@@ -11,7 +11,7 @@ import * as _ from 'lodash';
 function intent(DOM){
 
     return xs.merge(
-        DOM.select('.js-show-map').events('click').fold((acc, x) => acc ? false : true, true).map(value => ({type: "showMap", value: value})),
+        DOM.select('.js-show-map').events('click').fold((acc, x) => acc ? false : true, false).map(value => ({type: "showMap", value: value})),
     );
 }
 
@@ -63,11 +63,11 @@ function model(props$, DOM){
 function view(value$, props$, action$){
     const landmarksVTree$ = value$.map(landmarks =>
         xs.combine(...landmarks.map(landmark => landmark.DOM))
-    ).flatten().debug();
+    ).flatten();
 
     const showMap$ = action$.filter(action => action.type === "showMap").map(showMap => showMap.value);
     
-    const vdom$ = xs.combine(value$, landmarksVTree$, props$, showMap$).map(([value, landmarksVTree, [currentLocation, settings, locations, currentLinksValues], showMap]) =>
+    const vdom$ = xs.combine(value$, landmarksVTree$, props$, showMap$).map(([value, landmarksVTree, [currentLocation, settings, locations, currentLinksValues, progression, path], showMap]) =>
         /*
         <svg attrs= {{ width: "792px", height: "574px" }}>
             <image attrs={{ width: "100%", height: "100%", 'xlink:href': settings.images.map}} />
@@ -84,6 +84,14 @@ function view(value$, props$, action$){
                         svg({ attrs: { width: "792px", height: "574px", 'background-color': "green"}}, [
                             svg.rect({ attrs: { width: "100%", height: "100%", fill:"red", "fill-opacity": "0.25"}}),
                             svg.image({ attrs: { width: "100%", height: "100%", 'xlink:href': settings.images.map}}),
+                            // AFFICHAGE PATH
+                            svg.text({ attrs: { x: "50",  y: "30" }}, progression),
+                            ...(path.map((item, counter) => 
+                                counter < progression ?
+                                    svg.line({ attrs: { x1: path[counter].location, y1: "0", x2: counter * 20, y2: counter * 20, style: "stroke: rgb(0,0,0); stroke-width: 2" }}) :
+                                    ""
+                                // svg.line({ attrs: { x: counter*20,  y: "50" }}, counter)
+                            )),
                             ...landmarksVTree
                         ])
                     }

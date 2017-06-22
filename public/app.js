@@ -796,8 +796,11 @@ function _MainGame(sources) {
     })));
   }).flatten();
 
+  // Progression management
+  var progressionProxy$ = _xstream2.default.create();
+
   // Map
-  var mapProps$ = _xstream2.default.combine(currentLocation$, settings$, locations$, currentLinksValues$);
+  var mapProps$ = _xstream2.default.combine(currentLocation$, settings$, locations$, currentLinksValues$, progressionProxy$, path$);
   var mapSinks = (0, _Map.Map)({ DOM: DOM, props$: mapProps$ });
   //////////
 
@@ -808,9 +811,6 @@ function _MainGame(sources) {
   }).startWith(pathInit$).flatten(), mapSinks.changeLocation$);
 
   changeLocationProxy$.imitate(changeLocation$);
-
-  // Progression management
-  var progressionProxy$ = _xstream2.default.create();
 
   var nextCorrectLocation$ = _xstream2.default.combine(path$, progressionProxy$).map(function (_ref5) {
     var _ref6 = _slicedToArray(_ref5, 2),
@@ -1024,7 +1024,7 @@ function intent(DOM) {
 
     return _xstream2.default.merge(DOM.select('.js-show-map').events('click').fold(function (acc, x) {
         return acc ? false : true;
-    }, true).map(function (value) {
+    }, false).map(function (value) {
         return { type: "showMap", value: value };
     }));
 }
@@ -1087,7 +1087,7 @@ function view(value$, props$, action$) {
         return _xstream2.default.combine.apply(_xstream2.default, _toConsumableArray(landmarks.map(function (landmark) {
             return landmark.DOM;
         })));
-    }).flatten().debug();
+    }).flatten();
 
     var showMap$ = action$.filter(function (action) {
         return action.type === "showMap";
@@ -1099,11 +1099,13 @@ function view(value$, props$, action$) {
         var _ref4 = _slicedToArray(_ref3, 4),
             value = _ref4[0],
             landmarksVTree = _ref4[1],
-            _ref4$ = _slicedToArray(_ref4[2], 4),
+            _ref4$ = _slicedToArray(_ref4[2], 6),
             currentLocation = _ref4$[0],
             settings = _ref4$[1],
             locations = _ref4$[2],
             currentLinksValues = _ref4$[3],
+            progression = _ref4$[4],
+            path = _ref4$[5],
             showMap = _ref4[3];
 
         return (
@@ -1124,7 +1126,13 @@ function view(value$, props$, action$) {
                 showMap ? (0, _snabbdomJsx.html)(
                     'div',
                     { 'class-map': 'true' },
-                    (0, _dom.svg)({ attrs: { width: "792px", height: "574px", 'background-color': "green" } }, [_dom.svg.rect({ attrs: { width: "100%", height: "100%", fill: "red", "fill-opacity": "0.25" } }), _dom.svg.image({ attrs: { width: "100%", height: "100%", 'xlink:href': settings.images.map } })].concat(_toConsumableArray(landmarksVTree)))
+                    (0, _dom.svg)({ attrs: { width: "792px", height: "574px", 'background-color': "green" } }, [_dom.svg.rect({ attrs: { width: "100%", height: "100%", fill: "red", "fill-opacity": "0.25" } }), _dom.svg.image({ attrs: { width: "100%", height: "100%", 'xlink:href': settings.images.map } }),
+                    // AFFICHAGE PATH
+                    _dom.svg.text({ attrs: { x: "50", y: "30" } }, progression)].concat(_toConsumableArray(path.map(function (item, counter) {
+                        return counter < progression ? _dom.svg.line({ attrs: { x1: path[counter].location, y1: "0", x2: counter * 20, y2: counter * 20, style: "stroke: rgb(0,0,0); stroke-width: 2" } }) : "";
+                    }
+                    // svg.line({ attrs: { x: counter*20,  y: "50" }}, counter)
+                    )), _toConsumableArray(landmarksVTree)))
                 ) : ""
             )
         );

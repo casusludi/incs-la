@@ -77,8 +77,11 @@ function _MainGame(sources) {
   )
   .flatten();
 
+  // Progression management
+  const progressionProxy$ = xs.create();
+
   // Map
-  const mapProps$ = xs.combine(currentLocation$, settings$, locations$, currentLinksValues$);
+  const mapProps$ = xs.combine(currentLocation$, settings$, locations$, currentLinksValues$, progressionProxy$, path$);
   const mapSinks = Map({DOM, props$: mapProps$});
   //////////
 
@@ -91,9 +94,6 @@ function _MainGame(sources) {
   );
 
   changeLocationProxy$.imitate(changeLocation$);
-
-  // Progression management
-  const progressionProxy$ = xs.create();
 
   const nextCorrectLocation$ = xs.combine(path$, progressionProxy$).map(([path, progression]) =>
     ({id: path.length > progression + 1 ? path[progression + 1].location : null})
