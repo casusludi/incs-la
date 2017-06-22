@@ -235,31 +235,77 @@ var _isolate2 = _interopRequireDefault(_isolate);
 
 var _snabbdomJsx = require('snabbdom-jsx');
 
+var _lodash = require('lodash');
+
+var _ = _interopRequireWildcard(_lodash);
+
+var _JSONReader = require('./JSONReader');
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function EndGame(sources) {
+function intent(DOM) {
+    var click$ = DOM.select('.button-3d').events('click');
 
-    var previousPageClick$ = sources.DOM.select(".previous").events("click");
-    var goBack$ = previousPageClick$.mapTo({ type: "goBack" });
-    var DOMSink$ = _xstream2.default.of((0, _snabbdomJsx.html)(
-        'div',
-        null,
-        (0, _snabbdomJsx.html)(
-            'p',
-            null,
-            'COUCOU'
-        ),
-        (0, _snabbdomJsx.html)(
-            'button',
-            { selector: '.previous' },
-            'Previous'
-        )
-    ));
+    return click$;
+}
 
-    return {
-        DOM: DOMSink$,
-        router: goBack$
+function view(value$) {
+    var vdom$ = value$.map(function (value) {
+        return (0, _snabbdomJsx.html)(
+            'div',
+            { classNames: 'content end' },
+            ' ',
+            (0, _snabbdomJsx.html)(
+                'div',
+                { className: 'modal' },
+                false /*props.success*/ ? (0, _snabbdomJsx.html)(
+                    'div',
+                    { classNames: 'panel final-panel' },
+                    value.texts.win,
+                    '15h45'
+                ) : (0, _snabbdomJsx.html)(
+                    'div',
+                    { classNames: 'panel final-panel' },
+                    value.texts.loose
+                ),
+                (0, _snabbdomJsx.html)(
+                    'a',
+                    { className: 'button-3d' },
+                    'Rejouer'
+                )
+            )
+        );
+    });
+
+    return vdom$;
+}
+
+function _EndGame(sources) {
+    var HTTP = sources.HTTP,
+        DOM = sources.DOM;
+
+    // JSON management
+
+    var jsonSinks = (0, _JSONReader.JSONReader)({ HTTP: HTTP });
+    var jsonRequest$ = jsonSinks.request;
+    var jsonResponse$ = jsonSinks.JSON;
+
+    var action$ = intent(DOM);
+    var vdom$ = view(jsonResponse$);
+
+    var sinks = {
+        DOM: vdom$,
+        HTTP: jsonRequest$,
+        router: action$.mapTo("/")
     };
+
+    return sinks;
+}
+
+function EndGame(sources) {
+    return (0, _isolate2.default)(_EndGame)(sources);
 };
 
 });
@@ -495,6 +541,9 @@ function JSONReader(sources) {
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
 exports.Landmark = Landmark;
 
 var _xstream = require('xstream');
@@ -512,31 +561,64 @@ var _snabbdomJsx = require('snabbdom-jsx');
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function intent(DOM) {
+    var action$ = _xstream2.default.merge(DOM.select('.js-change-location').events('click').mapTo({ type: "changeLocation" }), DOM.select('.js-show-info').events('click').mapTo({ type: "showInfos" }));
 
-    var click$ = DOM.select('.js-change-location').events('click').mapTo(true);
-
-    return click$;
+    return action$;
 }
 
 function model(props$, action$) {
-    return action$.map(function (action) {
+    return action$.filter(function (action) {
+        return action.type === "changeLocation";
+    }).map(function (action) {
         return props$.map(function (props) {
             return props.location;
         });
     }).flatten();
 }
 
-function view(props$) {
-    return props$.map(function (props) {
-        return (0, _snabbdomJsx.html)('img', {
-            'class-js-change-location': props.isReachableLandmark,
-            src: props.isCurrentLocation ? props.settings.images.currentLocationLandmark : props.isReachableLandmark ? props.settings.images.reachableLandmark : props.settings.images.unreachableLandmark,
-            style: {
-                position: 'absolute',
-                left: props.pixelCoordinates.x + "px",
-                top: props.pixelCoordinates.y + "px"
-            }
-        });
+function view(props$, action$) {
+    var showInfos$ = action$.filter(function (action) {
+        return action.type === "showInfos";
+    }).fold(function (acc, x) {
+        return acc ? false : true;
+    }, false);
+
+    return _xstream2.default.combine(props$, showInfos$).map(function (_ref) {
+        var _ref2 = _slicedToArray(_ref, 2),
+            props = _ref2[0],
+            showInfos = _ref2[1];
+
+        return (0, _snabbdomJsx.html)(
+            'div',
+            null,
+            (0, _snabbdomJsx.html)('img', {
+                // class-js-change-location={props.isReachableLandmark}
+                className: 'js-show-info',
+                src: props.isCurrentLocation ? props.settings.images.currentLocationLandmark : props.isReachableLandmark ? props.settings.images.reachableLandmark : props.settings.images.unreachableLandmark,
+                style: {
+                    position: 'absolute',
+                    left: props.pixelCoordinates.x + "px",
+                    top: props.pixelCoordinates.y + "px"
+                }
+            }),
+            showInfos ? (0, _snabbdomJsx.html)(
+                'div',
+                {
+                    style: {
+                        position: 'absolute',
+                        left: props.pixelCoordinates.x + "px",
+                        top: props.pixelCoordinates.y + 30 + "px",
+                        backgroundColor: "white"
+                    }
+                },
+                props.location.name,
+                props.isReachableLandmark ? (0, _snabbdomJsx.html)(
+                    'button',
+                    { selector: '.js-change-location', type: 'button' },
+                    'Move to'
+                ) : ""
+            ) : ""
+        );
     });
 }
 
@@ -546,7 +628,7 @@ function _Landmark(sources) {
 
     var action$ = intent(DOM);
     var value$ = model(props$, action$);
-    var vdom$ = view(props$);
+    var vdom$ = view(props$, action$);
 
     var sinks = {
         DOM: vdom$,
@@ -776,8 +858,8 @@ function _MainGame(sources) {
         path = _ref12[0],
         progression = _ref12[1];
 
-    return path.length - 1 === progression;
-  });
+    return progression === path.length - 1;
+  }).mapTo(true);
 
   // View
   var witnessesVTree$ = witnesses$.map(function (witnesses) {
@@ -877,7 +959,7 @@ function _MainGame(sources) {
   var sinks = {
     DOM: DOMSink$,
     HTTP: jsonRequest$,
-    router: lastLocationReached$.mapTo("/end")
+    router: lastLocationReached$.mapTo("/end") // lastLocationReached$.mapTo({ pathname: "/end", state: { elapsedTime: timeManagerSinks.elapsedTime} })
   };
   return sinks;
 }

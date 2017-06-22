@@ -137,8 +137,8 @@ function _MainGame(sources) {
   // End game reached ?
   const lastLocationReached$ = xs.combine(path$, progression$)
   .filter(([path, progression]) =>
-    path.length - 1 === progression
-  );
+    progression === (path.length - 1)
+  ).mapTo(true);
 
   // View
   const witnessesVTree$ = witnesses$.map(witnesses =>
@@ -192,7 +192,7 @@ function _MainGame(sources) {
   const sinks = {
     DOM: DOMSink$,
     HTTP: jsonRequest$,
-    router: lastLocationReached$.mapTo("/end"),
+    router: lastLocationReached$.mapTo("/end"), // lastLocationReached$.mapTo({ pathname: "/end", state: { elapsedTime: timeManagerSinks.elapsedTime} })
   };
   return sinks;
 }
