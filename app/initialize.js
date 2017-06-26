@@ -9,15 +9,17 @@ import switchPath from 'switch-path';
 
 import {createBrowserHistory} from 'history';
 
-import {MainGame} from './components/MainGame.js';
-import {EndGame} from './components/EndGame.js';
-import {NotFound} from './components/NotFound.js';
+import {IntroGame} from './components/IntroGame';
+import {MainGame} from './components/MainGame';
+import {EndGame} from './components/EndGame';
+import {NotFound} from './components/NotFound';
 
 function main(sources) {
 
   const {HTTP, DOM} = sources;
 
   const match$ = sources.router.define({
+    '/': IntroGame,
     '/game': MainGame,
     '/end': EndGame,
      '*': NotFound,
@@ -33,7 +35,7 @@ function main(sources) {
 
   const sinks = {
     DOM: page$.map(c => c.DOM).flatten(),
-    router: page$.map(c => c.router).flatten(),//.startWith('/game'),
+    router: page$.map(c => c.router).flatten(),
     HTTP: page$.filter(c => c.HTTP).map(c => c.HTTP).flatten(),
   };
   

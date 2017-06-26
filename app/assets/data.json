@@ -29,7 +29,9 @@
         "images":{
             "intro":"images/Nantes-sanstour.jpg",
             "map": "images/carte/carte.png",
-            "landmark": "images/carte/landmark.png"
+            "currentLocationLandmark": "images/carte/currentLocationLandmark.png",
+            "reachableLandmark": "images/carte/reachableLandmark.png",
+            "unreachableLandmark": "images/carte/unreachableLandmark.png"
         }
     },
     "texts":{
@@ -695,8 +697,8 @@
             },
             "links":["nantes","la-roche-blanche","nozay","vallet"],
             "coordinates": {
-                "longitude": 47.133401,
-                "latitude": -1.7488479999999527
+                "longitude": 47.29957599999999,
+                "latitude": -1.5506379999999353
             }
         },
         "gorges":{
@@ -749,8 +751,8 @@
             },
             "links":["nantes","la-roche-blanche","nozay","vallet"],
             "coordinates": {
-                "longitude": 46.8136575,
-                "latitude": 1.7066969999999628
+                "longitude": 47.19964119999999,
+                "latitude": -1.6717693000000509
             }
         },
         "pornic":{
@@ -830,8 +832,8 @@
             },
             "links":["nantes","la-roche-blanche","nozay","vallet"],
             "coordinates": {
-                "longitude": 47.447403,
-                "latitude": -2.2433619999999337
+                "longitude": 47.4329224,
+                "latitude": -1.2049666000000343
             }
         },
         "prefailles":{

@@ -8,8 +8,7 @@ function intent(DOM) {
 
     const click$ = DOM
         .select('.js-question-witness')
-        .events('click')
-        .mapTo(true);
+        .events('click');
 
     return click$;
 }
@@ -20,7 +19,7 @@ function model(props$, action$) {
             .map(action =>
                 Object.assign(
                     props,
-                    { showResult: action, }
+                    { showResult: true, }
                 )
             ).startWith(props)
         )
@@ -31,16 +30,18 @@ function model(props$, action$) {
 function view(value$) {
     return value$
         .map(value =>
-            <section style="background: red;">
+            <section className="place-item">
                 {value.showResult
                     ?
                     <figure>
-                        <img className="witness" src={value.image} />
-                        <figcaption hook={{insert: vnode => vnode.elm.innerHTML = value.clue ? formatLinks(value.clue.text) : _.sample(value.dialogs)}}>
+                        <img src={value.image} />
+                        <figcaption>
+                            <span hook={{insert: vnode => vnode.elm.innerHTML = value.clue ? formatLinks(value.clue.text) : _.sample(value.dialogs)}}>
+                            </span>
                         </figcaption>
                     </figure>
                     :
-                    <button selector=".js-question-witness" type="button" >
+                    <button classNames="js-question-witness button-3d" type="button" >
                         {value.name}
                     </button>
                 }
@@ -56,7 +57,7 @@ export function Witness(sources) {
 
     const sinks = {
         DOM: vdom$,
-        questionned$: action$.mapTo(null),
+        questionned$: action$.mapTo(true),
     };
 
     return sinks;

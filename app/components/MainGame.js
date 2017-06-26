@@ -25,6 +25,8 @@ import {Map} from './Map';
 
 function _MainGame(sources) {
 
+  // console.log(sources.router);
+
   const {HTTP, DOM} = sources;
 
   // JSON management
@@ -32,17 +34,15 @@ function _MainGame(sources) {
   const jsonRequest$ = jsonSinks.request;
   const jsonResponse$ = jsonSinks.JSON;
 
-  const locations$ = jsonResponse$.map( jsonResponse => jsonResponse.locations);
-  const path$ = jsonResponse$.map(jsonResponse => jsonResponse.path);
   const settings$ = jsonResponse$.map(jsonResponse => jsonResponse.settings);
+  const texts$ = jsonResponse$.map(jsonResponse => jsonResponse.texts);
+  const path$ = jsonResponse$.map(jsonResponse => jsonResponse.path);
+  const locations$ = jsonResponse$.map( jsonResponse => jsonResponse.locations);
 
   // Locations management
   const changeLocationProxy$ = xs.create();
 
-  const currentLocation$ = xs.combine(locations$, changeLocationProxy$)
-  .map(([locations, changeLocation]) =>
-    Object.assign({}, locations[changeLocation.id], changeLocation)
-  );
+  const currentLocation$ = changeLocationProxy$.remember();
 
   const lastLocation$ = currentLocation$.compose(pairwise).map(item => item[0]).startWith("");
 
@@ -72,16 +72,23 @@ function _MainGame(sources) {
     }
   );
 
-  const changeLocation$ = currentLocationLinks$.map( 
-      links => xs.merge(...links.map(link => link.changeLocation$))
-  )
-  .startWith(pathInit$)
-  .flatten();
-
   const currentLinksValues$ = currentLocationLinks$.map( 
       links => xs.combine(...links.map(link => link.linkValue$))
   )
   .flatten();
+
+  // Map
+  const mapProps$ = xs.combine(currentLocation$, settings$, locations$, currentLinksValues$);
+  const mapSinks = Map({DOM, props$: mapProps$});
+  //////////
+
+  const changeLocation$ = xs.merge(
+    currentLocationLinks$.map( 
+        links => xs.merge(...links.map(link => link.changeLocation$))
+    ).startWith(pathInit$)
+    .flatten(),
+    mapSinks.changeLocation$,
+  );
 
   changeLocationProxy$.imitate(changeLocation$);
 
@@ -107,7 +114,7 @@ function _MainGame(sources) {
   const witnessesData$ = currentLocation$.map(currentLocation => currentLocation.places);
 
   const witnesses$ = xs.combine(witnessesData$, path$, currentLocation$, progression$)
-  .map(([witnessesData, path, currentLocation, progression]) =>
+  .map(([witnessesData, path, currentLocation, progression]) => 
     Object.keys(witnessesData).map((key, value) =>
       isolate(Witness,key)({
         DOM: sources.DOM, 
@@ -132,12 +139,8 @@ function _MainGame(sources) {
   // End game reached ?
   const lastLocationReached$ = xs.combine(path$, progression$)
   .filter(([path, progression]) =>
-    path.length - 1 === progression
-  );
-
-  // Map
-  const mapProps$ = xs.combine(settings$, locations$, currentLinksValues$);
-  const mapSinks = Map({DOM, props$: mapProps$});
+    progression === (path.length - 1)
+  ).mapTo(true);
 
   // View
   const witnessesVTree$ = witnesses$.map(witnesses =>
@@ -145,37 +148,53 @@ function _MainGame(sources) {
   ).flatten();
   const linksVTree$ = currentLocationLinks$.map(links => xs.combine(...links.map(link => link.DOM))).flatten();
   const TimeManagerVTree$ = timeManagerSinks.DOM;
-  const MapVTree$ = mapSinks.DOM;
+  const mapVTree$ = mapSinks.DOM;
 
-  const DOMSink$ = xs.combine(linksVTree$, changeLocation$, witnessesVTree$, progression$, TimeManagerVTree$, MapVTree$).map(
-      ([linksVTree, changeLocation, witnessesVTree, progression, TimeManagerVTree, MapVTree]) =>
-        <div>
-          <h1>Progression : {progression}</h1>
-          <h2>Elapsed time : {TimeManagerVTree}</h2>
-          <div>
-            {witnessesVTree}
-          </div>
-          <footer>
-            <div class-travel-panel="true">
-              <p>
-                {changeLocation.name ? 'Current : ' + changeLocation.name : ''}
-              </p>
-              <h1></h1>
-              <div selector=".items">
-                {linksVTree}
+  const DOMSink$ = xs.combine(linksVTree$, currentLocation$, witnessesVTree$, progression$, TimeManagerVTree$, mapVTree$, texts$, witnessQuestionned$.startWith(false)).map(
+      ([linksVTree, currentLocation, witnessesVTree, progression, TimeManagerVTree, mapVTree, texts, witnessQuestionned]) =>
+        <section className="city" style={{backgroundImage: "url("+currentLocation.image+")"}} >
+          <section className="col-main">
+            <header>
+              <h1>{currentLocation.name}</h1>
+            </header>
+            <section className="place-list" >
+              {witnessesVTree}
+            </section>
+            <aside className="aside">
+              <div classNames="city-desc scrollable-panel panel">
+                {currentLocation.desc}
               </div>
-              {MapVTree}
+              <div classNames="panel scrollable-panel">
+                {texts.gameDescription}
+              </div>
+              <div classNames="game-time panel red-panel">
+                {TimeManagerVTree}
+              </div>
+            </aside>
+          </section>
+          <footer>
+            <div className="travel-panel">
+              {witnessQuestionned ?
+                <div>
+                  <div className="travel-labem">{texts.travelLabel}</div>
+                  <nav>
+                    {linksVTree}
+                  </nav>
+                </div> :
+                <div>
+                  {texts.travelDescription}
+                </div>
+              }
             </div>
           </footer>
-          <br/>
-          <button selector=".end">END</button>
-        </div>
-    );
+          {mapVTree}
+        </section>
+      );
 
   const sinks = {
     DOM: DOMSink$,
     HTTP: jsonRequest$,
-    router: lastLocationReached$.mapTo("/end"),
+    router: lastLocationReached$.mapTo("/end"), // lastLocationReached$.mapTo({ pathname: "/end", state: { elapsedTime: timeManagerSinks.elapsedTime} })
   };
   return sinks;
 }

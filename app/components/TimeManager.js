@@ -12,13 +12,13 @@ function model(sources){
     const elapsedTime$ = settings$.map(settings =>
       xs.merge(
         changeLocation$.mapTo(settings.cost.travel), 
-        witnessQuestionned$.mapTo(settings.cost.investigate)
+        witnessQuestionned$.map(witnessQuestionned => witnessQuestionned ? settings.cost.investigate : 0),
       )
     ).flatten()
     .fold((acc, x) => acc + x, 0);
     
     return elapsedTime$.map(elapsedTime => {
-      const hours = parseInt(elapsedTime % 24);//elapsedTime - elapsedTime % 1;
+      const hours = parseInt(elapsedTime % 24);
       const minutes = (elapsedTime % 24 - hours) * 60;
       return {
         raw: elapsedTime,

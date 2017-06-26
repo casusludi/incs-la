@@ -63,6 +63,7 @@
     "@cycle/isolate": "^2.1.0",
     "@cycle/run": "^3.1.0",
     "cycle-onionify": "^3.3.0",
+    "cycle-time-travel": "^0.1.2",
     "cyclic-router": "^4.0.5",
     "lodash": "^4.17.2",
     "snabbdom-jsx": "^0.3.1",
