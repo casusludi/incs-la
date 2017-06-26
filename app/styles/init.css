@@ -1,3 +1,6 @@
+@import 'normalize.css';
+@import './_commons';
+
 img.witness {
     max-width: 200px;
     max-height: 200px;
