@@ -151,42 +151,48 @@ function _MainGame(sources) {
 
   const DOMSink$ = xs.combine(linksVTree$, currentLocation$, witnessesVTree$, progression$, TimeManagerVTree$, mapVTree$, texts$, witnessQuestionned$.startWith(false)).map(
       ([linksVTree, currentLocation, witnessesVTree, progression, TimeManagerVTree, mapVTree, texts, witnessQuestionned]) =>
-        <section className="city" style={{backgroundImage: "url("+currentLocation.image+")"}} >
-          <section className="col-main">
-            <header>
-              <h1>{currentLocation.name}</h1>
-            </header>
-            <section className="place-list" >
-              {witnessesVTree}
-            </section>
-            <aside className="aside">
-              <div classNames="city-desc scrollable-panel panel">
-                {currentLocation.desc}
-              </div>
-              <div classNames="panel scrollable-panel">
-                {texts.gameDescription}
-              </div>
-              <div classNames="game-time panel red-panel">
-                {TimeManagerVTree}
-              </div>
-            </aside>
-          </section>
-          <footer>
-            <div className="travel-panel">
-              {witnessQuestionned ?
-                <div>
-                  <div className="travel-labem">{texts.travelLabel}</div>
-                  <nav>
-                    {linksVTree}
-                  </nav>
-                </div> :
-                <div>
-                  {texts.travelDescription}
+        <section className="main">
+	        <section className="main-content" >
+            <section className="city" style={{backgroundImage: "url("+currentLocation.image+")"}} >
+              <section className="city-content">
+                <section className="col-main">
+                  <header>
+                    <h1>{currentLocation.name}</h1>
+                  </header>
+                  <section className="place-list" >
+                    {witnessesVTree}
+                  </section>
+                </section>
+                <aside className="aside">
+                  <div classNames="city-desc scrollable-panel panel">
+                    {currentLocation.desc}
+                  </div>
+                  <div classNames="panel scrollable-panel">
+                    {texts.gameDescription}
+                  </div>
+                  <div classNames="game-time panel red-panel">
+                    {TimeManagerVTree}
+                  </div>
+                </aside>
+              </section>
+              <footer>
+                <div className="travel-panel">
+                  {witnessQuestionned ?
+                    <div className="travel-panel-content">
+                      <div className="travel-label">{texts.travelLabel}</div>
+                      <nav>
+                        {linksVTree}
+                      </nav>
+                    </div> :
+                    <div className="travel-panel-content">
+                      {texts.travelDescription}
+                    </div>
+                  }
                 </div>
-              }
-            </div>
-          </footer>
-          {mapVTree}
+              </footer>
+        {/*mapVTree*/}
+            </section>
+          </section>
         </section>
       );
 
