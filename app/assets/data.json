@@ -29,6 +29,7 @@
         "images":{
             "intro":"images/Nantes-sanstour.jpg",
             "map": "images/carte/carte.png",
+            "closeMapIcon": "images/carte/closeIcon.svg",
             "currentLocationLandmark": "images/carte/currentLocationLandmark.png",
             "reachableLandmark": "images/carte/reachableLandmark.png",
             "unreachableLandmark": "images/carte/unreachableLandmark.png"
@@ -863,33 +864,6 @@
                 "latitude": -2.2181759999999713
             }
         },
-        "saint-brevin":{
-            "name":"Saint-Brévin",
-            "image":"images/multi3.jpg",
-			"desc": "La commune se situe à l'embouchure de la Loire, sur la rive opposée de Saint-Nazaire, ville dont le développement de Saint-Brevin dépend. Son littoral est composé de plages de sable.",
-            "places":{
-                "temoin-1":{
-                    "name":"Interroger un commerçant",
-                    "image":"images/personnages/Elu.png",
-                    "dialogs":["Mes excuses, je n'ai vu personne de suspect."]
-                },
-                "temoin-2":{
-                    "name":"Interroger un touriste",
-                    "image":"images/personnages/Hippie.png",
-                    "dialogs":["Mes excuses, je n'ai vu personne de suspect."]
-                },
-                "data":{
-                    "name":"Consulter D.A.T.A.",
-                    "image":"images/personnages/data.png",
-                    "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
-                }
-            },
-            "links":["nantes","la-roche-blanche","nozay","vallet"],
-            "coordinates": {
-                "longitude": 47.246659,
-                "latitude": -2.1658069999999725
-            }
-        },
         "la-chapelle-basse-mer":{
             "name":"La Chapelle-Basse-Mer",
             "image":"images/multi2.jpg",
@@ -915,6 +889,33 @@
             "coordinates": {
                 "longitude": 47.271643,
                 "latitude": -1.3389099999999416
+            }
+        },
+        "saint-brevin":{
+            "name":"Saint-Brévin",
+            "image":"images/multi3.jpg",
+			"desc": "La commune se situe à l'embouchure de la Loire, sur la rive opposée de Saint-Nazaire, ville dont le développement de Saint-Brevin dépend. Son littoral est composé de plages de sable.",
+            "places":{
+                "temoin-1":{
+                    "name":"Interroger un commerçant",
+                    "image":"images/personnages/Elu.png",
+                    "dialogs":["Mes excuses, je n'ai vu personne de suspect."]
+                },
+                "temoin-2":{
+                    "name":"Interroger un touriste",
+                    "image":"images/personnages/Hippie.png",
+                    "dialogs":["Mes excuses, je n'ai vu personne de suspect."]
+                },
+                "data":{
+                    "name":"Consulter D.A.T.A.",
+                    "image":"images/personnages/data.png",
+                    "dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
+                }
+            },
+            "links":["nantes","la-roche-blanche","nozay","vallet"],
+            "coordinates": {
+                "longitude": 47.246659,
+                "latitude": -2.1658069999999725
             }
         }
     }

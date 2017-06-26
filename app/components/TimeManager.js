@@ -17,13 +17,26 @@ function model(sources){
     ).flatten()
     .fold((acc, x) => acc + x, 0);
     
-    return elapsedTime$.map(elapsedTime => {
-      const hours = parseInt(elapsedTime % 24);
-      const minutes = (elapsedTime % 24 - hours) * 60;
+    return xs.combine(elapsedTime$, settings$).map(([elapsedTime, settings]) => {
+      const elapsedHours = parseInt(elapsedTime);
+      const elapsedMinutes = (elapsedTime - elapsedHours) * 60;
+      
+      const remainingTime = settings.totalTime - elapsedTime;
+      const remainingHours = parseInt(remainingTime);
+      const remainingMinutes = (remainingTime - remainingHours) * 60;
+
       return {
-        raw: elapsedTime,
-        hours: hours,
-        minutes: minutes,
+        totalTime: settings.totalTime,
+        elapsedTime: {
+          raw: elapsedTime,
+          hours: elapsedHours,
+          minutes: elapsedMinutes,
+        },
+        remainingTime: {
+          raw: remainingTime,
+          hours: remainingHours,
+          minutes: remainingMinutes,
+        }
       }
     });
 }
@@ -31,7 +44,7 @@ function model(sources){
 function view(value$){
     return value$.map(value =>
       <span>
-        {_.padStart(value.hours, 2, '0')}h{_.padStart(value.minutes, 2, '0')}
+        {_.padStart(value.remainingTime.hours, 2, '0')}h{_.padStart(value.remainingTime.minutes, 2, '0')}
       </span>
     );
 }

@@ -80,21 +80,6 @@ function _MainGame(sources) {
   // Progression management
   const progressionProxy$ = xs.create();
 
-  // Map
-  const mapProps$ = xs.combine(currentLocation$, settings$, locations$, currentLinksValues$, progressionProxy$, path$);
-  const mapSinks = Map({DOM, props$: mapProps$});
-  //////////
-
-  const changeLocation$ = xs.merge(
-    currentLocationLinks$.map( 
-        links => xs.merge(...links.map(link => link.changeLocation$))
-    ).startWith(pathInit$)
-    .flatten(),
-    mapSinks.changeLocation$,
-  );
-
-  changeLocationProxy$.imitate(changeLocation$);
-
   const nextCorrectLocation$ = xs.combine(path$, progressionProxy$).map(([path, progression]) =>
     ({id: path.length > progression + 1 ? path[progression + 1].location : null})
   ).remember();
@@ -107,6 +92,20 @@ function _MainGame(sources) {
   );
 
   const progression$ = correctNextChoosenCity$.mapTo(1).fold((acc, x) => acc + x, 0);
+  
+  // Map
+  const mapSinks = Map({DOM, progression$, path$, currentLocation$, settings$, locations$, currentLinksValues$});
+  //////////
+
+  const changeLocation$ = xs.merge(
+    currentLocationLinks$.map( 
+        links => xs.merge(...links.map(link => link.changeLocation$))
+    ).startWith(pathInit$)
+    .flatten(),
+    mapSinks.changeLocation$,
+  );
+
+  changeLocationProxy$.imitate(changeLocation$);
 
   progressionProxy$.imitate(xs.merge(progression$, xs.of(0)));
 

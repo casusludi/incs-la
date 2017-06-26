@@ -1,6 +1,6 @@
 import xs from 'xstream';
 import { run } from '@cycle/run';
-import { div, svg } from '@cycle/dom';
+import { div, svg, p } from '@cycle/dom';
 import isolate from '@cycle/isolate';
 import { html } from 'snabbdom-jsx';
 
@@ -20,9 +20,8 @@ function model(props$, action$){
 function view(props$, action$){
     const showInfos$ = action$.filter(action => action.type === "showInfos").fold((acc, x) => acc ? false : true, false);
 
-    return xs.combine(props$, showInfos$).map(([props, showInfos]) => { 
-
-        return svg.g({ attrs: { transform: "translate(" + props.pixelCoordinates.x + " " + props.pixelCoordinates.y + ")" } }, [
+    return xs.combine(props$, showInfos$).map(([props, showInfos]) => {
+        return /*p([*/svg.g({ attrs: { transform: "translate(" + props.pixelCoordinates.x + " " + props.pixelCoordinates.y + ")" } }, [
             svg.image({ attrs: {
                 'xlink:href': 
                     props.isCurrentLocation ? 
@@ -42,45 +41,8 @@ function view(props$, action$){
                 ]) :
                 ""
             ),
-        ])
-
-    }
-        
-        /*<div>
-            <img 
-                // class-js-change-location={props.isReachableLandmark}
-                className="js-show-info"
-                src={props.isCurrentLocation ? 
-                        props.settings.images.currentLocationLandmark : 
-                        (props.isReachableLandmark ? 
-                            props.settings.images.reachableLandmark : 
-                            props.settings.images.unreachableLandmark)}
-                style={ ({
-                    position: 'absolute',  
-                    left: props.pixelCoordinates.x + "px",
-                    top: props.pixelCoordinates.y + "px",
-                }) }
-            />
-            {showInfos ?
-                <div
-                    style={ ({
-                        position: 'absolute',  
-                        left: props.pixelCoordinates.x + "px",
-                        top: props.pixelCoordinates.y + 30 + "px",
-                        backgroundColor: "white",
-                    }) }
-                >
-                    {props.location.name}
-
-                    {props.isReachableLandmark ?
-                        <button selector=".js-change-location" type="button" >Move to</button> :
-                        ""
-                    }
-                </div> :
-                ""
-            }
-        </div>*/
-    );
+        ])//], props.location.name)
+    });
 }
 
 function _Landmark(sources) {
@@ -92,6 +54,8 @@ function _Landmark(sources) {
     const sinks = {
         DOM: vdom$,
         changeLocation$: value$,
+        pixelCoordinates$: props$.map(props => props.pixelCoordinates),
+        id$: props$.map(props => props.location.id)
     };
 
     return sinks;
