@@ -10,8 +10,8 @@
     background-size: cover;
     background-position: center;
 
-    header{
-       h1{ 
+    & header{
+       & h1{ 
            display: inline-block;
            margin: 20px 15px;
            color: #333333;
@@ -19,7 +19,7 @@
        } 
     }
 
-    footer{
+    & footer{
         flex: 0 1 auto;
         display: flex;
         min-height: 88px;
@@ -125,7 +125,7 @@
         
 
 
-    figure{
+    & figure{
         display: flex;
         flex-direction: column;
         justify-content: flex-end;
@@ -138,7 +138,7 @@
         box-sizing: border-box;
         position: relative;
         
-        img{
+        & img{
             /*width: auto;
             height: auto;
             max-width: 100%;*/
@@ -150,7 +150,7 @@
         }
     }
 
-    figcaption{
+    & figcaption{
         display: block;
         background-color: #ffffff;
         border-radius: 16px;
@@ -161,7 +161,7 @@
 
         font-family: 'Itim', cursive;
 
-        &:before{
+        &::before{
             content: '';
             display: block;
             width: 0;
@@ -174,7 +174,7 @@
             left: calc( 10% - 8px );
         }
 
-        &:after{
+        &::after{
             content: '';
             display: block;
             width: 0;
@@ -188,7 +188,7 @@
         }
 
 
-        a{
+        & a{
             color: #000000;
         }
 
@@ -196,7 +196,7 @@
         
     }
 
-    button{
+    & button{
 
         min-height: 70px;
         margin: 10px 10px 15px 10px;
@@ -204,8 +204,11 @@
 }
 
 
+.travel-panel {
+    width: 100%;
+}
 
-.travel-panel{
+.travel-panel-content{
     display: flex;
     flex-direction: row;
     flex: 1 1 100%;
@@ -213,7 +216,7 @@
     align-items: center;
     justify-content: center;
     padding: 15px;
-    button{
+    & button{
         border: none;
         border-radius: 8px;
         background-color: #dedede;
