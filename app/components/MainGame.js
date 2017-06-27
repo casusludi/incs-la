@@ -39,18 +39,21 @@ function _MainGame(sources) {
   const path$ = jsonResponse$.map(jsonResponse => jsonResponse.path);
   const locations$ = jsonResponse$.map( jsonResponse => jsonResponse.locations);
 
+  const pathInit$ = xs.combine(path$, locations$).map(([path, locations]) =>
+    Object.assign({}, locations[path[0].location], {id: path[0].location})
+  );
+
   // Locations management
   const changeLocationProxy$ = xs.create();
 
-  const currentLocation$ = changeLocationProxy$.remember();
+  const currentLocation$ = xs.merge(
+    changeLocationProxy$,
+    pathInit$,
+  ).remember();
 
   const lastLocation$ = currentLocation$.compose(pairwise).map(item => item[0]).startWith("");
 
   const nextCorrectLocationProxy$ = xs.create();
-
-  const pathInit$ = xs.combine(path$, locations$).map(([path, locations]) =>
-    Object.assign({}, locations[path[0].location], {id: path[0].location})
-  );
 
   const currentLocationLinks$ = xs.combine(nextCorrectLocationProxy$, currentLocation$, lastLocation$, locations$)
   .map(([nextCorrectLocation, currentLocation, lastLocation, locations, path]) => {
@@ -100,10 +103,10 @@ function _MainGame(sources) {
   const changeLocation$ = xs.merge(
     currentLocationLinks$.map( 
         links => xs.merge(...links.map(link => link.changeLocation$))
-    ).startWith(pathInit$)
-    .flatten(),
+    ).flatten(),
     mapSinks.changeLocation$,
-  );
+    // pathInit$,
+  ).debug("test");
 
   changeLocationProxy$.imitate(changeLocation$);
 
@@ -132,6 +135,11 @@ function _MainGame(sources) {
     xs.merge(...witnesses.map(witness => witness.questionned$))
   ).flatten();
 
+  const showDestinationLinks$ = xs.merge(
+    witnessQuestionned$.mapTo(true),
+    changeLocation$.mapTo(false),
+  ).startWith(false);
+
   // Time management
   const timeManagerSinks = TimeManager({DOM, settings: settings$, changeLocation: changeLocation$, witnessQuestionned: witnessQuestionned$});
 
@@ -149,15 +157,16 @@ function _MainGame(sources) {
   const TimeManagerVTree$ = timeManagerSinks.DOM;
   const mapVTree$ = mapSinks.DOM;
 
-  const DOMSink$ = xs.combine(linksVTree$, currentLocation$, witnessesVTree$, progression$, TimeManagerVTree$, mapVTree$, texts$, witnessQuestionned$.startWith(false)).map(
-      ([linksVTree, currentLocation, witnessesVTree, progression, TimeManagerVTree, mapVTree, texts, witnessQuestionned]) =>
+  const DOMSink$ = xs.combine(linksVTree$, currentLocation$, witnessesVTree$, progression$, TimeManagerVTree$, mapVTree$, texts$, showDestinationLinks$).map(
+      ([linksVTree, currentLocation, witnessesVTree, progression, TimeManagerVTree, mapVTree, texts, showDestinationLinks]) =>
         <section className="main">
 	        <section className="main-content" >
             <section className="city" style={{backgroundImage: "url("+currentLocation.image+")"}} >
               <section className="city-content">
                 <section className="col-main">
-                  <header>
+                  <header className="header">
                     <h1>{currentLocation.name}</h1>
+                    {mapVTree}
                   </header>
                   <section className="place-list" >
                     {witnessesVTree}
@@ -177,7 +186,7 @@ function _MainGame(sources) {
               </section>
               <footer>
                 <div className="travel-panel">
-                  {witnessQuestionned ?
+                  {showDestinationLinks ?
                     <div className="travel-panel-content">
                       <div className="travel-label">{texts.travelLabel}</div>
                       <nav>
@@ -190,7 +199,6 @@ function _MainGame(sources) {
                   }
                 </div>
               </footer>
-        {/*mapVTree*/}
             </section>
           </section>
         </section>

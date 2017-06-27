@@ -6,11 +6,8 @@
             "investigate":0.25
         },
         "totalTime":24,
-        "landmarkImageDimension": {
-            "x": 24,
-            "y": 24
-        },
-        "landmarks":[
+        "landmarksImageHeight": 40,
+        "baseLandmarks":[
             {
                 "location": "guemene",
                 "pixelCoordinates": {

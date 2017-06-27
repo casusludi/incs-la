@@ -18,10 +18,8 @@ function model(props$, action$){
 }
 
 function view(props$, action$){
-    const showInfos$ = action$.filter(action => action.type === "showInfos").fold((acc, x) => acc ? false : true, false);
-
-    return xs.combine(props$, showInfos$).map(([props, showInfos]) => {
-        return /*p([*/svg.g({ attrs: { transform: "translate(" + props.pixelCoordinates.x + " " + props.pixelCoordinates.y + ")" } }, [
+    return props$.map(props => {
+        return svg.g({ attrs: { transform: "translate(" + props.pixelCoordinates.x + " " + props.pixelCoordinates.y + ")" } }, [
             svg.image({ attrs: {
                 'xlink:href': 
                     props.isCurrentLocation ? 
@@ -29,36 +27,32 @@ function view(props$, action$){
                         (props.isReachableLandmark ? 
                             props.settings.images.reachableLandmark : 
                             props.settings.images.unreachableLandmark),
-                class: "js-show-info"
+                class: "js-show-info",
+                height: props.isCurrentLocation ? 
+                    props.settings.landmarksImageHeight + "px" :
+                    props.settings.landmarksImageHeight + "px",
+                y: - props.settings.landmarksImageHeight + "px",
             }}),
-            (showInfos ? 
-                svg.g({ attrs: { transform: "translate(0 -15)" } }, [
-                    svg.text(props.location.name),
-                    
-                    props.isReachableLandmark ?
-                        svg.text({ attrs: { x: "0",  y: "15", class: "js-change-location" }}, "Move to") :
-                        "",
-                ]) :
-                ""
-            ),
-        ])//], props.location.name)
+        ])
     });
 }
 
-function _Landmark(sources) {
+export function Landmark(sources) {
     const {props$, DOM} = sources;
+    const p$ = props$.remember()
     const action$ = intent(DOM);
     const value$ = model(props$, action$);
-    const vdom$ = view(props$, action$);
+    const vdom$ = view(p$, action$);
+
+    const showInfos$ = action$.filter(action => action.type === "showInfos").mapTo(p$).flatten();
 
     const sinks = {
         DOM: vdom$,
         changeLocation$: value$,
-        pixelCoordinates$: props$.map(props => props.pixelCoordinates),
-        id$: props$.map(props => props.location.id)
+        pixelCoordinates$: p$.map(props => props.pixelCoordinates),
+        id$: p$.map(props => props.location.id),
+        showInfos$
     };
 
     return sinks;
 }
-
-export function Landmark(sources){ return isolate(_Landmark)(sources) };

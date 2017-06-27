@@ -66,10 +66,10 @@
     "cycle-time-travel": "^0.1.2",
     "cyclic-router": "^4.0.5",
     "lodash": "^4.17.2",
+    "normalize.css": "^5.0.0",
     "snabbdom-jsx": "^0.3.1",
     "switch-path": "^1.2.0",
-    "xstream": "^10.8.0",
-    "normalize.css": "^5.0.0"
+    "xstream": "^10.8.0"
   },
   "devDependencies": {
     "auto-reload-brunch": "^2.7.1",
