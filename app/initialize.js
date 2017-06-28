@@ -23,7 +23,11 @@ function main(sources) {
     '/game': MainGame,
     '/end': EndGame,
      '*': NotFound,
-  });
+  }).debug("match");
+
+  // test$ = match$.map(({path, value, location, createHref}) => {
+  //   return 
+  // });
   
   const page$ = match$.map(({path, value}) =>
     value(Object.assign(

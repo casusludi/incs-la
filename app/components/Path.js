@@ -27,7 +27,7 @@ function model(locationsWithPixelCoordinates$, progression$, path$, currentLocat
 
 function view(value$){
     const vdom$ = value$.map(value => {
-        const lines = value.map(line => svg.line({ attrs: { x1: line.x1, y1: line.y1, x2: line.x2, y2: line.y2, style: 'stroke: rgb(200,0,0); stroke-width: 4; stroke-dasharray: 10, 5;' }}));
+        const lines = value.map(line => svg.line({ attrs: { x1: line.x1, y1: line.y1, x2: line.x2, y2: line.y2, style: 'stroke: rgb(200,0,0); stroke-width: 4; stroke-dasharray: 10, 10; stroke-linecap: round;' }}));
         return svg.g([
             ...lines
         ]);

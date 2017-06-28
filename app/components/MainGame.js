@@ -98,15 +98,13 @@ function _MainGame(sources) {
   
   // Map
   const mapSinks = Map({DOM, progression$, path$, currentLocation$, settings$, locations$, currentLinksValues$});
-  //////////
 
   const changeLocation$ = xs.merge(
     currentLocationLinks$.map( 
         links => xs.merge(...links.map(link => link.changeLocation$))
     ).flatten(),
     mapSinks.changeLocation$,
-    // pathInit$,
-  ).debug("test");
+  );
 
   changeLocationProxy$.imitate(changeLocation$);
 
@@ -146,8 +144,8 @@ function _MainGame(sources) {
   // End game reached ?
   const lastLocationReached$ = xs.combine(path$, progression$)
   .filter(([path, progression]) =>
-    progression === (path.length - 1)
-  ).mapTo(true);
+    progression === (path.length - 11)
+  ).mapTo(true).debug("lastLocationReached");
 
   // View
   const witnessesVTree$ = witnesses$.map(witnesses =>
@@ -207,7 +205,7 @@ function _MainGame(sources) {
   const sinks = {
     DOM: DOMSink$,
     HTTP: jsonRequest$,
-    router: lastLocationReached$.mapTo("/end"), // lastLocationReached$.mapTo({ pathname: "/end", state: { elapsedTime: timeManagerSinks.elapsedTime} })
+    router: /*lastLocationReached$.mapTo("/end"), */ lastLocationReached$.mapTo({ pathname: "/end", state: { elapsedTime: "10000"} })
   };
   return sinks;
 }

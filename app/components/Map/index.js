@@ -71,7 +71,7 @@ function model(DOM, progression$, path$, currentLocation$, settings$, locations$
     return {landmarks$, pathSink};
 }
 
-function view(DOM, value, currentLocation$, settings$, locations$, currentLinksValues$, progression$, path$, action$/*, travelAnimationState$*/, showInfos$){
+function view(DOM, value, currentLocation$, settings$, locations$, currentLinksValues$, progression$, path$, action$, travelAnimationState$, showInfos$){
     const landmarksVdom$ = value.landmarks$.map(landmarks => {
         const latitudeIdentifiedLandmarks = landmarks.map(landmark =>
             landmark.pixelCoordinates$.map(pixelCoordinates =>
@@ -94,14 +94,14 @@ function view(DOM, value, currentLocation$, settings$, locations$, currentLinksV
     );
     const pathVdom$ = value.pathSink.DOM;
 
-    // const travelAnimationVdom$ = travelAnimationState$.map(([currentLocationPixelCoordinates, newLocationPixelCoordinates, animationValue]) =>
-    //     svg.line({ attrs: {
-    //         x1: currentLocationPixelCoordinates.x + (newLocationPixelCoordinates.x - currentLocationPixelCoordinates.x) * animationValue,
-    //         y1: currentLocationPixelCoordinates.y + (newLocationPixelCoordinates.y - currentLocationPixelCoordinates.y) * animationValue,
-    //         x2: currentLocationPixelCoordinates.x + (newLocationPixelCoordinates.x - currentLocationPixelCoordinates.x) * (animationValue - 0.1),
-    //         y2: currentLocationPixelCoordinates.y + (newLocationPixelCoordinates.y - currentLocationPixelCoordinates.y) * (animationValue - 0.1),
-    //         style: 'stroke: rgb(200,0,0); stroke-width: 4; stroke-dasharray: 10, 5;'}})
-    // ).startWith("");
+    const travelAnimationVdom$ = travelAnimationState$.map(([currentLocationPixelCoordinates, newLocationPixelCoordinates, animationValue]) =>
+        svg.line({ attrs: {
+            x1: currentLocationPixelCoordinates.x,
+            y1: currentLocationPixelCoordinates.y,
+            x2: currentLocationPixelCoordinates.x + (newLocationPixelCoordinates.x - currentLocationPixelCoordinates.x) * animationValue,
+            y2: currentLocationPixelCoordinates.y + (newLocationPixelCoordinates.y - currentLocationPixelCoordinates.y) * animationValue,
+            style: 'stroke: rgb(200,0,0); stroke-width: 4; stroke-dasharray: 10, 10; stroke-linecap: round;'}})
+    ).startWith("");
 
     const svgTag$ = DOM.select(".svgMapTag").elements();
     const svgTagDimension$ = svgTag$
@@ -175,8 +175,8 @@ function view(DOM, value, currentLocation$, settings$, locations$, currentLinksV
             return "";
     }).startWith("");
     
-    const vdom$ = xs.combine(landmarksVdom$, pathVdom$, currentLocation$, settings$, locations$, currentLinksValues$, showMap$/*, travelAnimationVdom$*/, showInfosVdom$)
-    .map(([landmarksVdom, pathVdom, currentLocation, settings, locations, currentLinksValues, showMap/*, travelAnimationVdom*/, showInfosVdom]) =>
+    const vdom$ = xs.combine(landmarksVdom$, pathVdom$, currentLocation$, settings$, locations$, currentLinksValues$, showMap$, travelAnimationVdom$, showInfosVdom$)
+    .map(([landmarksVdom, pathVdom, currentLocation, settings, locations, currentLinksValues, showMap, travelAnimationVdom, showInfosVdom]) =>
         <div>
             <button className="js-show-map button-3d" type="button" >Afficher la carte</button>
             {showMap ?
@@ -186,7 +186,7 @@ function view(DOM, value, currentLocation$, settings$, locations$, currentLinksV
                             svg(".svgMapTag", { attrs: { viewBox:"0 0 792 574", width: "100%", height: "100%", 'background-color': "green"}}, [
                                 svg.image(".mapImageTag", { attrs: { width: "100%", height: "100%", 'xlink:href': settings.images.map}}),
                                 pathVdom,
-                                // travelAnimationVdom,
+                                travelAnimationVdom,
                                 ...landmarksVdom,
                                 svg.image(".js-show-map", { attrs: { width: "20px", height: "20px", x: "10px", y: "10px", 'xlink:href': settings.images.closeMapIcon}}),
                             ])
@@ -220,54 +220,54 @@ function _Map(sources) {
         landmarksShowInfos$,
         xs.merge(
             action$.filter(action => action.type === "hideInfos"),
-            currentLocation$,
+            changeLocation$,
         ).mapTo(null),
     );
     
-    // const getLandmark = function(location$){
-    //     return xs.combine(location$, value.landmarks$).map(([location, landmarks]) => {
-    //         const identifiedLandmarks = landmarks.map(landmark => 
-    //             landmark.id$.map(id =>
-    //                 {return {id, landmark}}
-    //             )
-    //         );
+    const getLandmark = function(location$){
+        return xs.combine(location$, value.landmarks$).map(([location, landmarks]) => {
+            const identifiedLandmarks = landmarks.map(landmark => 
+                landmark.id$.map(id =>
+                    {return {id, landmark}}
+                )
+            );
             
-    //         return xs.combine(...identifiedLandmarks).map(identifiedLandmarksCombined =>
-    //             identifiedLandmarksCombined.filter(identifiedLandmark => 
-    //                 identifiedLandmark.id === location.id
-    //             )[0].landmark
-    //         );
-    //     }).flatten();
-    // }
+            return xs.combine(...identifiedLandmarks).map(identifiedLandmarksCombined =>
+                identifiedLandmarksCombined.filter(identifiedLandmark => 
+                    identifiedLandmark.id === location.id
+                )[0].landmark
+            );
+        }).flatten();
+    }
 
-    // const currentLandmark$ = getLandmark(currentLocation$);
+    const currentLandmark$ = getLandmark(currentLocation$);
 
-    // const newLandmark$ = getLandmark(changeLocation$);
+    const newLandmark$ = getLandmark(changeLocation$);
     
-    // const animationDuration = 2;
-    // const travelAnimationState$ = xs.combine(
-    //     currentLandmark$.map(currentLandmark => currentLandmark.pixelCoordinates$).flatten(),
-    //     xs.of({x: 0, y: 0}), //newLandmark$.map(newLandmark => newLandmark.pixelCoordinates$).flatten(),
-    //     changeLocation$.mapTo(tween({
-    //         from: 0,
-    //         to: 1,
-    //         ease: tween.linear.ease,
-    //         duration: animationDuration * 1000, // milliseconds
-    //     })).flatten(),
-    //     // changeLocation$.mapTo(
-    //     //     xs.periodic(1000/60).map(value => 
-    //     //         value / 60)
-    //     //     ).flatten()
-    //     //     .map(value =>
-    //     //         value / animationDuration
-    //     //     ),
-    // ).debug("travelAnimationState");
+    const animationDuration = 2;
+    const travelAnimationState$ = xs.combine(
+        currentLandmark$.map(currentLandmark => currentLandmark.pixelCoordinates$).flatten(),
+        newLandmark$.map(newLandmark => newLandmark.pixelCoordinates$).flatten(),
+        changeLocation$.mapTo(tween({
+            from: 0,
+            to: 1,
+            ease: tween.linear.ease,
+            duration: animationDuration * 1000, // milliseconds
+        })).flatten(),
+        // changeLocation$.mapTo(
+        //     xs.periodic(1000/60).map(value => 
+        //         value / 60)
+        //     ).flatten()
+        //     .map(value =>
+        //         value / animationDuration
+        //     ),
+    ).debug("travelAnimationState");
 
-    const vdom$ = view(DOM, value, currentLocation$, settings$, locations$, currentLinksValues$, progression$, path$, action$/*, travelAnimationState$*/, showInfos$);
+    const vdom$ = view(DOM, value, currentLocation$, settings$, locations$, currentLinksValues$, progression$, path$, action$, travelAnimationState$, showInfos$);
 
     const sinks = {
         DOM: vdom$,
-        changeLocation$: changeLocation$, // .compose(delay(animationDuration * 1000)),
+        changeLocation$: changeLocation$.compose(delay(animationDuration * 1000)),
     };
 
     return sinks;
