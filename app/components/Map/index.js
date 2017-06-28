@@ -1,9 +1,12 @@
 import xs from 'xstream';
 import tween from 'xstream/extra/tween'
 import delay from 'xstream/extra/delay'
+import dropRepeats from 'xstream/extra/dropRepeats'
+
 import { run } from '@cycle/run';
 import { svg } from '@cycle/dom';
 import isolate from '@cycle/isolate';
+
 import { html } from 'snabbdom-jsx';
 
 import {Landmark} from '../Landmark';
@@ -68,7 +71,7 @@ function model(DOM, progression$, path$, currentLocation$, settings$, locations$
     return {landmarks$, pathSink};
 }
 
-function view(value, currentLocation$, settings$, locations$, currentLinksValues$, progression$, path$, action$/*, travelAnimationState$*/, showInfos$){
+function view(DOM, value, currentLocation$, settings$, locations$, currentLinksValues$, progression$, path$, action$/*, travelAnimationState$*/, showInfos$){
     const landmarksVdom$ = value.landmarks$.map(landmarks => {
         const latitudeIdentifiedLandmarks = landmarks.map(landmark =>
             landmark.pixelCoordinates$.map(pixelCoordinates =>
@@ -100,24 +103,77 @@ function view(value, currentLocation$, settings$, locations$, currentLinksValues
     //         style: 'stroke: rgb(200,0,0); stroke-width: 4; stroke-dasharray: 10, 5;'}})
     // ).startWith("");
 
-    const showInfosVdom$ = xs.combine(showInfos$, settings$).map(([showInfos, settings]) =>
-        showInfos ?
-            <div className="locationInfo scrollable-panel panel" style={{
-                top: showInfos.pixelCoordinates.y+"px", 
-                left: showInfos.pixelCoordinates.x+"px",
-                width: "200px"
-            }}>
-                <img className="js-hide-infos"
-                src={settings.images.closeMapIcon} style={{
-                    width: "20px", 
-                    background: "rgb(200, 200, 200)", 
-                    padding: "3px",}} />
-                <button className="js-travel-to button-3d" type="button">S'y rendre</button>
-                <h3>{showInfos.location.name}</h3>
-                <p>{showInfos.location.desc}</p>
-            </div> :
-            ""
-    ).startWith("");
+    const svgTag$ = DOM.select(".svgMapTag").elements();
+    const svgTagDimension$ = svgTag$
+    .filter(svgTag => svgTag.length > 0)
+    .map(svgTag => ({
+            width: svgTag[0].clientWidth, 
+            height: svgTag[0].clientHeight,
+        })
+    ).compose(dropRepeats((x, y) => x.width === y.width && x.height === y.height))
+    .startWith(null);
+
+    const mapImageTag$ = DOM.select(".mapImageTag").elements();
+    const mapImageDimension$ = mapImageTag$
+    .filter(mapImageTag => mapImageTag.length > 0)
+    .map(mapImageTag => ({
+            width: mapImageTag[0].getBoundingClientRect().width, 
+            height: mapImageTag[0].getBoundingClientRect().height,
+        })
+    ).compose(dropRepeats((x, y) => x.width === y.width && x.height === y.height))
+    .startWith(null);
+
+    const toolTipContainerTag$ = DOM.select(".locationInfo").elements();
+    const toolTipContainerDimension$ = toolTipContainerTag$.filter(toolTipContainerTag =>
+    toolTipContainerTag.length > 0).map(toolTipContainerTag => ({
+            width: toolTipContainerTag[0].clientWidth,
+            height: toolTipContainerTag[0].clientHeight
+        })
+    ).compose(dropRepeats((x, y) => x.width === y.width && x.height === y.height))
+    .startWith(null);
+
+    const showInfosVdom$ = xs.combine(showInfos$, settings$, svgTagDimension$, mapImageDimension$, toolTipContainerDimension$)
+    .map(([showInfos, settings, svgTagDimension, mapImageDimension, toolTipContainerDimension]) => {
+        if(showInfos) {
+            var xPos, yPos;
+            
+            const margin = 4;
+            const ratio = mapImageDimension.width / settings.mapImageDimension.width;
+            const widthMargin = (svgTagDimension.width - mapImageDimension.width) / 2;
+            const heightMargin = (svgTagDimension.height - mapImageDimension.height) / 2;
+            
+            xPos = showInfos.pixelCoordinates.x * ratio + widthMargin;
+            yPos = showInfos.pixelCoordinates.y * ratio + heightMargin;
+
+            if(toolTipContainerDimension){
+                if(xPos + toolTipContainerDimension.width > mapImageDimension.width)
+                    xPos -= toolTipContainerDimension.width + margin;
+                if(yPos + toolTipContainerDimension.height > mapImageDimension.height)
+                    yPos -= toolTipContainerDimension.height + margin;
+            }
+
+            return (
+                <div className="locationInfo scrollable-panel panel" style={{
+                    left: xPos+"px",
+                    top: yPos+"px",
+                    width: "200px"
+                }}>
+                    <div className="headerToolTip">  
+                        <img className="js-hide-infos"
+                        src={settings.images.closeMapIcon} style={{
+                            width: "20px", 
+                            background: "rgb(200, 200, 200)", 
+                            padding: "3px",}} />
+                        {showInfos.isReachableLandmark ? <button className="js-travel-to button-3d" type="button">S'y rendre</button> : ""}
+                    </div>
+                    <h3>{showInfos.location.name}</h3>
+                    <p>{showInfos.location.desc}</p>
+                </div>
+            );
+        }
+        else
+            return "";
+    }).startWith("");
     
     const vdom$ = xs.combine(landmarksVdom$, pathVdom$, currentLocation$, settings$, locations$, currentLinksValues$, showMap$/*, travelAnimationVdom$*/, showInfosVdom$)
     .map(([landmarksVdom, pathVdom, currentLocation, settings, locations, currentLinksValues, showMap/*, travelAnimationVdom*/, showInfosVdom]) =>
@@ -127,8 +183,8 @@ function view(value, currentLocation$, settings$, locations$, currentLinksValues
                 <div className="map">
                     <div className="mapContainer">
                         {
-                            svg(".mapImage", { attrs: { viewBox:"0 0 792 574", width: "100%", height: "100%", 'background-color': "green"}}, [
-                                svg.image({ attrs: { width: "100%", height: "100%", 'xlink:href': settings.images.map}}),
+                            svg(".svgMapTag", { attrs: { viewBox:"0 0 792 574", width: "100%", height: "100%", 'background-color': "green"}}, [
+                                svg.image(".mapImageTag", { attrs: { width: "100%", height: "100%", 'xlink:href': settings.images.map}}),
                                 pathVdom,
                                 // travelAnimationVdom,
                                 ...landmarksVdom,
@@ -167,13 +223,7 @@ function _Map(sources) {
             currentLocation$,
         ).mapTo(null),
     );
-
-    // changeLocation$.addListener({
-    //     next: (value) => {
-    //         console.log('The Stream gave me a value: ', value);
-    //     },
-    // });
-
+    
     // const getLandmark = function(location$){
     //     return xs.combine(location$, value.landmarks$).map(([location, landmarks]) => {
     //         const identifiedLandmarks = landmarks.map(landmark => 
@@ -213,7 +263,7 @@ function _Map(sources) {
     //     //     ),
     // ).debug("travelAnimationState");
 
-    const vdom$ = view(value, currentLocation$, settings$, locations$, currentLinksValues$, progression$, path$, action$/*, travelAnimationState$*/, showInfos$);
+    const vdom$ = view(DOM, value, currentLocation$, settings$, locations$, currentLinksValues$, progression$, path$, action$/*, travelAnimationState$*/, showInfos$);
 
     const sinks = {
         DOM: vdom$,

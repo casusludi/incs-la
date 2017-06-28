@@ -7,6 +7,10 @@
         },
         "totalTime":24,
         "landmarksImageHeight": 40,
+        "mapImageDimension": {
+            "width": 792,
+            "height": 574
+        },
         "baseLandmarks":[
             {
                 "location": "guemene",
