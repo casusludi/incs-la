@@ -23,17 +23,14 @@ function main(sources) {
     '/game': MainGame,
     '/end': EndGame,
      '*': NotFound,
-  }).debug("match");
-
-  // test$ = match$.map(({path, value, location, createHref}) => {
-  //   return 
-  // });
+  });
   
-  const page$ = match$.map(({path, value}) =>
+  const page$ = match$.map(({path, value, location, createHref}) =>
     value(Object.assign(
-      {}, 
-      sources,
-      {router: sources.router.path(path)}
+        {}, 
+        sources,
+        location.state,
+        {router: sources.router.path(path)}
     ))
   );
 

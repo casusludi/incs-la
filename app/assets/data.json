@@ -5,7 +5,7 @@
             "travel":0.75,
             "investigate":0.25
         },
-        "totalTime":24,
+        "totalTime":2,
         "landmarksImageHeight": 40,
         "mapImageDimension": {
             "width": 792,

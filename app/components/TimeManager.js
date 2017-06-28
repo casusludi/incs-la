@@ -31,11 +31,13 @@ function model(sources){
           raw: elapsedTime,
           hours: elapsedHours,
           minutes: elapsedMinutes,
+          formatted: _.padStart(elapsedHours, 2, '0') + "h" + _.padStart(elapsedMinutes, 2, '0'),
         },
         remainingTime: {
           raw: remainingTime,
           hours: remainingHours,
           minutes: remainingMinutes,
+          formatted: _.padStart(remainingHours, 2, '0') + "h" + _.padStart(remainingMinutes, 2, '0'),
         }
       }
     });
@@ -44,7 +46,7 @@ function model(sources){
 function view(value$){
     return value$.map(value =>
       <span>
-        {_.padStart(value.remainingTime.hours, 2, '0')}h{_.padStart(value.remainingTime.minutes, 2, '0')}
+        {value.remainingTime.formatted}
       </span>
     );
 }
@@ -55,7 +57,7 @@ function _TimeManager(sources) {
 
     const sinks = {
         DOM: vdom$,
-        elapsedTime: value$,
+        elapsedTime$: value$,
     };
 
     return sinks;

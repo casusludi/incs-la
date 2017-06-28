@@ -15,14 +15,16 @@ function intent(DOM){
     return click$;
 }
 
-function view(value$){
+function view(value$, elapsedTime){
+    const success = elapsedTime.remainingTime.raw > 0;
+
     const vdom$ = value$.map(value => (
-        <div classNames="content end" > {/*style={{backgroundImage: "url("+value.settings.images.intro+")"}} > */}
+        <div classNames="content end" style={{backgroundImage: "url("+value.settings.images.intro+")"}} >
             <div className="modal">
-                {false /*props.success*/ ? 
+                {success ? 
                     <div classNames="panel final-panel">
                         {value.texts.win}
-                        15h45
+                        {/*elapsedTime.remainingTime.formatted*/}
                     </div> :
                     <div classNames="panel final-panel">
                         {value.texts.loose}
@@ -37,7 +39,7 @@ function view(value$){
 }
 
 function _EndGame(sources) {
-	const {HTTP, DOM} = sources;
+	const {HTTP, DOM, elapsedTime} = sources;
 
 	// JSON management
 	const jsonSinks = JSONReader({HTTP});
@@ -45,7 +47,7 @@ function _EndGame(sources) {
 	const jsonResponse$ = jsonSinks.JSON;
 
     const action$ = intent(DOM);
-    const vdom$ = view(jsonResponse$);
+    const vdom$ = view(jsonResponse$, elapsedTime);
 
     const sinks = {
         DOM: vdom$,

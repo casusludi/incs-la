@@ -2,6 +2,7 @@ import xs from 'xstream';
 import tween from 'xstream/extra/tween'
 import delay from 'xstream/extra/delay'
 import dropRepeats from 'xstream/extra/dropRepeats'
+import concat from 'xstream/extra/concat'
 
 import { run } from '@cycle/run';
 import { svg } from '@cycle/dom';
@@ -248,12 +249,15 @@ function _Map(sources) {
     const travelAnimationState$ = xs.combine(
         currentLandmark$.map(currentLandmark => currentLandmark.pixelCoordinates$).flatten(),
         newLandmark$.map(newLandmark => newLandmark.pixelCoordinates$).flatten(),
-        changeLocation$.mapTo(tween({
-            from: 0,
-            to: 1,
-            ease: tween.linear.ease,
-            duration: animationDuration * 1000, // milliseconds
-        })).flatten(),
+        concat(
+            changeLocation$.mapTo(tween({
+                from: 0,
+                to: 1,
+                ease: tween.power2.easeInOut,
+                duration: animationDuration * 1000, // milliseconds
+            })).flatten(),
+            xs.of(0),
+        ).debug("pouet")
         // changeLocation$.mapTo(
         //     xs.periodic(1000/60).map(value => 
         //         value / 60)
@@ -261,7 +265,7 @@ function _Map(sources) {
         //     .map(value =>
         //         value / animationDuration
         //     ),
-    ).debug("travelAnimationState");
+    )//.debug("travelAnimationState");
 
     const vdom$ = view(DOM, value, currentLocation$, settings$, locations$, currentLinksValues$, progression$, path$, action$, travelAnimationState$, showInfos$);
 

@@ -24,9 +24,6 @@ import {TimeManager} from './TimeManager';
 import {Map} from './Map';
 
 function _MainGame(sources) {
-
-  // console.log(sources.router);
-
   const {HTTP, DOM} = sources;
 
   // JSON management
@@ -140,12 +137,19 @@ function _MainGame(sources) {
 
   // Time management
   const timeManagerSinks = TimeManager({DOM, settings: settings$, changeLocation: changeLocation$, witnessQuestionned: witnessQuestionned$});
+  const elapsedTime$ = timeManagerSinks.elapsedTime$;
 
   // End game reached ?
   const lastLocationReached$ = xs.combine(path$, progression$)
   .filter(([path, progression]) =>
-    progression === (path.length - 11)
-  ).mapTo(true).debug("lastLocationReached");
+    progression === (path.length - 1)
+  ).mapTo(true);
+
+  const noTimeRemaining$ = timeManagerSinks.elapsedTime$.filter(elapsedTime =>
+    elapsedTime.remainingTime.raw <= 0
+  ).mapTo(true);
+
+  const endGame$ = xs.merge(lastLocationReached$, noTimeRemaining$);
 
   // View
   const witnessesVTree$ = witnesses$.map(witnesses =>
@@ -154,6 +158,7 @@ function _MainGame(sources) {
   const linksVTree$ = currentLocationLinks$.map(links => xs.combine(...links.map(link => link.DOM))).flatten();
   const TimeManagerVTree$ = timeManagerSinks.DOM;
   const mapVTree$ = mapSinks.DOM;
+
 
   const DOMSink$ = xs.combine(linksVTree$, currentLocation$, witnessesVTree$, progression$, TimeManagerVTree$, mapVTree$, texts$, showDestinationLinks$).map(
       ([linksVTree, currentLocation, witnessesVTree, progression, TimeManagerVTree, mapVTree, texts, showDestinationLinks]) =>
@@ -205,7 +210,9 @@ function _MainGame(sources) {
   const sinks = {
     DOM: DOMSink$,
     HTTP: jsonRequest$,
-    router: /*lastLocationReached$.mapTo("/end"), */ lastLocationReached$.mapTo({ pathname: "/end", state: { elapsedTime: "10000"} })
+    router: xs.combine(elapsedTime$, endGame$).map(([elapsedTime, endGame]) =>
+      ({ pathname: "/end", type: 'push', state: { elapsedTime }})
+    ),
   };
   return sinks;
 }
