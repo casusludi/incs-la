@@ -52,8 +52,8 @@ function _MainGame(sources) {
 
   const nextCorrectLocationProxy$ = xs.create();
 
-  const currentLocationLinks$ = xs.combine(nextCorrectLocationProxy$, currentLocation$, lastLocation$, locations$)
-  .map(([nextCorrectLocation, currentLocation, lastLocation, locations, path]) => {
+  const currentLocationLinks$ = xs.combine(currentLocation$, lastLocation$, locations$)
+  .map(([currentLocation, lastLocation, locations]) => {
       const links = _.chain(currentLocation.links || [])
         .concat(lastLocation ? [lastLocation.id] : [])
         .uniq()
@@ -74,8 +74,7 @@ function _MainGame(sources) {
 
   const currentLinksValues$ = currentLocationLinks$.map( 
       links => xs.combine(...links.map(link => link.linkValue$))
-  )
-  .flatten();
+  ).flatten()//.debug();
 
   // Progression management
   const progressionProxy$ = xs.create();

@@ -2,10 +2,10 @@
     "settings":{
 
         "cost":{
-            "travel":0.75,
-            "investigate":0.25
+            "travel": 0.75,
+            "investigate": 0.25
         },
-        "totalTime":2,
+        "totalTime": 24,
         "landmarksImageHeight": 40,
         "mapImageDimension": {
             "width": 792,
@@ -27,8 +27,20 @@
                 }
             }
         ],
-        "images":{
-            "intro":"images/Nantes-sanstour.jpg",
+        "images": {
+            "intro": [
+                "images/intro/slide1.jpg",
+                "images/intro/slide2.jpg",
+                "images/intro/slide3.jpg",
+                "images/intro/slide4.jpg",
+                "images/intro/slide5.jpg",
+                "images/intro/slide6.jpg",
+                "images/intro/slide7.jpg",
+                "images/intro/slide8.jpg",
+                "images/intro/slide9.jpg"
+            ],
+            "endLose": "images/Nantes-sanstour.jpg",
+            "endWin": "images/Nantes-tour.jpg",
             "map": "images/carte/carte.png",
             "closeMapIcon": "images/carte/closeIcon.svg",
             "currentLocationLandmark": "images/carte/currentLocationLandmark.png",
@@ -37,35 +49,35 @@
         }
     },
     "texts":{
-        "gameDescription":"N'oubliez pas, agent, que vous devez faire vite : le touriste que vous poursuivez va recharger son module de translocation en 24 heures. Le compte à rebours ci-dessous indique le temps restant pour le retrouver.",
-        "travelLabel":"Choisissez une destination : ",
-        "travelDescription":"Vous devez enquêter !",
-        "intro":"INCS : Loire-Atlantique",
-        "win":"Bravo ! Le touriste spatio-temporel a aimablement rendu la tour Bretagne qu'il avait emportée, persuadé qu'il pouvait librement s'en servir pour compléter la boule à neige géante qui lui sert de galerie de souvenirs de voyages.",
-        "loose":"Trop tard, le touriste spatio-temporel s'est retransloqué dans son monde, emportant avec lui la tour Bretagne !",
-		"play":"Commencer l'enquête"
+        "gameDescription": "N'oubliez pas, agent, que vous devez faire vite : le touriste que vous poursuivez va recharger son module de translocation en 24 heures. Le compte à rebours ci-dessous indique le temps restant pour le retrouver.",
+        "travelLabel": "Choisissez une destination : ",
+        "travelDescription": "Vous devez enquêter !",
+        "intro": "INCS : Loire-Atlantique",
+        "win": "Bravo ! Le touriste spatio-temporel a aimablement rendu la tour Bretagne qu'il avait emportée, persuadé qu'il pouvait librement s'en servir pour compléter la boule à neige géante qui lui sert de galerie de souvenirs de voyages.",
+        "loose": "Trop tard, le touriste spatio-temporel s'est retransloqué dans son monde, emportant avec lui la tour Bretagne !",
+		"play": "Commencer l'enquête"
     },
     "path":[
         {
-            "location":"nantes",
+            "location": "nantes",
             "clues":{
 
                 "temoin-1":{
-                    "text":"Il a parlé d'un [cinéma](http://data.loire-atlantique.fr/donnees/detail/salles-de-cinema-en-loire-atlantique/?tx_icsoddatastore_pi1[page]=5&visualization=2) qui avait un rapport avec l'océan."
+                    "text": "Il a parlé d'un [cinéma](http://data.loire-atlantique.fr/donnees/detail/salles-de-cinema-en-loire-atlantique/?tx_icsoddatastore_pi1[page]=5&visualization=2) qui avait un rapport avec l'océan."
                 },
                 "temoin-2":{
-                    "text":"J'ai cru l'entendre parler d'un écrivain célèbre, mais il parlait d'un nom qui ne finissait pas par la bonne lettre."
+                    "text": "J'ai cru l'entendre parler d'un écrivain célèbre, mais il parlait d'un nom qui ne finissait pas par la bonne lettre."
                 },
                 "data":{
-                    "text":"Grzzz...Prrrt...Clic... Suspect a pris la ... grzzzt... [ligne Lila](http://www.casusludi.com/projects/Download/BD-Lila/frequentations_LILA_2012_2013.htm) la plus frrrréquentée."
+                    "text": "Grzzz...Prrrt...Clic... Suspect a pris la ... grzzzt... [ligne Lila](http://www.casusludi.com/projects/Download/BD-Lila/frequentations_LILA_2012_2013.htm) la plus frrrréquentée."
                 }
             }
         },
         {
-            "location":"chateaubriant",
+            "location": "chateaubriant",
             "clues":{
-                "temoin-1":{
-                    "text":"Il avait rendez-vous avec un [paludier](https://fr.wikipedia.org/wiki/Saunier)."
+                "temoin-1": {
+                    "text": "Il avait rendez-vous avec un [paludier](https://fr.wikipedia.org/wiki/Saunier)."
                 },
                 "temoin-2":{
                     "text":"Il voulait brouiller sa piste dans des [marais](http://data.loire-atlantique.fr/donnees/detail/carte-des-implantations-des-reserves-naturelles-regionales-en-pays-de-la-loire/?tx_icsoddatastore_pi1[page]=1&visualization=2)."

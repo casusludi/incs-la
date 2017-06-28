@@ -19,7 +19,7 @@ function view(value$, elapsedTime){
     const success = elapsedTime.remainingTime.raw > 0;
 
     const vdom$ = value$.map(value => (
-        <div classNames="content end" style={{backgroundImage: "url("+value.settings.images.intro+")"}} >
+        <div classNames="content end" style={{ backgroundImage: "url("+ (success ? value.settings.images.endWin : value.settings.images.endLoose) +")" }} >
             <div className="modal">
                 {success ? 
                     <div classNames="panel final-panel">

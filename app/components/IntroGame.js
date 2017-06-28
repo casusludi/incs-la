@@ -8,24 +8,38 @@ import * as _ from 'lodash';
 import {JSONReader} from './JSONReader';
 
 function intent(DOM){
-    const click$ = DOM
-        .select('.button-3d')
-        .events('click');
+    const click$ = xs.merge(
+		DOM.select('.startGame').events('click').mapTo({type: "startGame"}),
+		DOM.select('.content').events('click').mapTo({type: "nextSlide"}),
+	);
 
     return click$;
 }
 
-function view(value$){
-    const vdom$ = value$.map(value => (
-		<div classNames="content intro" style={{backgroundImage: "url("+value.settings.images.intro+")"}} >
+function model(action$, jsonResponse$){
+	const index$ = action$.filter(action => action.type === "nextSlide").fold((acc, x) => acc + 1, 0);
+	
+	const value$ = xs.combine(index$, jsonResponse$).map(([index, jsonResponse]) => ({
+		image: jsonResponse.settings.images.intro[index],
+		ready: index >= jsonResponse.settings.images.intro.length,
+	}));
+
+	return value$;
+}
+
+function view(value$, jsonResponse$){
+    const vdom$ = xs.combine(value$, jsonResponse$).map(([value, jsonResponse]) =>
+		<div classNames="content intro" style={{backgroundImage: "url("+ value.image +")"}} >
+			{value.ready ?
 			<div className="modal">
 				<div className="panel">
-					{value.texts.intro}
+					{jsonResponse.texts.intro}
 				</div>
-				<a className="button-3d">{value.texts.play}</a>
-			</div>
+				<a classNames="startGame button-3d">{jsonResponse.texts.play}</a>
+			</div> :
+			""}
 		</div>
-	));
+	);
 
     return vdom$;
 }
@@ -39,12 +53,13 @@ function _IntroGame(sources) {
 	const jsonResponse$ = jsonSinks.JSON;
 
     const action$ = intent(DOM);
-    const vdom$ = view(jsonResponse$);
+    const value$ = model(action$, jsonResponse$);
+    const vdom$ = view(value$, jsonResponse$);
 
     const sinks = {
         DOM: vdom$,
 		HTTP: jsonRequest$,
-		router: action$.mapTo("/game"),
+		router: action$.filter(action => action.type === "startGame").mapTo("/game"),
     };
 
     return sinks;

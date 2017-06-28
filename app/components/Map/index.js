@@ -62,8 +62,8 @@ function model(DOM, progression$, path$, currentLocation$, settings$, locations$
     });
     
     const landmarks$ = locationsWithPixelCoordinates$.map(locationsWithPixelCoordinates =>
-        locationsWithPixelCoordinates.map((locationWithPixelCoordinates,key) =>
-            isolate(Landmark,key)({DOM, props$: xs.of(locationWithPixelCoordinates)})
+        locationsWithPixelCoordinates.map((locationWithPixelCoordinates, key) =>
+            isolate(Landmark, key)({DOM, props$: xs.of(locationWithPixelCoordinates)})
         )
     );
 
@@ -215,7 +215,7 @@ function _Map(sources) {
     const changeLocation$ = landmarksShowInfos$.map(showInfos =>
         action$.filter(action => action.type === "travelTo")
         .mapTo(showInfos.location)
-    ).flatten();
+    ).flatten().debug("changeLocation");
 
     const showInfos$ = xs.merge(
         landmarksShowInfos$,
@@ -238,17 +238,17 @@ function _Map(sources) {
                     identifiedLandmark.id === location.id
                 )[0].landmark
             );
-        }).flatten();
+        }).flatten()//.debug("etape1");
     }
 
-    const currentLandmark$ = getLandmark(currentLocation$);
+    const currentLandmark$ = getLandmark(currentLocation$)//.debug("currentLandmark");
 
-    const newLandmark$ = getLandmark(changeLocation$);
+    const newLandmark$ = getLandmark(changeLocation$)//.debug("newLandmark");
     
     const animationDuration = 2;
     const travelAnimationState$ = xs.combine(
-        currentLandmark$.map(currentLandmark => currentLandmark.pixelCoordinates$).flatten(),
-        newLandmark$.map(newLandmark => newLandmark.pixelCoordinates$).flatten(),
+        currentLandmark$.map(currentLandmark => currentLandmark.pixelCoordinates$).flatten(),//.debug("currentLandmark"),
+        newLandmark$.map(newLandmark => newLandmark.pixelCoordinates$).flatten(),//.debug("newLandmark"),
         concat(
             changeLocation$.mapTo(tween({
                 from: 0,
@@ -257,14 +257,7 @@ function _Map(sources) {
                 duration: animationDuration * 1000, // milliseconds
             })).flatten(),
             xs.of(0),
-        ).debug("pouet")
-        // changeLocation$.mapTo(
-        //     xs.periodic(1000/60).map(value => 
-        //         value / 60)
-        //     ).flatten()
-        //     .map(value =>
-        //         value / animationDuration
-        //     ),
+        )//.debug("pouet")
     )//.debug("travelAnimationState");
 
     const vdom$ = view(DOM, value, currentLocation$, settings$, locations$, currentLinksValues$, progression$, path$, action$, travelAnimationState$, showInfos$);
