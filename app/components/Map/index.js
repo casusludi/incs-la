@@ -203,7 +203,7 @@ function view(DOM, value, currentLocation$, settings$, locations$, currentLinksV
     return vdom$;
 }
 
-function _Map(sources) {
+export function Map(sources) {
     const {DOM, progression$, path$, currentLocation$, settings$, locations$, currentLinksValues$} = sources;
     const action$ = intent(DOM);
     const value = model(DOM, progression$, path$, currentLocation$, settings$, locations$, currentLinksValues$);
@@ -269,5 +269,3 @@ function _Map(sources) {
 
     return sinks;
 }
-
-export function Map(sources){ return isolate(_Map)(sources) };

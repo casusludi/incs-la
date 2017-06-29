@@ -38,7 +38,7 @@ function view(value$, elapsedTime){
     return vdom$;
 }
 
-function _EndGame(sources) {
+export function EndGame(sources) {
 	const {HTTP, DOM, elapsedTime} = sources;
 
 	// JSON management
@@ -57,5 +57,3 @@ function _EndGame(sources) {
 
     return sinks;
 }
-
-export function EndGame(sources){ return isolate(_EndGame)(sources) };

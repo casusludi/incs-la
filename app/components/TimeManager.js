@@ -51,7 +51,7 @@ function view(value$){
     );
 }
 
-function _TimeManager(sources) {
+export function TimeManager(sources) {
     const value$ = model(sources);
     const vdom$ = view(value$);
 
@@ -62,5 +62,3 @@ function _TimeManager(sources) {
 
     return sinks;
 }
-
-export function TimeManager(sources){ return isolate(_TimeManager)(sources) };

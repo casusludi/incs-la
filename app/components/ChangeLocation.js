@@ -24,7 +24,7 @@ function view(props$){
         );
 }
 
-function _ChangeLocation(sources) {
+export function ChangeLocation(sources) {
     const {props$, DOM} = sources;
     const action$ = intent(DOM);
     const value$ = model(props$, action$);
@@ -38,5 +38,3 @@ function _ChangeLocation(sources) {
 
     return sinks;
 }
-
-export function ChangeLocation(sources){ return isolate(_ChangeLocation)(sources) };

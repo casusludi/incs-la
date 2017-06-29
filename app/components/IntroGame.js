@@ -44,7 +44,7 @@ function view(value$, jsonResponse$){
     return vdom$;
 }
 
-function _IntroGame(sources) {
+export function IntroGame(sources) {
 	const {HTTP, DOM} = sources;
 
 	// JSON management
@@ -64,5 +64,3 @@ function _IntroGame(sources) {
 
     return sinks;
 }
-
-export function IntroGame(sources){ return isolate(_IntroGame)(sources) };

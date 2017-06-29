@@ -16,14 +16,13 @@ import {html} from 'snabbdom-jsx';
 
 import switchPath from 'switch-path';
 
-import {Investigate} from './Investigate';
 import {ChangeLocation} from './ChangeLocation';
 import {Witness} from './Witness';
 import {JSONReader} from './JSONReader';
 import {TimeManager} from './TimeManager';
 import {Map} from './Map';
 
-function _MainGame(sources) {
+export function MainGame(sources) {
   const {HTTP, DOM} = sources;
 
   // JSON management
@@ -61,8 +60,8 @@ function _MainGame(sources) {
         .shuffle()
         .value();
 
-      return links.map(link =>
-        ChangeLocation({
+      return links.map((link, key) =>
+        isolate(ChangeLocation, key)({
           DOM, 
           props$: xs.of(
             Object.assign({}, locations[link], {id: link})
@@ -112,7 +111,7 @@ function _MainGame(sources) {
   const witnesses$ = xs.combine(witnessesData$, path$, currentLocation$, progression$)
   .map(([witnessesData, path, currentLocation, progression]) => 
     Object.keys(witnessesData).map((key, value) =>
-      isolate(Witness,key)({
+      isolate(Witness, key)({
         DOM: sources.DOM, 
         props$: xs.of(Object.assign(
           {}, 
@@ -215,5 +214,3 @@ function _MainGame(sources) {
   };
   return sinks;
 }
-
-export function MainGame(sources){ return isolate(_MainGame)(sources) };

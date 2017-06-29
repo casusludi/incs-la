@@ -18,6 +18,11 @@ function main(sources) {
 
   const {HTTP, DOM} = sources;
 
+	// JSON management
+	// const jsonSinks = JSONReader({HTTP});
+	// const jsonRequest$ = jsonSinks.request;
+	// const jsonResponse$ = jsonSinks.JSON;
+
   const match$ = sources.router.define({
     '/': IntroGame,
     '/game': MainGame,

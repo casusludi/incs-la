@@ -36,7 +36,7 @@ function view(value$){
     return vdom$;
 }
 
-function _Path(sources) {
+export function Path(sources) {
     const {locationsWithPixelCoordinates$, progression$, path$, currentLocation$} = sources;
 
     const value$ = model(locationsWithPixelCoordinates$, progression$, path$, currentLocation$);
@@ -48,5 +48,3 @@ function _Path(sources) {
 
     return sinks;
 }
-
-export function Path(sources){ return isolate(_Path)(sources) };
