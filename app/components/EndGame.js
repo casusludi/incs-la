@@ -39,21 +39,15 @@ function view(value$, elapsedTime){
 }
 
 export function EndGame(sources) {
-	const {HTTP, DOM, elapsedTime} = sources;
+	const {DOM, elapsedTime} = sources;
 
-    console.log(sources);
-
-	// JSON management
-	const jsonSinks = JSONReader({HTTP});
-	const jsonRequest$ = jsonSinks.request;
-	const jsonResponse$ = jsonSinks.JSON;
+    const datas$ = sources.scenarioGenerator;
 
     const action$ = intent(DOM);
-    const vdom$ = view(jsonResponse$, elapsedTime);
+    const vdom$ = view(datas$, elapsedTime);
 
     const sinks = {
         DOM: vdom$,
-		HTTP: jsonRequest$,
 		router: action$.mapTo("/"),
     };
 

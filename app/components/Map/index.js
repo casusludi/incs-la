@@ -23,29 +23,29 @@ function intent(DOM){
     );
 }
 
-function model(DOM, currentLocation$, currentLocationLinksIds$, progression$, jsonResponse$){
-    const locationsWithPixelCoordinatesTEMP$ = jsonResponse$.map(jsonResponse => {
-        const baseLandmarkId1 = jsonResponse.settings.baseLandmarks[0].location;
-        const coordinateLandmark1 = jsonResponse.locations[baseLandmarkId1].coordinates;
-        const pixelCoordinateLandmark1 = jsonResponse.settings.baseLandmarks[0].pixelCoordinates;
+function model(DOM, currentLocation$, currentLocationLinksIds$, progression$, datas$){
+    const locationsWithPixelCoordinatesTEMP$ = datas$.map(datas => {
+        const baseLandmarkId1 = datas.settings.baseLandmarks[0].location;
+        const coordinateLandmark1 = datas.locations[baseLandmarkId1].coordinates;
+        const pixelCoordinateLandmark1 = datas.settings.baseLandmarks[0].pixelCoordinates;
 
-        const baseLandmarkId2 = jsonResponse.settings.baseLandmarks[1].location;
-        const coordinateLandmark2 = jsonResponse.locations[baseLandmarkId2].coordinates;
-        const pixelCoordinateLandmark2 = jsonResponse.settings.baseLandmarks[1].pixelCoordinates;
+        const baseLandmarkId2 = datas.settings.baseLandmarks[1].location;
+        const coordinateLandmark2 = datas.locations[baseLandmarkId2].coordinates;
+        const pixelCoordinateLandmark2 = datas.settings.baseLandmarks[1].pixelCoordinates;
 
-        return Object.keys(jsonResponse.locations).map((curLocationId, value) => {
+        return Object.keys(datas.locations).map((curLocationId, value) => {
             // Some boring arithmetic
             // Converts real latitude/longitude into pixel coordinates curX/curY
             const xRatio = (coordinateLandmark2.latitude - coordinateLandmark1.latitude) / (pixelCoordinateLandmark2.x - pixelCoordinateLandmark1.x);
             const x0 = (pixelCoordinateLandmark2.x * coordinateLandmark1.latitude - pixelCoordinateLandmark1.x * coordinateLandmark2.latitude) / (pixelCoordinateLandmark2.x - pixelCoordinateLandmark1.x);
-            const curX = (jsonResponse.locations[curLocationId].coordinates.latitude - x0) / xRatio;
+            const curX = (datas.locations[curLocationId].coordinates.latitude - x0) / xRatio;
             
             const yRatio = (coordinateLandmark2.longitude - coordinateLandmark1.longitude) / (pixelCoordinateLandmark2.y - pixelCoordinateLandmark1.y);
             const y0 = (pixelCoordinateLandmark2.y * coordinateLandmark1.longitude - pixelCoordinateLandmark1.y * coordinateLandmark2.longitude) / (pixelCoordinateLandmark2.y - pixelCoordinateLandmark1.y);
-            const curY = (jsonResponse.locations[curLocationId].coordinates.longitude - y0) / yRatio;
+            const curY = (datas.locations[curLocationId].coordinates.longitude - y0) / yRatio;
 
             return {
-                location: makeLocationObject(curLocationId, jsonResponse),
+                location: makeLocationObject(curLocationId, datas),
                 pixelCoordinates: {
                     x: curX,
                     y: curY,
@@ -54,8 +54,8 @@ function model(DOM, currentLocation$, currentLocationLinksIds$, progression$, js
         });
     });
 
-    const locationsWithPixelCoordinates$ = xs.combine(currentLocation$, currentLocationLinksIds$, locationsWithPixelCoordinatesTEMP$, jsonResponse$)
-    .map(([currentLocation, currentLocationLinksIds, locationsWithPixelCoordinatesTEMP, jsonResponse]) => {
+    const locationsWithPixelCoordinates$ = xs.combine(currentLocation$, currentLocationLinksIds$, locationsWithPixelCoordinatesTEMP$, datas$)
+    .map(([currentLocation, currentLocationLinksIds, locationsWithPixelCoordinatesTEMP, datas]) => {
         return locationsWithPixelCoordinatesTEMP.map(locationsWithPixelCoordinatesTEMP => {
             const isCurrentLocation = locationsWithPixelCoordinatesTEMP.location.id === currentLocation.id;
             const isReachableLandmark = _.includes(currentLocationLinksIds, locationsWithPixelCoordinatesTEMP.location.id);
@@ -63,26 +63,26 @@ function model(DOM, currentLocation$, currentLocationLinksIds$, progression$, js
             return Object.assign({}, 
                 locationsWithPixelCoordinatesTEMP,
                 {
-                    settings: jsonResponse.settings,
+                    settings: datas.settings,
                     isCurrentLocation: isCurrentLocation,
                     isReachableLandmark: isReachableLandmark,
                 }
             );
         });
-    });
+    }).remember();
     
     const landmarks$ = locationsWithPixelCoordinates$.map(locationsWithPixelCoordinates =>
         locationsWithPixelCoordinates.map((locationWithPixelCoordinates, key) =>
-            isolate(Landmark, key)({DOM, jsonResponse$, props$: xs.of(locationWithPixelCoordinates)})
+            isolate(Landmark, key)({DOM, datas$, props$: xs.of(locationWithPixelCoordinates)})
         )
     );
 
-    const pathSink = Path({locationsWithPixelCoordinates$, progression$, jsonResponse$, currentLocation$});
+    const pathSink = Path({locationsWithPixelCoordinates$, progression$, datas$, currentLocation$});
 
     return {landmarks$, pathSink};
 }
 
-function view(DOM, value, currentLocation$, changeLocationDelayed$, progression$, jsonResponse$, action$, travelAnimationState$, showInfos$){
+function view(DOM, value, currentLocation$, changeLocationDelayed$, progression$, datas$, action$, travelAnimationState$, showInfos$){
     const landmarksVdom$ = value.landmarks$.map(landmarks => {
         const latitudeIdentifiedLandmarks = landmarks.map(landmark =>
             landmark.pixelCoordinates$.map(pixelCoordinates =>
@@ -147,13 +147,13 @@ function view(DOM, value, currentLocation$, changeLocationDelayed$, progression$
     ).compose(dropRepeats((x, y) => x.width === y.width && x.height === y.height))
     .startWith(null);
 
-    const showInfosVdom$ = xs.combine(showInfos$, jsonResponse$, svgTagDimension$, mapImageDimension$, toolTipContainerDimension$)
-    .map(([showInfos, jsonResponse, svgTagDimension, mapImageDimension, toolTipContainerDimension]) => {
+    const showInfosVdom$ = xs.combine(showInfos$, datas$, svgTagDimension$, mapImageDimension$, toolTipContainerDimension$)
+    .map(([showInfos, datas, svgTagDimension, mapImageDimension, toolTipContainerDimension]) => {
         if(showInfos) {
             var xPos, yPos;
             
             const margin = 4;
-            const ratio = mapImageDimension.width / jsonResponse.settings.mapImageDimension.width;
+            const ratio = mapImageDimension.width / datas.settings.mapImageDimension.width;
             const widthMargin = (svgTagDimension.width - mapImageDimension.width) / 2;
             const heightMargin = (svgTagDimension.height - mapImageDimension.height) / 2;
             
@@ -176,7 +176,7 @@ function view(DOM, value, currentLocation$, changeLocationDelayed$, progression$
                 }}>
                     <div className="headerToolTip">  
                         <img className="js-hide-infos"
-                        src={jsonResponse.settings.images.closeMapIcon} style={{
+                        src={datas.settings.images.closeMapIcon} style={{
                             width: "20px", 
                             background: "rgb(200, 200, 200)", 
                             padding: "3px",}} />
@@ -191,8 +191,8 @@ function view(DOM, value, currentLocation$, changeLocationDelayed$, progression$
             return "";
     }).startWith("");
     
-    const vdom$ = xs.combine(landmarksVdom$, pathVdom$, currentLocation$, jsonResponse$, showMap$, travelAnimationVdom$, showInfosVdom$)
-    .map(([landmarksVdom, pathVdom, currentLocation, jsonResponse, showMap, travelAnimationVdom, showInfosVdom]) =>
+    const vdom$ = xs.combine(landmarksVdom$, pathVdom$, currentLocation$, datas$, showMap$, travelAnimationVdom$, showInfosVdom$)
+    .map(([landmarksVdom, pathVdom, currentLocation, datas, showMap, travelAnimationVdom, showInfosVdom]) =>
         <div>
             <button className="js-show-map button-3d" type="button" >Afficher la carte</button>
             {showMap ?
@@ -200,11 +200,11 @@ function view(DOM, value, currentLocation$, changeLocationDelayed$, progression$
                     <div className="mapContainer">
                         {
                             svg(".svgMapTag", { attrs: { viewBox:"0 0 792 574", width: "100%", height: "100%", 'background-color': "green"}}, [
-                                svg.image(".mapImageTag", { attrs: { width: "100%", height: "100%", 'xlink:href': jsonResponse.settings.images.map}}),
+                                svg.image(".mapImageTag", { attrs: { width: "100%", height: "100%", 'xlink:href': datas.settings.images.map}}),
                                 pathVdom,
                                 travelAnimationVdom,
                                 ...landmarksVdom,
-                                svg.image(".js-show-map", { attrs: { width: "20px", height: "20px", x: "10px", y: "10px", 'xlink:href': jsonResponse.settings.images.closeMapIcon}}),
+                                svg.image(".js-show-map", { attrs: { width: "20px", height: "20px", x: "10px", y: "10px", 'xlink:href': datas.settings.images.closeMapIcon}}),
                             ])
                         }
                         {showInfosVdom}
@@ -219,11 +219,11 @@ function view(DOM, value, currentLocation$, changeLocationDelayed$, progression$
 }
 
 export function Map(sources) {
-    const {DOM, currentLocation$, currentLocationLinksIds$, progression$, jsonResponse$} = sources;
+    const {DOM, currentLocation$, currentLocationLinksIds$, progression$, datas$} = sources;
     const animationDuration = 3;
 
     const action$ = intent(DOM);
-    const value = model(DOM, currentLocation$, currentLocationLinksIds$, progression$, jsonResponse$);
+    const value = model(DOM, currentLocation$, currentLocationLinksIds$, progression$, datas$);
     
     const landmarksShowInfos$ = value.landmarks$.map(landmarks =>
         xs.merge(...landmarks.map(landmark => landmark.showInfos$))
@@ -274,7 +274,7 @@ export function Map(sources) {
         })).flatten(),
     );
 
-    const vdom$ = view(DOM, value, currentLocation$, changeLocationDelayed$, progression$, jsonResponse$, action$, travelAnimationState$, showInfos$);
+    const vdom$ = view(DOM, value, currentLocation$, changeLocationDelayed$, progression$, datas$, action$, travelAnimationState$, showInfos$);
 
     const sinks = {
         DOM: vdom$,

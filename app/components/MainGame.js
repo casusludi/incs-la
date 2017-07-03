@@ -35,23 +35,18 @@ import {Map} from './Map';
 // }
 
 // Takes a location id and makes an object made up of this id attribute and the location object contained in the json file
-export function makeLocationObject(id, jsonResponse){
-	return Object.assign({}, jsonResponse.locations[id], {id});
+export function makeLocationObject(id, datas){
+	return Object.assign({}, datas.locations[id], {id});
 }
 
 export function MainGame(sources) {
 	const {DOM} = sources;
 
-	// JSON management
-	const jsonSinks = JSONReader(sources);
-	const jsonRequest$ = jsonSinks.request;
-	const jsonResponse2$ = jsonSinks.JSON;
-
-	const jsonResponse$ = sources.scenarioGenerator;
-
+	const datas$ = sources.scenarioGenerator;
+	
 	// Get the first location
-	const pathInit$ = jsonResponse$.map(jsonResponse =>
-		makeLocationObject(jsonResponse.path[0].location, jsonResponse)
+	const pathInit$ = datas$.map(datas =>
+		makeLocationObject(datas.path[0].location, datas)
 	);
 
 	// Proxys creation
@@ -67,9 +62,9 @@ export function MainGame(sources) {
 
 	const lastLocation$ = currentLocation$.compose(pairwise).map(item => item[0]).startWith(null);
 
-	const nextCorrectLocation$ = xs.combine(progression$, jsonResponse$).map(([progression, jsonResponse]) =>
-		progression + 1 < jsonResponse.path.length ? 
-			makeLocationObject(jsonResponse.path[progression + 1].location, jsonResponse) : 
+	const nextCorrectLocation$ = xs.combine(progression$, datas$).map(([progression, datas]) =>
+		progression + 1 < datas.path.length ? 
+			makeLocationObject(datas.path[progression + 1].location, datas) : 
 			null
 	);
 
@@ -88,10 +83,10 @@ export function MainGame(sources) {
 		.value()
 	);
 	
-	const currentLocationLinks$ = xs.combine(currentLocationLinksIds$, jsonResponse$)
-	.map(([currentLocationLinksIds, jsonResponse]) => 
+	const currentLocationLinks$ = xs.combine(currentLocationLinksIds$, datas$)
+	.map(([currentLocationLinksIds, datas]) => 
 		currentLocationLinksIds.map(currentLocationLinkId =>
-			makeLocationObject(currentLocationLinkId, jsonResponse)
+			makeLocationObject(currentLocationLinkId, datas)
 		)
 	);
 
@@ -111,7 +106,7 @@ export function MainGame(sources) {
 
 	correctNextChoosenLocationProxy$.imitate(correctNextChoosenLocation$);
 	
-	const mapSinks = Map({DOM, currentLocation$, currentLocationLinksIds$, progression$, jsonResponse$});
+	const mapSinks = Map({DOM, currentLocation$, currentLocationLinksIds$, progression$, datas$});
 
 	const changeLocation$ = xs.merge(
 		changeLocationButtons$.map( 
@@ -122,16 +117,16 @@ export function MainGame(sources) {
 
 	changeLocationProxy$.imitate(changeLocation$);
 
-	const witnesses$ = xs.combine(currentLocation$.compose(sampleCombine(progression$)), jsonResponse$)
-	.map(([[currentLocation, progression], jsonResponse]) => 
+	const witnesses$ = xs.combine(currentLocation$.compose(sampleCombine(progression$)), datas$)
+	.map(([[currentLocation, progression], datas]) => 
 		Object.keys(currentLocation.places).map((key, value) =>
 			isolate(Witness, key)({
 				DOM: sources.DOM,
 				props$: xs.of(Object.assign(
 					{}, 
 					currentLocation.places[key], 
-					jsonResponse.path[progression].location === currentLocation.id ? 
-						{clue: jsonResponse.path[progression].clues[key]} : 
+					datas.path[progression].location === currentLocation.id ? 
+						{clue: datas.path[progression].clues[key]} : 
 						{},
 				)),
 			})
@@ -147,12 +142,12 @@ export function MainGame(sources) {
 		changeLocation$.mapTo(false),
 	).startWith(false);
 
-	const timeManagerSinks = TimeManager({DOM, jsonResponse$, changeLocation$, witnessQuestionned$});
+	const timeManagerSinks = TimeManager({DOM, datas$, changeLocation$, witnessQuestionned$});
 
 	// End game reached ?
-	const lastLocationReached$ = xs.combine(jsonResponse$, progression$)
-	.filter(([jsonResponse, progression]) =>
-		progression === (jsonResponse.path.length - 1)
+	const lastLocationReached$ = xs.combine(datas$, progression$)
+	.filter(([datas, progression]) =>
+		progression === (datas.path.length - 1)
 	).mapTo(true);
 
 	const noTimeRemaining$ = timeManagerSinks.elapsedTime$.filter(elapsedTime =>
@@ -167,8 +162,8 @@ export function MainGame(sources) {
 	const timeManagerVTree$ = timeManagerSinks.DOM;
 	const mapVTree$ = mapSinks.DOM;
 
-	const DOMSink$ = xs.combine(linksVTree$, currentLocation$, witnessesVTree$, timeManagerVTree$, mapVTree$, jsonResponse$, showDestinationLinks$).map(
-		([linksVTree, currentLocation, witnessesVTree, timeManagerVTree, mapVTree, jsonResponse, showDestinationLinks]) =>
+	const DOMSink$ = xs.combine(linksVTree$, currentLocation$, witnessesVTree$, timeManagerVTree$, mapVTree$, datas$, showDestinationLinks$).map(
+		([linksVTree, currentLocation, witnessesVTree, timeManagerVTree, mapVTree, datas, showDestinationLinks]) =>
 			<section className="main">
 				<section className="main-content" >
 					<section className="city" style={{backgroundImage: "url("+currentLocation.image+")"}} >
@@ -187,7 +182,7 @@ export function MainGame(sources) {
 									{currentLocation.desc}
 								</div>
 								<div classNames="panel scrollable-panel">
-									{jsonResponse.texts.gameDescription}
+									{datas.texts.gameDescription}
 								</div>
 								<div classNames="game-time panel red-panel">
 									{timeManagerVTree}
@@ -198,13 +193,13 @@ export function MainGame(sources) {
 							<div className="travel-panel">
 								{showDestinationLinks ?
 									<div className="travel-panel-content">
-										<div className="travel-label">{jsonResponse.texts.travelLabel}</div>
+										<div className="travel-label">{datas.texts.travelLabel}</div>
 										<nav>
 											{linksVTree}
 										</nav>
 									</div> :
 									<div className="travel-panel-content">
-										{jsonResponse.texts.travelDescription}
+										{datas.texts.travelDescription}
 									</div>
 								}
 							</div>
@@ -216,11 +211,9 @@ export function MainGame(sources) {
 
 	const sinks = {
 		DOM: DOMSink$,
-		HTTP: jsonRequest$,
 		router: xs.combine(timeManagerSinks.elapsedTime$, endGame$).map(([elapsedTime, endGame]) =>
 			({ pathname: "/end", type: 'push', state: { elapsedTime }})
 		),
-		scenarioGenerator: jsonResponse2$,
 	};
 	return sinks;
 }

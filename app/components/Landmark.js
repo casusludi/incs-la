@@ -22,7 +22,7 @@ function model(props$, action$){
     ).flatten();
 }
 
-function view(props$, jsonResponse$){
+function view(props$, datas$){
     return props$.map(props => {
         return svg.g({ attrs: { transform: "translate(" + props.pixelCoordinates.x + " " + props.pixelCoordinates.y + ")" } }, [
             svg.image({ attrs: {
@@ -43,11 +43,11 @@ function view(props$, jsonResponse$){
 }
 
 export function Landmark(sources) {
-    const {props$, jsonResponse$, DOM} = sources;
+    const {props$, datas$, DOM} = sources;
     const p$ = props$.remember()
     const action$ = intent(DOM);
     const value$ = model(p$, action$);
-    const vdom$ = view(p$, jsonResponse$.debug("wsh"));
+    const vdom$ = view(p$, datas$.debug("wsh"));
 
     const sinks = {
         DOM: vdom$,

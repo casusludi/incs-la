@@ -16,26 +16,26 @@ function intent(DOM){
     return click$;
 }
 
-function model(action$, jsonResponse$){
+function model(action$, datas$){
 	const index$ = action$.filter(action => action.type === "nextSlide").fold((acc, x) => acc + 1, 0);
 	
-	const value$ = xs.combine(index$, jsonResponse$).map(([index, jsonResponse]) => ({
-		image: jsonResponse.settings.images.intro[index >= jsonResponse.settings.images.intro.length ? jsonResponse.settings.images.intro.length - 1 : index],
-		ready: index >= jsonResponse.settings.images.intro.length - 1,
+	const value$ = xs.combine(index$, datas$).map(([index, datas]) => ({
+		image: datas.settings.images.intro[index >= datas.settings.images.intro.length ? datas.settings.images.intro.length - 1 : index],
+		ready: index >= datas.settings.images.intro.length - 1,
 	}));
 
 	return value$;
 }
 
-function view(value$, jsonResponse$){
-    const vdom$ = xs.combine(value$, jsonResponse$).map(([value, jsonResponse]) =>
+function view(value$, datas$){
+    const vdom$ = xs.combine(value$, datas$).map(([value, datas]) =>
 		<div classNames="content intro" style={{backgroundImage: "url("+ value.image +")"}} >
 			{value.ready ?
 			<div className="modal">
 				<div className="panel">
-					{jsonResponse.texts.intro}
+					{datas.texts.intro}
 				</div>
-				<a classNames="startGame button-3d">{jsonResponse.texts.play}</a>
+				<a classNames="startGame button-3d">{datas.texts.play}</a>
 			</div> :
 			""}
 		</div>
@@ -45,20 +45,16 @@ function view(value$, jsonResponse$){
 }
 
 export function IntroGame(sources) {
-	const {HTTP, DOM} = sources;
+	const {DOM} = sources;
 
-	// JSON management
-	const jsonSinks = JSONReader({HTTP});
-	const jsonRequest$ = jsonSinks.request;
-	const jsonResponse$ = jsonSinks.JSON;
+	const datas$ = sources.scenarioGenerator;
 
     const action$ = intent(DOM);
-    const value$ = model(action$, jsonResponse$);
-    const vdom$ = view(value$, jsonResponse$);
+    const value$ = model(action$, datas$);
+    const vdom$ = view(value$, datas$);
 
     const sinks = {
         DOM: vdom$,
-		HTTP: jsonRequest$,
 		router: action$.filter(action => action.type === "startGame").mapTo("/game"),
     };
 

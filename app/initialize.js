@@ -15,14 +15,16 @@ import {MainGame} from './components/MainGame';
 import {EndGame} from './components/EndGame';
 import {NotFound} from './components/NotFound';
 
+import {JSONReader} from './components/JSONReader';
+
 function main(sources) {
 
   const {HTTP, DOM} = sources;
 
 	// JSON management
-	// const jsonSinks = JSONReader({HTTP});
-	// const jsonRequest$ = jsonSinks.request;
-	// const jsonResponse$ = jsonSinks.JSON;
+	const jsonSinks = JSONReader({HTTP});
+	const jsonRequest$ = jsonSinks.request;
+	const jsonResponse$ = jsonSinks.JSON;
 
   const match$ = sources.router.define({
     '*': NotFound,
@@ -43,8 +45,8 @@ function main(sources) {
   const sinks = {
     DOM: page$.map(c => c.DOM).flatten(),
     router: page$.map(c => c.router).flatten(),
-    HTTP: page$.filter(c => c.HTTP).map(c => c.HTTP).flatten(),
-    scenarioGenerator: page$.filter(c => c.scenarioGenerator).map(c => c.scenarioGenerator).flatten(),
+    HTTP: jsonRequest$,
+    scenarioGenerator: jsonResponse$,
   };
   
   return sinks;
