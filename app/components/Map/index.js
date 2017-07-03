@@ -10,6 +10,7 @@ import isolate from '@cycle/isolate';
 import { html } from 'snabbdom-jsx';
 
 import {Landmark} from '../Landmark';
+import {LandmarkTooltip} from '../LandmarkTooltip';
 import {Path} from '../Path';
 import {makeLocationObject} from '../MainGame';
 
@@ -82,8 +83,8 @@ function model(DOM, currentLocation$, currentLocationLinksIds$, progression$, da
     return {landmarks$, pathSink};
 }
 
-function view(DOM, value, currentLocation$, changeLocationDelayed$, progression$, datas$, action$, travelAnimationState$, showInfos$){
-    const landmarksVdom$ = value.landmarks$.map(landmarks => {
+function view(DOM, landmarks$, pathSink, currentLocation$, changeLocationDelayed$, progression$, datas$, action$, travelAnimationState$, landmarkTooltipSink){
+    const landmarksVdom$ = landmarks$.map(landmarks => {
         const latitudeIdentifiedLandmarks = landmarks.map(landmark =>
             landmark.pixelCoordinates$.map(pixelCoordinates =>
                  ({landmark, latitude: pixelCoordinates.y})
@@ -104,7 +105,7 @@ function view(DOM, value, currentLocation$, changeLocationDelayed$, progression$
         changeLocationDelayed$,
     ).fold((acc, x) => acc ? false : true, false);
 
-    const pathVdom$ = value.pathSink.DOM;
+    const pathVdom$ = pathSink.DOM;
 
     const travelAnimationVdom$ = travelAnimationState$.map(([currentLocationPixelCoordinates, newLocationPixelCoordinates, animationState]) => {
         const x1 = currentLocationPixelCoordinates.x;
@@ -146,6 +147,8 @@ function view(DOM, value, currentLocation$, changeLocationDelayed$, progression$
         })
     ).compose(dropRepeats((x, y) => x.width === y.width && x.height === y.height))
     .startWith(null);
+
+    const showInfos$ = landmarkTooltipSink.showInfos$;
 
     const showInfosVdom$ = xs.combine(showInfos$, datas$, svgTagDimension$, mapImageDimension$, toolTipContainerDimension$)
     .map(([showInfos, datas, svgTagDimension, mapImageDimension, toolTipContainerDimension]) => {
@@ -223,29 +226,33 @@ export function Map(sources) {
     const animationDuration = 3;
 
     const action$ = intent(DOM);
-    const value = model(DOM, currentLocation$, currentLocationLinksIds$, progression$, datas$);
+    const {landmarks$, pathSink} = model(DOM, currentLocation$, currentLocationLinksIds$, progression$, datas$);
     
-    const landmarksShowInfos$ = value.landmarks$.map(landmarks =>
-        xs.merge(...landmarks.map(landmark => landmark.showInfos$))
-    ).flatten()
+    const landmarkTooltipSink = LandmarkTooltip({DOM, landmarks$});
+
+    // const landmarksShowInfos$ = landmarks$.map(landmarks =>
+    //     xs.merge(...landmarks.map(landmark => landmark.showInfos$))
+    // ).flatten();
     
-    const changeLocation$ = landmarksShowInfos$.map(showInfos =>
-        action$.filter(action => action.type === "travelTo")
-        .mapTo(showInfos.location)
-    ).flatten();
+    const changeLocation$ = landmarkTooltipSink.changeLocation$;
+    
+    // const changeLocation$ = landmarkTooltip.landmarksShowInfos$.map(showInfos =>
+    //     action$.filter(action => action.type === "travelTo")
+    //     .mapTo(showInfos.location)
+    // ).flatten();
 
     const changeLocationDelayed$ = changeLocation$.compose(delay(animationDuration * 1000));
 
-    const showInfos$ = xs.merge(
-        landmarksShowInfos$,
-        xs.merge(
-            action$.filter(action => action.type === "hideInfos"),
-            changeLocation$,
-        ).mapTo(null),
-    );
+    // const showInfos$ = xs.merge(
+    //     landmarksShowInfos$,
+    //     xs.merge(
+    //         action$.filter(action => action.type === "hideInfos"),
+    //         changeLocation$,
+    //     ).mapTo(null),
+    // );
     
     const getLandmarkById = function(location$){
-        return xs.combine(location$, value.landmarks$).map(([location, landmarks]) => {
+        return xs.combine(location$, landmarks$).map(([location, landmarks]) => {
             const identifiedLandmarks = landmarks.map(landmark => 
                 landmark.id$.map(id =>
                     {return {id, landmark}}
@@ -274,7 +281,7 @@ export function Map(sources) {
         })).flatten(),
     );
 
-    const vdom$ = view(DOM, value, currentLocation$, changeLocationDelayed$, progression$, datas$, action$, travelAnimationState$, showInfos$);
+    const vdom$ = view(DOM, landmarks$, pathSink, currentLocation$, changeLocationDelayed$, progression$, datas$, action$, travelAnimationState$, landmarkTooltipSink);
 
     const sinks = {
         DOM: vdom$,
