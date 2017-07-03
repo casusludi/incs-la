@@ -1,7 +1,6 @@
 import xs from 'xstream';
 import tween from 'xstream/extra/tween'
 import delay from 'xstream/extra/delay'
-import dropRepeats from 'xstream/extra/dropRepeats'
 
 import { run } from '@cycle/run';
 import { svg } from '@cycle/dom';
@@ -119,80 +118,9 @@ function view(DOM, landmarks$, pathSink, currentLocation$, changeLocationDelayed
         }})
     }).startWith("");
 
-    const svgTag$ = DOM.select(".svgMapTag").elements();
-    const svgTagDimension$ = svgTag$
-    .filter(svgTag => svgTag.length > 0)
-    .map(svgTag => ({
-            width: svgTag[0].clientWidth, 
-            height: svgTag[0].clientHeight,
-        })
-    ).compose(dropRepeats((x, y) => x.width === y.width && x.height === y.height))
-    .startWith(null);
-
-    const mapImageTag$ = DOM.select(".mapImageTag").elements();
-    const mapImageDimension$ = mapImageTag$
-    .filter(mapImageTag => mapImageTag.length > 0)
-    .map(mapImageTag => ({
-            width: mapImageTag[0].getBoundingClientRect().width, 
-            height: mapImageTag[0].getBoundingClientRect().height,
-        })
-    ).compose(dropRepeats((x, y) => x.width === y.width && x.height === y.height))
-    .startWith(null);
-
-    const toolTipContainerTag$ = DOM.select(".locationInfo").elements();
-    const toolTipContainerDimension$ = toolTipContainerTag$.filter(toolTipContainerTag =>
-    toolTipContainerTag.length > 0).map(toolTipContainerTag => ({
-            width: toolTipContainerTag[0].clientWidth,
-            height: toolTipContainerTag[0].clientHeight
-        })
-    ).compose(dropRepeats((x, y) => x.width === y.width && x.height === y.height))
-    .startWith(null);
-
     const showInfos$ = landmarkTooltipSink.showInfos$;
 
-    const showInfosVdom$ = xs.combine(showInfos$, datas$, svgTagDimension$, mapImageDimension$, toolTipContainerDimension$)
-    .map(([showInfos, datas, svgTagDimension, mapImageDimension, toolTipContainerDimension]) => {
-        if(showInfos) {
-            var xPos, yPos;
-            
-            const margin = 4;
-            const ratio = mapImageDimension.width / datas.settings.mapImageDimension.width;
-            const widthMargin = (svgTagDimension.width - mapImageDimension.width) / 2;
-            const heightMargin = (svgTagDimension.height - mapImageDimension.height) / 2;
-            
-            xPos = showInfos.pixelCoordinates.x * ratio + widthMargin;
-            yPos = showInfos.pixelCoordinates.y * ratio + heightMargin;
-
-            if(toolTipContainerDimension){
-                if(xPos + toolTipContainerDimension.width > mapImageDimension.width)
-                    xPos -= toolTipContainerDimension.width + margin;
-                if(yPos + toolTipContainerDimension.height > mapImageDimension.height)
-                    yPos -= toolTipContainerDimension.height + margin;
-            }
-
-            return (
-                <div className="locationInfo scrollable-panel panel" style={{
-                    left: xPos+"px",
-                    top: yPos+"px",
-                    width: "200px",
-                    'max-height': 'none',
-                }}>
-                    <div className="headerToolTip">  
-                        <img className="js-hide-infos"
-                        src={datas.settings.images.closeMapIcon} style={{
-                            width: "20px", 
-                            background: "rgb(200, 200, 200)", 
-                            padding: "3px",}} />
-                        {showInfos.isReachableLandmark ? <button className="js-travel-to button-3d" type="button">S'y rendre</button> : ""}
-                    </div>
-                    <h3>{showInfos.location.name}</h3>
-                    <p>{showInfos.location.desc}</p>
-                </div>
-            );
-        }
-        else
-            return "";
-    }).startWith("");
+    const showInfosVdom$ = landmarkTooltipSink.DOM;
     
     const vdom$ = xs.combine(landmarksVdom$, pathVdom$, currentLocation$, datas$, showMap$, travelAnimationVdom$, showInfosVdom$)
     .map(([landmarksVdom, pathVdom, currentLocation, datas, showMap, travelAnimationVdom, showInfosVdom]) =>
@@ -228,7 +156,7 @@ export function Map(sources) {
     const action$ = intent(DOM);
     const {landmarks$, pathSink} = model(DOM, currentLocation$, currentLocationLinksIds$, progression$, datas$);
     
-    const landmarkTooltipSink = LandmarkTooltip({DOM, landmarks$});
+    const landmarkTooltipSink = LandmarkTooltip({DOM, landmarks$, datas$});
 
     // const landmarksShowInfos$ = landmarks$.map(landmarks =>
     //     xs.merge(...landmarks.map(landmark => landmark.showInfos$))
