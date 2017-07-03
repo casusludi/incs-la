@@ -5,28 +5,26 @@ import { html } from 'snabbdom-jsx';
 import * as _ from 'lodash';
 
 function model(sources){
-    const settings$ = sources.settings;
-    const changeLocation$ = sources.changeLocation;
-    const witnessQuestionned$ = sources.witnessQuestionned;
+    const {DOM, jsonResponse$, changeLocation$, witnessQuestionned$} = sources;
 
-    const elapsedTime$ = settings$.map(settings =>
+    const elapsedTime$ = jsonResponse$.map(jsonResponse =>
       xs.merge(
-        changeLocation$.mapTo(settings.cost.travel), 
-        witnessQuestionned$.map(witnessQuestionned => witnessQuestionned ? settings.cost.investigate : 0),
+        changeLocation$.mapTo(jsonResponse.settings.cost.travel), 
+        witnessQuestionned$.map(witnessQuestionned => witnessQuestionned ? jsonResponse.settings.cost.investigate : 0),
       )
     ).flatten()
     .fold((acc, x) => acc + x, 0);
     
-    return xs.combine(elapsedTime$, settings$).map(([elapsedTime, settings]) => {
+    return xs.combine(elapsedTime$, jsonResponse$).map(([elapsedTime, jsonResponse]) => {
       const elapsedHours = parseInt(elapsedTime);
       const elapsedMinutes = (elapsedTime - elapsedHours) * 60;
       
-      const remainingTime = settings.totalTime - elapsedTime;
+      const remainingTime = jsonResponse.settings.totalTime - elapsedTime;
       const remainingHours = parseInt(remainingTime);
       const remainingMinutes = (remainingTime - remainingHours) * 60;
 
       return {
-        totalTime: settings.totalTime,
+        totalTime: jsonResponse.settings.totalTime,
         elapsedTime: {
           raw: elapsedTime,
           hours: elapsedHours,

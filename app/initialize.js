@@ -2,6 +2,7 @@ import {run} from '@cycle/run';
 import {makeDOMDriver} from '@cycle/dom';
 import {makeHTTPDriver} from '@cycle/http';
 import {makeRouterDriver} from 'cyclic-router'
+import {MakeScenarioGeneratorDriver} from './drivers/ScenarioGeneratorDriver';
 
 import xs from 'xstream';
 
@@ -24,10 +25,10 @@ function main(sources) {
 	// const jsonResponse$ = jsonSinks.JSON;
 
   const match$ = sources.router.define({
+    '*': NotFound,
     '/': IntroGame,
     '/game': MainGame,
     '/end': EndGame,
-     '*': NotFound,
   });
   
   const page$ = match$.map(({path, value, location, createHref}) =>
@@ -43,6 +44,7 @@ function main(sources) {
     DOM: page$.map(c => c.DOM).flatten(),
     router: page$.map(c => c.router).flatten(),
     HTTP: page$.filter(c => c.HTTP).map(c => c.HTTP).flatten(),
+    scenarioGenerator: page$.filter(c => c.scenarioGenerator).map(c => c.scenarioGenerator).flatten(),
   };
   
   return sinks;
@@ -52,6 +54,7 @@ const drivers = {
   DOM: makeDOMDriver('#app'),
   HTTP: makeHTTPDriver(),
   router: makeRouterDriver(createBrowserHistory(), switchPath),
+  scenarioGenerator: MakeScenarioGeneratorDriver(),
 };  
 
 run(main, drivers);

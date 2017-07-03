@@ -20,8 +20,8 @@ function model(action$, jsonResponse$){
 	const index$ = action$.filter(action => action.type === "nextSlide").fold((acc, x) => acc + 1, 0);
 	
 	const value$ = xs.combine(index$, jsonResponse$).map(([index, jsonResponse]) => ({
-		image: jsonResponse.settings.images.intro[index],
-		ready: index >= jsonResponse.settings.images.intro.length,
+		image: jsonResponse.settings.images.intro[index >= jsonResponse.settings.images.intro.length ? jsonResponse.settings.images.intro.length - 1 : index],
+		ready: index >= jsonResponse.settings.images.intro.length - 1,
 	}));
 
 	return value$;

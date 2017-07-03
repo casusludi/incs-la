@@ -6,7 +6,6 @@ import { html } from 'snabbdom-jsx';
 
 function intent(DOM){
     const action$ = xs.merge(
-        DOM.select('.js-change-location').events('click').mapTo({type: "changeLocation"}),
         DOM.select('.js-show-info').events('click').mapTo({type: "showInfos"}),
     );
 
@@ -14,10 +13,16 @@ function intent(DOM){
 }
 
 function model(props$, action$){
-    return action$.filter(action => action.type === "changeLocation").map(action => props$.map(props => props.location)).flatten();
+    return props$.map(props => 
+        action$.filter(action => 
+            action.type === "showInfos"
+        ).map(action => 
+            props
+        )
+    ).flatten();
 }
 
-function view(props$, action$){
+function view(props$, jsonResponse$){
     return props$.map(props => {
         return svg.g({ attrs: { transform: "translate(" + props.pixelCoordinates.x + " " + props.pixelCoordinates.y + ")" } }, [
             svg.image({ attrs: {
@@ -38,20 +43,17 @@ function view(props$, action$){
 }
 
 export function Landmark(sources) {
-    const {props$, DOM} = sources;
+    const {props$, jsonResponse$, DOM} = sources;
     const p$ = props$.remember()
     const action$ = intent(DOM);
-    const value$ = model(props$, action$);
-    const vdom$ = view(p$, action$);
-
-    const showInfos$ = action$.filter(action => action.type === "showInfos").mapTo(p$).flatten();
+    const value$ = model(p$, action$);
+    const vdom$ = view(p$, jsonResponse$.debug("wsh"));
 
     const sinks = {
         DOM: vdom$,
-        changeLocation$: value$,
+        showInfos$: value$,
         pixelCoordinates$: p$.map(props => props.pixelCoordinates),
-        id$: p$.map(props => props.location.id),
-        showInfos$
+        id$: props$.map(props => props.location.id),
     };
 
     return sinks;

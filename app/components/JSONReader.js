@@ -6,7 +6,7 @@ import { html } from 'snabbdom-jsx';
 export function JSONReader(sources) {
 
     const request$ = xs.of({
-        url: '/data.json',
+        url: '/data2.json',
         category: 'data',
     });
 

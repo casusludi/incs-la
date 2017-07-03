@@ -37,7 +37,8 @@
                 "images/intro/slide6.jpg",
                 "images/intro/slide7.jpg",
                 "images/intro/slide8.jpg",
-                "images/intro/slide9.jpg"
+                "images/intro/slide9.jpg",
+                "images/intro/slide10.jpg"
             ],
             "endLose": "images/Nantes-sanstour.jpg",
             "endWin": "images/Nantes-tour.jpg",
@@ -286,7 +287,7 @@
         "guerande":{
             "name":"Guérande",
             "image":"images/Guerande.jpg",
-			"desc": "Guérande est une commune de Loire-Atlantique dont la partie urbaine occupe le sommet d'un coteau qui domine un territoire presque entièrement entouré d'eau, salée ou douce&nbsp;: la presqu'île guérandaise. L'histoire de la commune elle-même est fortement marquée par la présence de marais salants qui ont fait sa richesse.",
+			"desc": "Guérande est une commune de Loire-Atlantique dont la partie urbaine occupe le sommet d'un coteau qui domine un territoire presque entièrement entouré d'eau, salée ou douce, la presqu'île guérandaise. L'histoire de la commune elle-même est fortement marquée par la présence de marais salants qui ont fait sa richesse.",
 			"places":{
                 "temoin-1":{
                     "name":"Interroger un touriste",

@@ -41,6 +41,8 @@ function view(value$, elapsedTime){
 export function EndGame(sources) {
 	const {HTTP, DOM, elapsedTime} = sources;
 
+    console.log(sources);
+
 	// JSON management
 	const jsonSinks = JSONReader({HTTP});
 	const jsonRequest$ = jsonSinks.request;
