@@ -17,7 +17,11 @@ import * as _ from 'lodash';
 
 function intent(DOM){
     return xs.merge(
-        DOM.select('.js-show-map').events('click').map(value => ({type: "showMap"})),
+        xs.merge(
+            DOM.select('.js-show-map').events('click'),
+            DOM.select('.map').events('click').filter(e => e.target.className === "map"),
+            DOM.select('.svgMapTag').events('click').filter(e => e.target.className.baseVal === "svgMapTag")
+        ).map(value => ({type: "showMap"})),
         DOM.select('.js-hide-infos').events('click').map(value => ({type: "hideInfos"})),
         DOM.select('.js-travel-to').events('click').map(value => ({type: "travelTo"})),
     );
@@ -118,12 +122,10 @@ function view(DOM, landmarks$, pathSink, currentLocation$, changeLocationDelayed
         }})
     }).startWith("");
 
-    const showInfos$ = landmarkTooltipSink.showInfos$;
-
-    const showInfosVdom$ = landmarkTooltipSink.DOM;
+    const tooltipInfosVdom$ = landmarkTooltipSink.DOM;
     
-    const vdom$ = xs.combine(landmarksVdom$, pathVdom$, currentLocation$, datas$, showMap$, travelAnimationVdom$, showInfosVdom$)
-    .map(([landmarksVdom, pathVdom, currentLocation, datas, showMap, travelAnimationVdom, showInfosVdom]) =>
+    const vdom$ = xs.combine(landmarksVdom$, pathVdom$, currentLocation$, datas$, showMap$, travelAnimationVdom$, tooltipInfosVdom$)
+    .map(([landmarksVdom, pathVdom, currentLocation, datas, showMap, travelAnimationVdom, tooltipInfosVdom]) =>
         <div>
             <button className="js-show-map button-3d" type="button" >Afficher la carte</button>
             {showMap ?
@@ -138,7 +140,7 @@ function view(DOM, landmarks$, pathSink, currentLocation$, changeLocationDelayed
                                 svg.image(".js-show-map", { attrs: { width: "20px", height: "20px", x: "10px", y: "10px", 'xlink:href': datas.settings.images.closeMapIcon}}),
                             ])
                         }
-                        {showInfosVdom}
+                        {tooltipInfosVdom}
                     </div>
                 </div>
                 : ""
@@ -158,26 +160,9 @@ export function Map(sources) {
     
     const landmarkTooltipSink = LandmarkTooltip({DOM, landmarks$, datas$});
 
-    // const landmarksShowInfos$ = landmarks$.map(landmarks =>
-    //     xs.merge(...landmarks.map(landmark => landmark.showInfos$))
-    // ).flatten();
-    
     const changeLocation$ = landmarkTooltipSink.changeLocation$;
     
-    // const changeLocation$ = landmarkTooltip.landmarksShowInfos$.map(showInfos =>
-    //     action$.filter(action => action.type === "travelTo")
-    //     .mapTo(showInfos.location)
-    // ).flatten();
-
     const changeLocationDelayed$ = changeLocation$.compose(delay(animationDuration * 1000));
-
-    // const showInfos$ = xs.merge(
-    //     landmarksShowInfos$,
-    //     xs.merge(
-    //         action$.filter(action => action.type === "hideInfos"),
-    //         changeLocation$,
-    //     ).mapTo(null),
-    // );
     
     const getLandmarkById = function(location$){
         return xs.combine(location$, landmarks$).map(([location, landmarks]) => {

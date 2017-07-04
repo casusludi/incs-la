@@ -47,11 +47,11 @@ export function Landmark(sources) {
     const p$ = props$.remember()
     const action$ = intent(DOM);
     const value$ = model(p$, action$);
-    const vdom$ = view(p$, datas$.debug("wsh"));
+    const vdom$ = view(p$, datas$);
 
     const sinks = {
         DOM: vdom$,
-        showInfos$: value$,
+        tooltipInfos$: value$,
         pixelCoordinates$: p$.map(props => props.pixelCoordinates),
         id$: props$.map(props => props.location.id),
     };

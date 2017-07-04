@@ -1,11 +1,19 @@
 import xs from 'xstream';
 import dropRepeats from 'xstream/extra/dropRepeats'
+import pairwise from 'xstream/extra/pairwise'
+import debounce from 'xstream/extra/debounce'
+import sampleCombine from 'xstream/extra/sampleCombine'
+
 import { run } from '@cycle/run';
+
 import { html } from 'snabbdom-jsx';
 
 function intent(DOM){
     return xs.merge(
-        DOM.select('.js-hide-infos').events('click').map(value => ({type: "hideInfos"})),
+        xs.merge(
+            DOM.select('.js-hide-infos').events('click'),
+            DOM.select('.map').events('click').filter(e => e.target.className.baseVal === "mapImageTag")
+        ).map(value => ({type: "hideInfos"})),
         DOM.select('.js-travel-to').events('click').map(value => ({type: "travelTo"})),
     );
 }
@@ -15,6 +23,14 @@ function model(locationsWithPixelCoordinates$, progression$, datas$, currentLoca
 }
 
 function view(DOM, showInfos$, datas$){
+    const resize$ = DOM.select("body").events('resize').startWith(null);
+    // const bodyTag$ = DOM.select("body").elements();
+    // const resize$ = bodyTag$
+    // .compose(pairwise)
+    // .map(bodyTag =>
+    //     bodyTag[0][0].clientWidth !== bodyTag[0][1].clientWidth || bodyTag[0][0].clientHeight !== bodyTag[0][1].clientHeight
+    // ).startWith(null).debug("wsh");
+
     const svgTag$ = DOM.select(".svgMapTag").elements();
     const svgTagDimension$ = svgTag$
     .filter(svgTag => svgTag.length > 0)
@@ -22,7 +38,7 @@ function view(DOM, showInfos$, datas$){
             width: svgTag[0].clientWidth, 
             height: svgTag[0].clientHeight,
         })
-    ).compose(dropRepeats((x, y) => x.width === y.width && x.height === y.height))
+    ).compose(dropRepeats((a, b) => a.width === b.width && a.height === b.height))
     .startWith(null);
 
     const mapImageTag$ = DOM.select(".mapImageTag").elements();
@@ -32,7 +48,7 @@ function view(DOM, showInfos$, datas$){
             width: mapImageTag[0].getBoundingClientRect().width, 
             height: mapImageTag[0].getBoundingClientRect().height,
         })
-    ).compose(dropRepeats((x, y) => x.width === y.width && x.height === y.height))
+    ).compose(dropRepeats((a, b) => a.width === b.width && a.height === b.height))
     .startWith(null);
 
     const toolTipContainerTag$ = DOM.select(".locationInfo").elements();
@@ -41,15 +57,14 @@ function view(DOM, showInfos$, datas$){
             width: toolTipContainerTag[0].clientWidth,
             height: toolTipContainerTag[0].clientHeight
         })
-    ).compose(dropRepeats((x, y) => x.width === y.width && x.height === y.height))
+    ).compose(dropRepeats((a, b) => a.width === b.width && a.height <= b.height + 1 && a.height >= b.height - 1))
     .startWith(null);
 
-    const vdom$ = xs.combine(showInfos$, datas$, svgTagDimension$, mapImageDimension$, toolTipContainerDimension$)
-    .map(([showInfos, datas, svgTagDimension, mapImageDimension, toolTipContainerDimension]) => {
+    const vdom$ = xs.combine(resize$, showInfos$, datas$, svgTagDimension$, mapImageDimension$, toolTipContainerDimension$)
+    .map(([resize, showInfos, datas, svgTagDimension, mapImageDimension, toolTipContainerDimension]) => {
         if(showInfos) {
             var xPos, yPos;
             
-            const margin = 4;
             const ratio = mapImageDimension.width / datas.settings.mapImageDimension.width;
             const widthMargin = (svgTagDimension.width - mapImageDimension.width) / 2;
             const heightMargin = (svgTagDimension.height - mapImageDimension.height) / 2;
@@ -59,9 +74,9 @@ function view(DOM, showInfos$, datas$){
 
             if(toolTipContainerDimension){
                 if(xPos + toolTipContainerDimension.width > mapImageDimension.width)
-                    xPos -= toolTipContainerDimension.width + margin;
+                    xPos -= toolTipContainerDimension.width;
                 if(yPos + toolTipContainerDimension.height > mapImageDimension.height)
-                    yPos -= toolTipContainerDimension.height + margin;
+                    yPos -= toolTipContainerDimension.height;
             }
 
             return (
@@ -96,17 +111,17 @@ export function LandmarkTooltip(sources) {
 
     const action$ = intent(DOM);
 
-    const landmarksShowInfos$ = landmarks$.map(landmarks =>
-        xs.merge(...landmarks.map(landmark => landmark.showInfos$))
+    const landmarksTooltipInfos$ = landmarks$.map(landmarks =>
+        xs.merge(...landmarks.map(landmark => landmark.tooltipInfos$))
     ).flatten();
     
-    const changeLocation$ = landmarksShowInfos$.map(showInfos =>
+    const changeLocation$ = landmarksTooltipInfos$.map(landmarksTooltipInfos =>
         action$.filter(action => action.type === "travelTo")
-        .mapTo(showInfos.location)
+        .mapTo(landmarksTooltipInfos.location)
     ).flatten();
 
-    const showInfos$ = xs.merge(
-        landmarksShowInfos$,
+    const tooltipInfos$ = xs.merge(
+        landmarksTooltipInfos$,
         xs.merge(
             action$.filter(action => action.type === "hideInfos"),
             changeLocation$,
@@ -114,12 +129,11 @@ export function LandmarkTooltip(sources) {
     );
 
     // const value$ = model(locationsWithPixelCoordinates$, progression$, datas$, currentLocation$);
-    const vdom$ = view(DOM, showInfos$, datas$);
+    const vdom$ = view(DOM, tooltipInfos$, datas$);
 
     const sinks = {
         DOM: vdom$,
         changeLocation$,
-        showInfos$,
     };
 
     return sinks;
