@@ -40,7 +40,8 @@ export function makeLocationObject(id, datas){
 }
 
 export function MainGame(sources) {
-	const {DOM} = sources;
+	const DOM = sources.DOM;
+	const windowResize$ = sources.windowResize;
 
 	const datas$ = sources.scenarioGenerator;
 	
@@ -106,7 +107,7 @@ export function MainGame(sources) {
 
 	correctNextChoosenLocationProxy$.imitate(correctNextChoosenLocation$);
 	
-	const mapSinks = Map({DOM, currentLocation$, currentLocationLinksIds$, progression$, datas$});
+	const mapSinks = Map({DOM, windowResize$, currentLocation$, currentLocationLinksIds$, progression$, datas$});
 
 	const changeLocation$ = xs.merge(
 		changeLocationButtons$.map( 

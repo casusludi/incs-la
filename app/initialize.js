@@ -2,7 +2,8 @@ import {run} from '@cycle/run';
 import {makeDOMDriver} from '@cycle/dom';
 import {makeHTTPDriver} from '@cycle/http';
 import {makeRouterDriver} from 'cyclic-router'
-import {MakeScenarioGeneratorDriver} from './drivers/ScenarioGeneratorDriver';
+import {makeScenarioGeneratorDriver} from './drivers/scenarioGeneratorDriver';
+import {makeWindowResizeDriver} from './drivers/windowResizeDriver';
 
 import xs from 'xstream';
 
@@ -56,7 +57,8 @@ const drivers = {
   DOM: makeDOMDriver('#app'),
   HTTP: makeHTTPDriver(),
   router: makeRouterDriver(createBrowserHistory(), switchPath),
-  scenarioGenerator: MakeScenarioGeneratorDriver(),
+  scenarioGenerator: makeScenarioGeneratorDriver(),
+  windowResize: makeWindowResizeDriver(),
 };  
 
 run(main, drivers);

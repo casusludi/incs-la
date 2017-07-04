@@ -22,15 +22,7 @@ function model(locationsWithPixelCoordinates$, progression$, datas$, currentLoca
     return xs.of(null);
 }
 
-function view(DOM, showInfos$, datas$){
-    const resize$ = DOM.select("window").events('resize').startWith(null);
-    // const bodyTag$ = DOM.select("body").elements();
-    // const resize$ = bodyTag$
-    // .compose(pairwise)
-    // .map(bodyTag =>
-    //     bodyTag[0][0].clientWidth !== bodyTag[0][1].clientWidth || bodyTag[0][0].clientHeight !== bodyTag[0][1].clientHeight
-    // ).startWith(null).debug("wsh");
-
+function view(DOM, windowResize$, showInfos$, datas$){
     const svgTag$ = DOM.select(".svgMapTag").elements();
     const svgTagDimension$ = svgTag$
     .filter(svgTag => svgTag.length > 0)
@@ -60,8 +52,8 @@ function view(DOM, showInfos$, datas$){
     ).compose(dropRepeats((a, b) => a.width === b.width && a.height <= b.height + 1 && a.height >= b.height - 1))
     .startWith(null);
 
-    const vdom$ = xs.combine(resize$, showInfos$, datas$, svgTagDimension$, mapImageDimension$, toolTipContainerDimension$)
-    .map(([resize, showInfos, datas, svgTagDimension, mapImageDimension, toolTipContainerDimension]) => {
+    const vdom$ = xs.combine(windowResize$, showInfos$, datas$, svgTagDimension$, mapImageDimension$, toolTipContainerDimension$)
+    .map(([windowResize, showInfos, datas, svgTagDimension, mapImageDimension, toolTipContainerDimension]) => {
         if(showInfos) {
             var xPos, yPos;
             
@@ -107,7 +99,7 @@ function view(DOM, showInfos$, datas$){
 }
 
 export function LandmarkTooltip(sources) {
-    const {DOM, landmarks$, datas$} = sources;
+    const {DOM, windowResize$, landmarks$, datas$} = sources;
 
     const action$ = intent(DOM);
 
@@ -129,7 +121,7 @@ export function LandmarkTooltip(sources) {
     );
 
     // const value$ = model(locationsWithPixelCoordinates$, progression$, datas$, currentLocation$);
-    const vdom$ = view(DOM, tooltipInfos$, datas$);
+    const vdom$ = view(DOM, windowResize$.debug("starf"), tooltipInfos$, datas$);
 
     const sinks = {
         DOM: vdom$,

@@ -151,13 +151,13 @@ function view(DOM, landmarks$, pathSink, currentLocation$, changeLocationDelayed
 }
 
 export function Map(sources) {
-    const {DOM, currentLocation$, currentLocationLinksIds$, progression$, datas$} = sources;
+    const {DOM, windowResize$, currentLocation$, currentLocationLinksIds$, progression$, datas$} = sources;
     const animationDuration = 3;
 
     const action$ = intent(DOM);
     const {landmarks$, pathSink} = model(DOM, currentLocation$, currentLocationLinksIds$, progression$, datas$);
     
-    const landmarkTooltipSink = LandmarkTooltip({DOM, landmarks$, datas$});
+    const landmarkTooltipSink = LandmarkTooltip({DOM, windowResize$, landmarks$, datas$});
 
     const changeLocation$ = landmarkTooltipSink.changeLocation$;
     

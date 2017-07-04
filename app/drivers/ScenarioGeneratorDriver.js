@@ -2,8 +2,8 @@ import xs from 'xstream';
 
 import * as _ from 'lodash';
 
-export function MakeScenarioGeneratorDriver(){
-	function ScenarioGeneratorDriver(sink$){
+export function makeScenarioGeneratorDriver(){
+	function scenarioGeneratorDriver(sink$){
 		const source$ = sink$.map(sink => {
 			const pathLocationsNumber = 10;
 			const locationsTotalNumber = sink.locationsClues.length;
@@ -57,5 +57,5 @@ export function MakeScenarioGeneratorDriver(){
 		return source$;
 	}
 
-	return ScenarioGeneratorDriver;
+	return scenarioGeneratorDriver;
 }
