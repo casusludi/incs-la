@@ -171,7 +171,7 @@ export function MainGame(sources) {
 							<section className="col-main">
 								<header className="header">
 									<h1>{currentLocation.name}</h1>
-									{mapVTree}
+									{/*{mapVTree}*/}
 								</header>
 								<section className="place-list" >
 									{witnessesVTree}
@@ -192,12 +192,14 @@ export function MainGame(sources) {
 						<footer>
 							<div className="travel-panel">
 								{showDestinationLinks ?
-									<div className="travel-panel-content">
+									mapVTree
+									/*<div className="travel-panel-content">
 										<div className="travel-label">{datas.texts.travelLabel}</div>
 										<nav>
 											{linksVTree}
 										</nav>
-									</div> :
+									</div> */
+									:
 									<div className="travel-panel-content">
 										{datas.texts.travelDescription}
 									</div>

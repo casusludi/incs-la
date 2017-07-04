@@ -23,20 +23,20 @@ function model(props$, action$){
 }
 
 function view(props$, datas$){
-    return props$.map(props => {
+    return xs.combine(datas$, props$).map(([datas, props]) => {
         return svg.g({ attrs: { transform: "translate(" + props.pixelCoordinates.x + " " + props.pixelCoordinates.y + ")" } }, [
             svg.image({ attrs: {
                 'xlink:href': 
                     props.isCurrentLocation ? 
-                        props.settings.images.currentLocationLandmark : 
+                        datas.settings.images.currentLocationLandmark : 
                         (props.isReachableLandmark ? 
-                            props.settings.images.reachableLandmark : 
-                            props.settings.images.unreachableLandmark),
+                            datas.settings.images.reachableLandmark : 
+                            datas.settings.images.unreachableLandmark),
                 class: "js-show-info",
                 height: props.isCurrentLocation ? 
-                    props.settings.landmarksImageHeight + "px" :
-                    props.settings.landmarksImageHeight + "px",
-                y: - props.settings.landmarksImageHeight + "px",
+                    datas.settings.landmarksImageHeight + "px" :
+                    datas.settings.landmarksImageHeight + "px",
+                y: - datas.settings.landmarksImageHeight + "px",
             }}),
         ])
     });

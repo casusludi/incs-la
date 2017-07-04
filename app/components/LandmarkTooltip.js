@@ -23,7 +23,7 @@ function model(locationsWithPixelCoordinates$, progression$, datas$, currentLoca
 }
 
 function view(DOM, showInfos$, datas$){
-    const resize$ = DOM.select("body").events('resize').startWith(null);
+    const resize$ = DOM.select("window").events('resize').startWith(null);
     // const bodyTag$ = DOM.select("body").elements();
     // const resize$ = bodyTag$
     // .compose(pairwise)

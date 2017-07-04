@@ -28,7 +28,7 @@ function intent(DOM){
 }
 
 function model(DOM, currentLocation$, currentLocationLinksIds$, progression$, datas$){
-    const locationsWithPixelCoordinatesTEMP$ = datas$.map(datas => {
+    const pixelCoordinates$ = datas$.map(datas => {
         const baseLandmarkId1 = datas.settings.baseLandmarks[0].location;
         const coordinateLandmark1 = datas.locations[baseLandmarkId1].coordinates;
         const pixelCoordinateLandmark1 = datas.settings.baseLandmarks[0].pixelCoordinates;
@@ -58,16 +58,15 @@ function model(DOM, currentLocation$, currentLocationLinksIds$, progression$, da
         });
     });
 
-    const locationsWithPixelCoordinates$ = xs.combine(currentLocation$, currentLocationLinksIds$, locationsWithPixelCoordinatesTEMP$, datas$)
-    .map(([currentLocation, currentLocationLinksIds, locationsWithPixelCoordinatesTEMP, datas]) => {
-        return locationsWithPixelCoordinatesTEMP.map(locationsWithPixelCoordinatesTEMP => {
-            const isCurrentLocation = locationsWithPixelCoordinatesTEMP.location.id === currentLocation.id;
-            const isReachableLandmark = _.includes(currentLocationLinksIds, locationsWithPixelCoordinatesTEMP.location.id);
+    const landmarksProps$ = xs.combine(currentLocation$, currentLocationLinksIds$, pixelCoordinates$, datas$)
+    .map(([currentLocation, currentLocationLinksIds, pixelCoordinates, datas]) => {
+        return pixelCoordinates.map(pixelCoordinates => {
+            const isCurrentLocation = pixelCoordinates.location.id === currentLocation.id;
+            const isReachableLandmark = _.includes(currentLocationLinksIds, pixelCoordinates.location.id);
 
             return Object.assign({}, 
-                locationsWithPixelCoordinatesTEMP,
+                pixelCoordinates,
                 {
-                    settings: datas.settings,
                     isCurrentLocation: isCurrentLocation,
                     isReachableLandmark: isReachableLandmark,
                 }
@@ -75,13 +74,13 @@ function model(DOM, currentLocation$, currentLocationLinksIds$, progression$, da
         });
     }).remember();
     
-    const landmarks$ = locationsWithPixelCoordinates$.map(locationsWithPixelCoordinates =>
-        locationsWithPixelCoordinates.map((locationWithPixelCoordinates, key) =>
-            isolate(Landmark, key)({DOM, datas$, props$: xs.of(locationWithPixelCoordinates)})
+    const landmarks$ = landmarksProps$.map(landmarksProps =>
+        landmarksProps.map((landmarkProps, key) =>
+            isolate(Landmark, key)({DOM, datas$, props$: xs.of(landmarkProps)})
         )
     );
 
-    const pathSink = Path({locationsWithPixelCoordinates$, progression$, datas$, currentLocation$});
+    const pathSink = Path({pixelCoordinates$, progression$, datas$, currentLocation$});
 
     return {landmarks$, pathSink};
 }

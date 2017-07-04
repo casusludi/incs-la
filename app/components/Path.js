@@ -6,14 +6,14 @@ import { html } from 'snabbdom-jsx';
 
 import * as _ from 'lodash';
 
-function model(locationsWithPixelCoordinates$, progression$, datas$, currentLocation$){
-    return xs.combine(locationsWithPixelCoordinates$, progression$, datas$, currentLocation$)
-        .map(([locationsWithPixelCoordinates, progression, datas, currentLocation]) => {
+function model(pixelCoordinates$, progression$, datas$, currentLocation$){
+    return xs.combine(pixelCoordinates$, progression$, datas$, currentLocation$)
+        .map(([pixelCoordinates, progression, datas, currentLocation]) => {
             const pathLocations = [...datas.path.slice(0, progression + 1).map(o => o.location), currentLocation.id];
             
             return pathLocations.slice(0, pathLocations.length - 1).map((item, i) => {
-                const curLocation = locationsWithPixelCoordinates.filter(o => o.location.id === pathLocations[i])[0];
-                const nextLocation = locationsWithPixelCoordinates.filter(o => o.location.id === pathLocations[i + 1])[0];
+                const curLocation = pixelCoordinates.filter(o => o.location.id === pathLocations[i])[0];
+                const nextLocation = pixelCoordinates.filter(o => o.location.id === pathLocations[i + 1])[0];
                 
                 return {
                     x1: curLocation.pixelCoordinates.x, 
@@ -51,9 +51,9 @@ function view(value$){
 }
 
 export function Path(sources) {
-    const {locationsWithPixelCoordinates$, progression$, datas$, currentLocation$} = sources;
+    const {pixelCoordinates$, progression$, datas$, currentLocation$} = sources;
 
-    const value$ = model(locationsWithPixelCoordinates$, progression$, datas$, currentLocation$);
+    const value$ = model(pixelCoordinates$, progression$, datas$, currentLocation$);
     const vdom$ = view(value$);
 
     const sinks = {
