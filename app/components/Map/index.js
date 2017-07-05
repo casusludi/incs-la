@@ -85,7 +85,7 @@ function model(DOM, currentLocation$, currentLocationLinksIds$, progression$, da
     return {landmarks$, pathSink};
 }
 
-function view(DOM, landmarks$, pathSink, currentLocation$, changeLocationDelayed$, progression$, datas$, action$, travelAnimationState$, landmarkTooltipSink){
+function view(DOM, landmarks$, pathSink, currentLocation$, showMap$, changeLocationDelayed$, progression$, datas$, action$, travelAnimationState$, landmarkTooltipSink){
     const landmarksVdom$ = landmarks$.map(landmarks => {
         const latitudeIdentifiedLandmarks = landmarks.map(landmark =>
             landmark.pixelCoordinates$.map(pixelCoordinates =>
@@ -101,11 +101,6 @@ function view(DOM, landmarks$, pathSink, currentLocation$, changeLocationDelayed
             return xs.combine(...doms);
         }).flatten();
     }).flatten();
-
-    const showMap$ = xs.merge(
-        action$.filter(action => action.type === "showMap"),
-        changeLocationDelayed$,
-    ).fold((acc, x) => acc ? false : true, false);
 
     const pathVdom$ = pathSink.DOM;
 
@@ -156,12 +151,21 @@ export function Map(sources) {
 
     const action$ = intent(DOM);
     const {landmarks$, pathSink} = model(DOM, currentLocation$, currentLocationLinksIds$, progression$, datas$);
+
+    const changeLocationDelayedProxy$ = xs.create();
+
+    const showMap$ = xs.merge(
+        action$.filter(action => action.type === "showMap"),
+        changeLocationDelayedProxy$,
+    ).fold((acc, x) => acc ? false : true, false);
     
-    const landmarkTooltipSink = LandmarkTooltip({DOM, windowResize$, landmarks$, datas$});
+    const landmarkTooltipSink = LandmarkTooltip({DOM, windowResize$, landmarks$, datas$, showMap$});
 
     const changeLocation$ = landmarkTooltipSink.changeLocation$;
     
     const changeLocationDelayed$ = changeLocation$.compose(delay(animationDuration * 1000));
+
+    changeLocationDelayedProxy$.imitate(changeLocationDelayed$);
     
     const getLandmarkById = function(location$){
         return xs.combine(location$, landmarks$).map(([location, landmarks]) => {
@@ -193,7 +197,7 @@ export function Map(sources) {
         })).flatten(),
     );
 
-    const vdom$ = view(DOM, landmarks$, pathSink, currentLocation$, changeLocationDelayed$, progression$, datas$, action$, travelAnimationState$, landmarkTooltipSink);
+    const vdom$ = view(DOM, landmarks$, pathSink, currentLocation$, showMap$, changeLocationDelayed$, progression$, datas$, action$, travelAnimationState$, landmarkTooltipSink);
 
     const sinks = {
         DOM: vdom$,

@@ -99,7 +99,7 @@ function view(DOM, windowResize$, showInfos$, datas$){
 }
 
 export function LandmarkTooltip(sources) {
-    const {DOM, windowResize$, landmarks$, datas$} = sources;
+    const {DOM, windowResize$, landmarks$, datas$, showMap$} = sources;
 
     const action$ = intent(DOM);
 
@@ -117,6 +117,7 @@ export function LandmarkTooltip(sources) {
         xs.merge(
             action$.filter(action => action.type === "hideInfos"),
             changeLocation$,
+            showMap$,
         ).mapTo(null),
     );
 
