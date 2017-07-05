@@ -3,7 +3,6 @@ import {run} from '@cycle/run';
 import {makeDOMDriver} from '@cycle/dom';
 import {makeHTTPDriver} from '@cycle/http';
 import {makeRouterDriver} from 'cyclic-router'
-import {makeScenarioGeneratorDriver} from './drivers/scenarioGeneratorDriver';
 import {makeWindowResizeDriver} from './drivers/windowResizeDriver';
 import {makeRandomDriver} from './drivers/randomDriver';
 
@@ -78,7 +77,6 @@ function main(sources) {
 		DOM: page$.map(c => c.DOM).flatten(),
 		router: page$.map(c => c.router).flatten(),
 		HTTP: jsonRequest$,
-		scenarioGenerator: jsonResponse$,
 		random: randomRequests$,
 	};
 	
@@ -89,7 +87,6 @@ const drivers = {
 	DOM: makeDOMDriver('#app'),
 	HTTP: makeHTTPDriver(),
 	router: makeRouterDriver(createBrowserHistory(), switchPath),
-	scenarioGenerator: makeScenarioGeneratorDriver(),
 	windowResize: makeWindowResizeDriver(),
 	random: makeRandomDriver(),
 };  
