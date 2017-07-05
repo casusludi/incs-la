@@ -51,13 +51,13 @@ function view(value$) {
 
 export function Witness(sources) {
     const { props$, DOM } = sources;
-    const action$ = intent(DOM);
+    const action$ = intent(DOM).debug();
     const value$ = model(props$, action$);
     const vdom$ = view(value$);
 
     const sinks = {
         DOM: vdom$,
-        questionned$: action$.mapTo(true),
+        questionned$: action$.mapTo(true).debug(),
     };
 
     return sinks;

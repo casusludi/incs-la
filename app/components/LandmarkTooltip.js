@@ -121,7 +121,7 @@ export function LandmarkTooltip(sources) {
     );
 
     // const value$ = model(locationsWithPixelCoordinates$, progression$, datas$, currentLocation$);
-    const vdom$ = view(DOM, windowResize$.debug("starf"), tooltipInfos$, datas$);
+    const vdom$ = view(DOM, windowResize$, tooltipInfos$, datas$);
 
     const sinks = {
         DOM: vdom$,

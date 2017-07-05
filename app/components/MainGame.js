@@ -43,7 +43,7 @@ export function MainGame(sources) {
 	const DOM = sources.DOM;
 	const windowResize$ = sources.windowResize;
 
-	const datas$ = sources.scenarioGenerator;
+	const datas$ = sources.datas$.remember(); // sources.scenarioGenerator;
 	
 	// Get the first location
 	const pathInit$ = datas$.map(datas =>
