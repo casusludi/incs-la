@@ -148,7 +148,7 @@ export function MainGame(sources) {
 	// End game reached ?
 	const lastLocationReached$ = xs.combine(datas$, progression$)
 	.filter(([datas, progression]) =>
-		progression === 1//(datas.path.length - 1)
+		progression === (datas.path.length - 1)
 	).mapTo(true);
 
 	const noTimeRemaining$ = timeManagerSinks.elapsedTime$.filter(elapsedTime =>

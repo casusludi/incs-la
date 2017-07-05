@@ -216,6 +216,7 @@
     align-items: center;
     justify-content: center;
     padding: 15px;
+    /*
     & button{
         border: none;
         border-radius: 8px;
@@ -231,6 +232,7 @@
             color: #ffffff;
         }
     }
+    */
 }
 
 .map {
