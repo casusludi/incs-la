@@ -5,7 +5,7 @@ import { html } from 'snabbdom-jsx';
 import * as _ from 'lodash';
 
 export function ScenarioGenerator(sources) {
-	const {jsonResponse$, random$} = sources;
+	const {jsonResponse$, selectedValue$} = sources;
 	
 	const selectedLocationsIndexesRequest$ = jsonResponse$.map(jsonResponse => {
 		const pathLocationsNumber = 10;
@@ -24,15 +24,15 @@ export function ScenarioGenerator(sources) {
 		return selectedLocationsIndexesRequest;
 	});
 
-	const selectedLocationsIndexes$ = random$.filter(random => random.id === "selectedLocationsIndexes").map(random => random.val);
+	const selectedLocationsIndexes$ = selectedValue$.filter(selectedValue => selectedValue.id === "selectedLocationsIndexes").map(selectedValue => selectedValue.val);
 
 	const selectedLocations$ = xs.combine(jsonResponse$, selectedLocationsIndexes$)
 	.map(([jsonResponse, selectedLocationsIndexes]) => 
 		_.concat(
-			jsonResponse.locationsClues[0], 
-			_.shuffle(jsonResponse.locationsClues.filter((value, index) => 
-				_.includes(selectedLocationsIndexes, index)
-			))
+			jsonResponse.locationsClues[0],
+			selectedLocationsIndexes.map(selectedLocationsIndex =>
+				jsonResponse.locationsClues[selectedLocationsIndex]
+			),
 		)
 	);
 
@@ -68,26 +68,26 @@ export function ScenarioGenerator(sources) {
 
 			const result$ = index < selectedLocations.length - 1 ? 
 				xs.combine(
-					random$.filter(random => random.id.locationId === locationId && random.id.type === "witnesses"),
-					random$.filter(random => random.id.locationId === locationId && random.id.type === "data"),
-				).map(([randomWitnesses, randomData]) => {
+					selectedValue$.filter(selectedValue => selectedValue.id.locationId === locationId && selectedValue.id.type === "witnesses"),
+					selectedValue$.filter(selectedValue => selectedValue.id.locationId === locationId && selectedValue.id.type === "data"),
+				).map(([selectedWitnesses, selectedData]) => {
 					const nextLocation = selectedLocations[index + 1];
 					
-					const selectedWitnessesIndex = randomWitnesses.val;
-					const selectedDataIndex = randomData.val;
+					const selectedWitnessesIndexes = selectedWitnesses.val;
+					const selectedDataIndex = selectedData.val;
 
-					const temoin1 = nextLocation.clues.temoins[selectedWitnessesIndex[0]];
-					const temoin2 = nextLocation.clues.temoins[selectedWitnessesIndex[1]];
+					const witness1 = nextLocation.clues.temoins[selectedWitnessesIndexes[0]];
+					const witness2 = nextLocation.clues.temoins[selectedWitnessesIndexes[1]];
 					const data = nextLocation.clues.data[selectedDataIndex];
 					
 					return {
 						"location": locationId,
 						"clues":{
 							"temoin-1":{
-								"text": temoin1
+								"text": witness1
 							},
 							"temoin-2":{
-								"text": temoin2
+								"text": witness2
 							},
 							"data":{
 								"text": data
