@@ -43,7 +43,7 @@ export function MainGame(sources) {
 	const DOM = sources.DOM;
 	const windowResize$ = sources.windowResize;
 
-	const datas$ = sources.datas$.remember(); // sources.scenarioGenerator;
+	const datas$ = sources.datas$; // sources.scenarioGenerator;
 	
 	// Get the first location
 	const pathInit$ = datas$.map(datas =>
@@ -132,7 +132,7 @@ export function MainGame(sources) {
 				)),
 			})
 		)
-	);
+	).remember();
 
 	const witnessQuestionned$ = witnesses$.map(witnesses =>
 		xs.merge(...witnesses.map(witness => witness.questionned$))
@@ -148,7 +148,7 @@ export function MainGame(sources) {
 	// End game reached ?
 	const lastLocationReached$ = xs.combine(datas$, progression$)
 	.filter(([datas, progression]) =>
-		progression === (datas.path.length - 1)
+		progression === 1//(datas.path.length - 1)
 	).mapTo(true);
 
 	const noTimeRemaining$ = timeManagerSinks.elapsedTime$.filter(elapsedTime =>

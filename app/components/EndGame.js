@@ -41,7 +41,7 @@ function view(value$, elapsedTime){
 export function EndGame(sources) {
 	const {DOM, elapsedTime} = sources;
 
-    const datas$ = sources.scenarioGenerator;
+    const datas$ = sources.datas$;
 
     const action$ = intent(DOM);
     const vdom$ = view(datas$, elapsedTime);

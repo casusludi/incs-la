@@ -126,7 +126,7 @@ export function ScenarioGenerator(sources) {
 		);
 
 		return datas$;
-	}).flatten();
+	}).flatten().remember();
 
 	const randomRequests$ = xs.merge(
 		selectedLocationsIndexesRequest$,

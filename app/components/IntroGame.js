@@ -47,7 +47,7 @@ function view(value$, datas$){
 export function IntroGame(sources) {
 	const {DOM} = sources;
 
-	const datas$ = sources.scenarioGenerator;
+	const datas$ = sources.datas$;
 
     const action$ = intent(DOM);
     const value$ = model(action$, datas$);
