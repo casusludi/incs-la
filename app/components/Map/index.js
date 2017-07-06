@@ -27,7 +27,7 @@ function intent(DOM){
     );
 }
 
-function model(DOM, currentLocation$, currentLocationLinksIds$, progression$, datas$){
+function model(DOM, currentLocation$, currentLocationLinksIds$, progression$, path$, datas$){
     const pixelCoordinates$ = datas$.map(datas => {
         const baseLandmarkId1 = datas.settings.baseLandmarks[0].location;
         const coordinateLandmark1 = datas.locations[baseLandmarkId1].coordinates;
@@ -58,8 +58,8 @@ function model(DOM, currentLocation$, currentLocationLinksIds$, progression$, da
         });
     });
 
-    const landmarksProps$ = xs.combine(currentLocation$, currentLocationLinksIds$, pixelCoordinates$, datas$)
-    .map(([currentLocation, currentLocationLinksIds, pixelCoordinates, datas]) => {
+    const landmarksProps$ = xs.combine(currentLocation$, currentLocationLinksIds$, pixelCoordinates$)
+    .map(([currentLocation, currentLocationLinksIds, pixelCoordinates]) => {
         return pixelCoordinates.map(pixelCoordinates => {
             const isCurrentLocation = pixelCoordinates.location.id === currentLocation.id;
             const isReachableLandmark = _.includes(currentLocationLinksIds, pixelCoordinates.location.id);
@@ -80,7 +80,7 @@ function model(DOM, currentLocation$, currentLocationLinksIds$, progression$, da
         )
     );
 
-    const pathSink = Path({pixelCoordinates$, progression$, datas$, currentLocation$});
+    const pathSink = Path({pixelCoordinates$, progression$, path$, currentLocation$});
 
     return {landmarks$, pathSink};
 }
@@ -118,7 +118,7 @@ function view(DOM, landmarks$, pathSink, currentLocation$, showMap$, changeLocat
 
     const tooltipInfosVdom$ = landmarkTooltipSink.DOM;
     
-    const vdom$ = xs.combine(landmarksVdom$, pathVdom$, currentLocation$, datas$, showMap$.debug("mais wesh"), travelAnimationVdom$, tooltipInfosVdom$)
+    const vdom$ = xs.combine(landmarksVdom$, pathVdom$, currentLocation$, datas$, showMap$/*.debug("mais wesh")*/, travelAnimationVdom$, tooltipInfosVdom$)
     .map(([landmarksVdom, pathVdom, currentLocation, datas, showMap, travelAnimationVdom, tooltipInfosVdom]) =>
         <div>
             <button className="js-show-map button-3d" type="button" >Afficher la carte</button>
@@ -140,24 +140,24 @@ function view(DOM, landmarks$, pathSink, currentLocation$, showMap$, changeLocat
                 : ""
             }
         </div>
-    ).debug("starf");
+    )/*.debug("test")*/;
 
     return vdom$;
 }
 
 export function Map(sources) {
-    const {DOM, windowResize$, currentLocation$, currentLocationLinksIds$, progression$, datas$} = sources;
+    const {DOM, windowResize$, currentLocation$, currentLocationLinksIds$, progression$, path$, datas$} = sources;
     const animationDuration = 3;
-
+    
     const action$ = intent(DOM);
-    const {landmarks$, pathSink} = model(DOM, currentLocation$, currentLocationLinksIds$, progression$, datas$);
+    const {landmarks$, pathSink} = model(DOM, currentLocation$, currentLocationLinksIds$, progression$, path$, datas$);
 
     const changeLocationDelayedProxy$ = xs.create();
 
     const showMap$ = xs.merge(
-        action$.filter(action => action.type === "showMap").debug("1"),
-        changeLocationDelayedProxy$.debug("2"),
-    ).fold((acc, x) => acc ? false : true, false).debug("3");
+        action$.filter(action => action.type === "showMap")/*.debug("1")*/,
+        changeLocationDelayedProxy$/*.debug("2")*/,
+    ).fold((acc, x) => acc ? false : true, false)/*.debug("3")*/;
     
     const landmarkTooltipSink = LandmarkTooltip({DOM, windowResize$, landmarks$, datas$, showMap$});
 

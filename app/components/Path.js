@@ -4,10 +4,10 @@ import { svg } from '@cycle/dom';
 
 import { html } from 'snabbdom-jsx';
 
-function model(pixelCoordinates$, progression$, datas$, currentLocation$){
-    return xs.combine(pixelCoordinates$, progression$, datas$, currentLocation$)
-        .map(([pixelCoordinates, progression, datas, currentLocation]) => {
-            const pathLocations = [...datas.path.slice(0, progression + 1).map(o => o.location), currentLocation.id];
+function model(pixelCoordinates$, progression$, path$, currentLocation$){
+    return xs.combine(pixelCoordinates$, progression$, path$, currentLocation$)
+        .map(([pixelCoordinates, progression, path, currentLocation]) => {
+            const pathLocations = [...path.slice(0, progression + 1).map(o => o.location), currentLocation.id];
             
             return pathLocations.slice(0, pathLocations.length - 1).map((item, i) => {
                 const curLocation = pixelCoordinates.filter(o => o.location.id === pathLocations[i])[0];
@@ -49,9 +49,9 @@ function view(value$){
 }
 
 export function Path(sources) {
-    const {pixelCoordinates$, progression$, datas$, currentLocation$} = sources;
+    const {pixelCoordinates$, progression$, path$, currentLocation$} = sources;
 
-    const value$ = model(pixelCoordinates$, progression$, datas$, currentLocation$);
+    const value$ = model(pixelCoordinates$, progression$, path$, currentLocation$);
     const vdom$ = view(value$);
 
     const sinks = {

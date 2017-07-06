@@ -4,15 +4,18 @@ import { html } from 'snabbdom-jsx';
 
 export function JSONReader(sources) {
 
-    const request$ = xs.of({
-        url: '/data.json',
-        category: 'data',
-    });
+    const {HTTP, jsonPath$} = sources;
 
-    const response$ = sources.HTTP
-        .select('data')
+    const request$ = jsonPath$.map(jsonPath => ({
+        url: jsonPath,
+        category: jsonPath,
+    }));
+
+    const response$ = jsonPath$.map(jsonPath =>
+        HTTP.select(jsonPath)
         .flatten()
-        .map(response => response.body);
+        .map(response => response.body)
+    ).flatten().remember();
 
     const sinks = {
         JSON: response$,

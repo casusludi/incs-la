@@ -7,7 +7,7 @@ export function ScenarioGenerator(sources) {
 	
 	const selectedLocationsIndexesRequest$ = jsonResponse$.map(jsonResponse => {
 		const pathLocationsNumber = 10;
-		const locationsTotalNumber = jsonResponse.locationsClues.length;
+		const locationsTotalNumber = jsonResponse.length;
 		
 		const selectedLocationsIndexesRequest = {
 			id: "selectedLocationsIndexes", 
@@ -27,9 +27,9 @@ export function ScenarioGenerator(sources) {
 	const selectedLocations$ = xs.combine(jsonResponse$, selectedLocationsIndexes$)
 	.map(([jsonResponse, selectedLocationsIndexes]) => 
 		_.concat(
-			jsonResponse.locationsClues[0],
+			jsonResponse[0],
 			selectedLocationsIndexes.map(selectedLocationsIndex =>
-				jsonResponse.locationsClues[selectedLocationsIndex]
+				jsonResponse[selectedLocationsIndex]
 			),
 		)
 	);
@@ -60,7 +60,7 @@ export function ScenarioGenerator(sources) {
 		)
 	).flatten();
 
-	const datas$ = xs.combine(selectedLocations$, jsonResponse$).map(([selectedLocations, jsonResponse]) => {
+	const path$ = xs.combine(selectedLocations$, jsonResponse$).map(([selectedLocations, jsonResponse]) => {
 		const pathTemp = selectedLocations.map((selectedLocation, index) => {
 			const locationId = selectedLocation.location;
 
@@ -111,19 +111,7 @@ export function ScenarioGenerator(sources) {
 			return result$;
 		});
 
-		const path$ = xs.combine(...pathTemp);
-
-		const datas$ = path$.map(path =>
-			Object.assign(
-				{},
-				{settings: jsonResponse.settings},
-				{texts: jsonResponse.texts},
-				{locations: jsonResponse.locations},
-				{path: path},
-			)
-		);
-
-		return datas$;
+		return xs.combine(...pathTemp);
 	}).flatten().remember();
 
 	const randomRequests$ = xs.merge(
@@ -132,7 +120,7 @@ export function ScenarioGenerator(sources) {
 	);
 
 	const sinks = {
-		datas$, 
+		path$, 
 		randomRequests$,
 	};
 
