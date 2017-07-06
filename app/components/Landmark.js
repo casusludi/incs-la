@@ -1,7 +1,7 @@
 import xs from 'xstream';
-import { run } from '@cycle/run';
-import { div, svg, p } from '@cycle/dom';
-import isolate from '@cycle/isolate';
+
+import { svg } from '@cycle/dom';
+
 import { html } from 'snabbdom-jsx';
 
 function intent(DOM){

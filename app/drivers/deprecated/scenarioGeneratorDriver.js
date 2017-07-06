@@ -1,5 +1,3 @@
-import xs from 'xstream';
-
 import * as _ from 'lodash';
 
 export function makeScenarioGeneratorDriver(){

@@ -1,10 +1,8 @@
 import xs from 'xstream';
-import { run } from '@cycle/run';
-import { svg } from '@cycle/dom';
-import isolate from '@cycle/isolate';
-import { html } from 'snabbdom-jsx';
 
-import * as _ from 'lodash';
+import { svg } from '@cycle/dom';
+
+import { html } from 'snabbdom-jsx';
 
 function model(pixelCoordinates$, progression$, datas$, currentLocation$){
     return xs.combine(pixelCoordinates$, progression$, datas$, currentLocation$)

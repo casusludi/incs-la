@@ -1,11 +1,4 @@
-import xs from 'xstream';
-import { run } from '@cycle/run';
-import isolate from '@cycle/isolate';
 import { html } from 'snabbdom-jsx';
-
-import * as _ from 'lodash';
-
-import {JSONReader} from './JSONReader';
 
 function intent(DOM){
     const click$ = DOM

@@ -1,8 +1,6 @@
-import {run} from '@cycle/run';
 import isolate from '@cycle/isolate';
 
 import xs from 'xstream';
-import dropRepeats from 'xstream/extra/dropRepeats'
 import pairwise from 'xstream/extra/pairwise'
 import sampleCombine from 'xstream/extra/sampleCombine'
 
@@ -12,9 +10,10 @@ import {html} from 'snabbdom-jsx';
 
 import {ChangeLocationButton} from './ChangeLocationButton';
 import {Witness} from './Witness';
-import {JSONReader} from './JSONReader';
 import {TimeManager} from './TimeManager';
 import {Map} from './Map';
+
+import {makeLocationObject} from '../utils';
 
 // function intent(sources){
 // 	const action$ = xs.of(null);
@@ -33,11 +32,6 @@ import {Map} from './Map';
 
 // 	return vdom$;
 // }
-
-// Takes a location id and makes an object made up of this id attribute and the location object contained in the json file
-export function makeLocationObject(id, datas){
-	return Object.assign({}, datas.locations[id], {id});
-}
 
 export function MainGame(sources) {
 	const DOM = sources.DOM;

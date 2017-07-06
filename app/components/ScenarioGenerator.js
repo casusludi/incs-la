@@ -1,6 +1,4 @@
 import xs from 'xstream';
-import { run } from '@cycle/run';
-import { html } from 'snabbdom-jsx';
 
 import * as _ from 'lodash';
 

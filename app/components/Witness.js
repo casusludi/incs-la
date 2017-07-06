@@ -1,8 +1,8 @@
-import xs from 'xstream';
-import { run } from '@cycle/run';
 import { html } from 'snabbdom-jsx';
+
 import { formatLinks } from '../utils';
-import _ from 'lodash';
+
+import * as _ from 'lodash';
 
 function intent(DOM) {
 

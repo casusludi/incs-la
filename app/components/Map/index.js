@@ -2,7 +2,6 @@ import xs from 'xstream';
 import tween from 'xstream/extra/tween'
 import delay from 'xstream/extra/delay'
 
-import { run } from '@cycle/run';
 import { svg } from '@cycle/dom';
 import isolate from '@cycle/isolate';
 
@@ -11,7 +10,8 @@ import { html } from 'snabbdom-jsx';
 import {Landmark} from '../Landmark';
 import {LandmarkTooltip} from '../LandmarkTooltip';
 import {Path} from '../Path';
-import {makeLocationObject} from '../MainGame';
+
+import {makeLocationObject} from '../../utils';
 
 import * as _ from 'lodash';
 
@@ -118,7 +118,7 @@ function view(DOM, landmarks$, pathSink, currentLocation$, showMap$, changeLocat
 
     const tooltipInfosVdom$ = landmarkTooltipSink.DOM;
     
-    const vdom$ = xs.combine(landmarksVdom$, pathVdom$, currentLocation$, datas$, showMap$, travelAnimationVdom$, tooltipInfosVdom$)
+    const vdom$ = xs.combine(landmarksVdom$, pathVdom$, currentLocation$, datas$, showMap$.debug("mais wesh"), travelAnimationVdom$, tooltipInfosVdom$)
     .map(([landmarksVdom, pathVdom, currentLocation, datas, showMap, travelAnimationVdom, tooltipInfosVdom]) =>
         <div>
             <button className="js-show-map button-3d" type="button" >Afficher la carte</button>
@@ -140,7 +140,7 @@ function view(DOM, landmarks$, pathSink, currentLocation$, showMap$, changeLocat
                 : ""
             }
         </div>
-    );
+    ).debug("starf");
 
     return vdom$;
 }
@@ -155,9 +155,9 @@ export function Map(sources) {
     const changeLocationDelayedProxy$ = xs.create();
 
     const showMap$ = xs.merge(
-        action$.filter(action => action.type === "showMap"),
-        changeLocationDelayedProxy$,
-    ).fold((acc, x) => acc ? false : true, false);
+        action$.filter(action => action.type === "showMap").debug("1"),
+        changeLocationDelayedProxy$.debug("2"),
+    ).fold((acc, x) => acc ? false : true, false).debug("3");
     
     const landmarkTooltipSink = LandmarkTooltip({DOM, windowResize$, landmarks$, datas$, showMap$});
 
