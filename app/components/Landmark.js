@@ -14,11 +14,8 @@ function intent(DOM){
 
 function model(props$, action$){
     return props$.map(props => 
-        action$.filter(action => 
-            action.type === "showInfos"
-        ).map(action => 
-            props
-        )
+        action$.filter(action => action.type === "showInfos")
+        .map(action => props)
     ).flatten();
 }
 

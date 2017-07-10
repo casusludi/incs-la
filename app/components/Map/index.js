@@ -27,7 +27,7 @@ function intent(DOM){
     );
 }
 
-function model(DOM, currentLocation$, currentLocationLinksIds$, progression$, path$, datas$){
+function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progression$, path$, windowResize$, datas$){
     const pixelCoordinates$ = datas$.map(datas => {
         const baseLandmarkId1 = datas.settings.baseLandmarks[0].location;
         const coordinateLandmark1 = datas.locations[baseLandmarkId1].coordinates;
@@ -60,12 +60,12 @@ function model(DOM, currentLocation$, currentLocationLinksIds$, progression$, pa
 
     const landmarksProps$ = xs.combine(currentLocation$, currentLocationLinksIds$, pixelCoordinates$)
     .map(([currentLocation, currentLocationLinksIds, pixelCoordinates]) => {
-        return pixelCoordinates.map(pixelCoordinates => {
-            const isCurrentLocation = pixelCoordinates.location.id === currentLocation.id;
-            const isReachableLandmark = _.includes(currentLocationLinksIds, pixelCoordinates.location.id);
+        return pixelCoordinates.map(currentPixelCoordinates => {
+            const isCurrentLocation = currentPixelCoordinates.location.id === currentLocation.id;
+            const isReachableLandmark = _.includes(currentLocationLinksIds, currentPixelCoordinates.location.id);
 
             return Object.assign({}, 
-                pixelCoordinates,
+                currentPixelCoordinates,
                 {
                     isCurrentLocation: isCurrentLocation,
                     isReachableLandmark: isReachableLandmark,
@@ -80,89 +80,32 @@ function model(DOM, currentLocation$, currentLocationLinksIds$, progression$, pa
         )
     );
 
-    const pathSink = Path({pixelCoordinates$, progression$, path$, currentLocation$});
-
-    return {landmarks$, pathSink};
-}
-
-function view(DOM, landmarks$, pathSink, currentLocation$, showMap$, changeLocationDelayed$, progression$, datas$, action$, travelAnimationState$, landmarkTooltipSink){
-    const landmarksVdom$ = landmarks$.map(landmarks => {
+    const latitudeSortedLandmarks$ = landmarks$.map(landmarks => {
         const latitudeIdentifiedLandmarks = landmarks.map(landmark =>
             landmark.pixelCoordinates$.map(pixelCoordinates =>
                  ({landmark, latitude: pixelCoordinates.y})
             )
         );
 
-        return xs.combine(...latitudeIdentifiedLandmarks).map(latitudeIdentifiedLandmarksArray => {
-            const doms = _.chain(latitudeIdentifiedLandmarksArray)
-                .sortBy('latitude')
-                .map(o => o.landmark.DOM)
-                .value();
-            return xs.combine(...doms);
-        }).flatten();
-    }).flatten();
+        return xs.combine(...latitudeIdentifiedLandmarks).map(latitudeIdentifiedLandmarksArray => 
+            _.sortBy(latitudeIdentifiedLandmarksArray, 'latitude').map(latitudeIdentifiedLandmark => latitudeIdentifiedLandmark.landmark)
+        );
+    }).flatten().remember();
 
-    const pathVdom$ = pathSink.DOM;
-
-    const travelAnimationVdom$ = travelAnimationState$.map(([currentLocationPixelCoordinates, newLocationPixelCoordinates, animationState]) => {
-        const x1 = currentLocationPixelCoordinates.x;
-        const y1 = currentLocationPixelCoordinates.y;
-        const x2 = currentLocationPixelCoordinates.x + (newLocationPixelCoordinates.x - currentLocationPixelCoordinates.x) * animationState;
-        const y2 = currentLocationPixelCoordinates.y + (newLocationPixelCoordinates.y - currentLocationPixelCoordinates.y) * animationState;
-        
-        return svg.line({ attrs: {
-            x1, y1, x2, y2, 
-            style: 'stroke: rgb(200,0,0); stroke-width: 4; stroke-dasharray: 10, 10; stroke-linecap: round;'
-        }})
-    }).startWith("");
-
-    const tooltipInfosVdom$ = landmarkTooltipSink.DOM;
-    
-    const vdom$ = xs.combine(landmarksVdom$, pathVdom$, currentLocation$, datas$, showMap$/*.debug("mais wesh")*/, travelAnimationVdom$, tooltipInfosVdom$)
-    .map(([landmarksVdom, pathVdom, currentLocation, datas, showMap, travelAnimationVdom, tooltipInfosVdom]) =>
-        <div>
-            <button className="js-show-map button-3d" type="button" >Afficher la carte</button>
-            {showMap ?
-                <div className="map">
-                    <div className="mapContainer">
-                        {
-                            svg(".svgMapTag", { attrs: { viewBox:"0 0 792 574", width: "100%", height: "100%", 'background-color': "green"}}, [
-                                svg.image(".mapImageTag", { attrs: { width: "100%", height: "100%", 'xlink:href': datas.settings.images.map}}),
-                                pathVdom,
-                                travelAnimationVdom,
-                                ...landmarksVdom,
-                                svg.image(".js-show-map", { attrs: { width: "20px", height: "20px", x: "10px", y: "10px", 'xlink:href': datas.settings.images.closeMapIcon}}),
-                            ])
-                        }
-                        {tooltipInfosVdom}
-                    </div>
-                </div>
-                : ""
-            }
-        </div>
-    )/*.debug("test")*/;
-
-    return vdom$;
-}
-
-export function Map(sources) {
-    const {DOM, windowResize$, currentLocation$, currentLocationLinksIds$, progression$, path$, datas$} = sources;
-    const animationDuration = 3;
-    
-    const action$ = intent(DOM);
-    const {landmarks$, pathSink} = model(DOM, currentLocation$, currentLocationLinksIds$, progression$, path$, datas$);
+    const pathSink = Path({pixelCoordinates$, progression$, path$, currentLocation$});
 
     const changeLocationDelayedProxy$ = xs.create();
 
     const showMap$ = xs.merge(
-        action$.filter(action => action.type === "showMap")/*.debug("1")*/,
-        changeLocationDelayedProxy$/*.debug("2")*/,
-    ).fold((acc, x) => acc ? false : true, false)/*.debug("3")*/;
+        action$.filter(action => action.type === "showMap"),
+        changeLocationDelayedProxy$,
+    ).fold((acc, x) => acc ? false : true, false);
     
     const landmarkTooltipSink = LandmarkTooltip({DOM, windowResize$, landmarks$, datas$, showMap$});
 
     const changeLocation$ = landmarkTooltipSink.changeLocation$;
-    
+
+    const animationDuration = 3;
     const changeLocationDelayed$ = changeLocation$.compose(delay(animationDuration * 1000));
 
     changeLocationDelayedProxy$.imitate(changeLocationDelayed$);
@@ -183,10 +126,10 @@ export function Map(sources) {
         }).flatten();
     }
 
-    const currentLandmark$ = getLandmarkById(currentLocation$);
-    const newLandmark$ = getLandmarkById(changeLocation$);
+    const currentLandmark$ = getLandmarkById(currentLocation$).debug("1");
+    const newLandmark$ = getLandmarkById(changeLocation$).debug("2");
     
-    const travelAnimationState$ = xs.combine(
+    const travelAnimationDatas$ = xs.combine(
         currentLandmark$.map(currentLandmark => currentLandmark.pixelCoordinates$).flatten(),
         newLandmark$.map(newLandmark => newLandmark.pixelCoordinates$).flatten(),
         changeLocation$.mapTo(tween({
@@ -196,8 +139,63 @@ export function Map(sources) {
             duration: animationDuration * 1000, // milliseconds
         })).flatten(),
     );
+        
+    const travelAnimationState$ = travelAnimationDatas$.map(([currentLocationPixelCoordinates, newLocationPixelCoordinates, animationState]) => {
+        const x1 = currentLocationPixelCoordinates.x;
+        const y1 = currentLocationPixelCoordinates.y;
+        const x2 = currentLocationPixelCoordinates.x + (newLocationPixelCoordinates.x - currentLocationPixelCoordinates.x) * animationState;
+        const y2 = currentLocationPixelCoordinates.y + (newLocationPixelCoordinates.y - currentLocationPixelCoordinates.y) * animationState;
+        // console.log(x1, y1, x2, y2)
+        return {x1, y1, x2, y2};
+    });
 
-    const vdom$ = view(DOM, landmarks$, pathSink, currentLocation$, showMap$, changeLocationDelayed$, progression$, datas$, action$, travelAnimationState$, landmarkTooltipSink);
+    return {showMap$, landmarks$: latitudeSortedLandmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, changeLocationDelayed$};
+}
+
+function view(showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, datas$){
+    const landmarksVdom$ = landmarks$.map(landmarks => xs.combine(...landmarks.map(landmark => landmark.DOM))).flatten();
+    const tooltipInfosVdom$ = landmarkTooltipSink.DOM;
+    const pathVdom$ = pathSink.DOM;
+    const travelAnimationVdom$ = travelAnimationState$/*.debug()*/.map(({x1, y1, x2, y2}) => {
+        return svg.line({ attrs: {
+            x1, y1, x2, y2, 
+            style: 'stroke: rgb(200,0,0); stroke-width: 4; stroke-dasharray: 10, 10; stroke-linecap: round;'
+        }})
+    }).startWith("");
+    
+    const vdom$ = xs.combine(landmarksVdom$, pathVdom$, datas$, showMap$, travelAnimationVdom$, tooltipInfosVdom$)
+    .map(([landmarksVdom, pathVdom, datas, showMap, travelAnimationVdom, tooltipInfosVdom]) =>
+        <div>
+            <button className="js-show-map button-3d" type="button" >Afficher la carte</button>
+            {showMap ?
+                <div className="map">
+                    <div className="mapContainer">
+                        {
+                            svg(".svgMapTag", { attrs: { viewBox:"0 0 792 574", width: "100%", height: "100%", 'background-color': "green"}}, [
+                                svg.image(".mapImageTag", { attrs: { width: "100%", height: "100%", 'xlink:href': datas.settings.images.map}}),
+                                pathVdom,
+                                travelAnimationVdom,
+                                ...landmarksVdom,
+                                svg.image(".js-show-map", { attrs: { width: "20px", height: "20px", x: "10px", y: "10px", 'xlink:href': datas.settings.images.closeMapIcon}}),
+                            ])
+                        }
+                        {tooltipInfosVdom}
+                    </div>
+                </div>
+                : ""
+            }
+        </div>
+    );
+
+    return vdom$;
+}
+
+export function Map(sources) {
+    const {DOM, windowResize$, currentLocation$, currentLocationLinksIds$, progression$, path$, datas$} = sources;
+    
+    const action$ = intent(DOM)//.debug("action");
+    const {showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, changeLocationDelayed$} = model(DOM, action$, currentLocation$, currentLocationLinksIds$, progression$, path$, windowResize$, datas$);
+    const vdom$ = view(showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, datas$);
 
     const sinks = {
         DOM: vdom$,

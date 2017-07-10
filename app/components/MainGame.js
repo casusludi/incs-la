@@ -3,6 +3,7 @@ import isolate from '@cycle/isolate';
 import xs from 'xstream';
 import pairwise from 'xstream/extra/pairwise'
 import sampleCombine from 'xstream/extra/sampleCombine'
+import dropRepeats from 'xstream/extra/dropRepeats'
 
 import * as _ from 'lodash';
 
@@ -16,6 +17,8 @@ import {JSONReader} from './JSONReader';
 import {ScenarioGenerator} from './ScenarioGenerator';
 
 import {makeLocationObject} from '../utils';
+
+import delay from 'xstream/extra/delay'
 
 // function intent(sources){
 // 	const action$ = xs.of(null);
@@ -82,11 +85,14 @@ export function MainGame(sources) {
 	
 	const progression$ = correctNextChoosenLocationProxy$.fold((acc, x) => acc + 1, 0);
 
-	const currentLocation$ = xs.merge(
-		currentLocationInit$,
-		changeLocationProxy$,
-	).remember();
-
+	// map path$ to wait for the json loading
+	const currentLocation$ = path$.mapTo(
+		xs.merge(
+			currentLocationInit$,
+			changeLocationProxy$,
+		).remember()
+	).flatten();
+	
 	const lastLocation$ = currentLocation$.compose(pairwise).map(item => item[0]).startWith(null);
 
 	const nextCorrectLocation$ = xs.combine(progression$, path$, datas$).map(([progression, path, datas]) =>
@@ -98,9 +104,12 @@ export function MainGame(sources) {
 	// Array stream of current location's links' ids
 	// It's made of the current location's list of links in the json and the last location visited
 	// sampleCombine to avoid duplicate signal on the stream (currentLocation and lastLocation emitting at the same time)
-	const currentLocationLinksIds$ = xs.combine(currentLocation$, lastLocation$, nextCorrectLocation$) 
+	const currentLocationLinksIds$ = 
+	// xs.combine(currentLocation$, lastLocation$, nextCorrectLocation$) 
 	// currentLocation$.compose(sampleCombine(lastLocation$, nextCorrectLocation$))
-	.map(([currentLocation, lastLocation, nextCorrectLocation]) =>
+	// .map(([currentLocation, lastLocation, nextCorrectLocation]) =>
+	nextCorrectLocation$.compose(sampleCombine(lastLocation$, currentLocation$))
+	.map(([nextCorrectLocation, lastLocation, currentLocation]) =>
 		_.chain(currentLocation.links || [])
 		.concat(lastLocation ? [lastLocation.id] : [])
 		.concat(nextCorrectLocation ? [nextCorrectLocation.id] : [])
@@ -167,7 +176,7 @@ export function MainGame(sources) {
 	const showDestinationLinks$ = xs.merge(
 		witnessQuestionned$.mapTo(true),
 		changeLocation$.mapTo(false),
-	).startWith(false);
+	).startWith(false).compose(dropRepeats());
 
 	const timeManagerSinks = TimeManager({DOM, datas$, changeLocation$, witnessQuestionned$});
 
