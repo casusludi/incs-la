@@ -126,8 +126,8 @@ function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progres
         }).flatten();
     }
 
-    const currentLandmark$ = getLandmarkById(currentLocation$).debug("1");
-    const newLandmark$ = getLandmarkById(changeLocation$).debug("2");
+    const currentLandmark$ = getLandmarkById(currentLocation$);
+    const newLandmark$ = getLandmarkById(changeLocation$);
     
     const travelAnimationDatas$ = xs.combine(
         currentLandmark$.map(currentLandmark => currentLandmark.pixelCoordinates$).flatten(),

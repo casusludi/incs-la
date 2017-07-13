@@ -86,12 +86,10 @@ export function MainGame(sources) {
 	const progression$ = correctNextChoosenLocationProxy$.fold((acc, x) => acc + 1, 0);
 
 	// map path$ to wait for the json loading
-	const currentLocation$ = path$.mapTo(
-		xs.merge(
-			currentLocationInit$,
-			changeLocationProxy$,
-		).remember()
-	).flatten();
+	const currentLocation$ = xs.merge(
+		currentLocationInit$,
+		changeLocationProxy$,
+	).remember();
 	
 	const lastLocation$ = currentLocation$.compose(pairwise).map(item => item[0]).startWith(null);
 
@@ -134,13 +132,6 @@ export function MainGame(sources) {
 			})
 		)
 	);
-
-	const correctNextChoosenLocation$ = currentLocation$.compose(sampleCombine(nextCorrectLocation$))
-	.filter(([currentLocation, nextCorrectLocation]) =>
-		currentLocation.id === nextCorrectLocation.id
-	).mapTo(true);
-
-	correctNextChoosenLocationProxy$.imitate(correctNextChoosenLocation$);
 	
 	const mapSinks = Map({DOM, windowResize$, currentLocation$, currentLocationLinksIds$, progression$, path$, datas$});
 
@@ -153,8 +144,16 @@ export function MainGame(sources) {
 
 	changeLocationProxy$.imitate(changeLocation$);
 
-	const witnesses$ = xs.combine(currentLocation$.compose(sampleCombine(progression$)), path$)
-	.map(([[currentLocation, progression], path]) => 
+	const correctNextChoosenLocation$ = 
+	xs.combine(changeLocation$, nextCorrectLocation$)
+	.filter(([changeLocation, nextCorrectLocation]) =>
+		changeLocation.id === nextCorrectLocation.id
+	).mapTo(true);
+
+	correctNextChoosenLocationProxy$.imitate(correctNextChoosenLocation$);
+
+	const witnesses$ = xs.combine(currentLocation$, progression$, path$)
+	.map(([currentLocation, progression, path]) => 
 		Object.keys(currentLocation.places).map((key, value) =>
 			isolate(Witness, key)({
 				DOM: sources.DOM,
