@@ -50,7 +50,9 @@ export function IntroGame(sources) {
 
     const sinks = {
         DOM: vdom$,
-		router: action$.filter(action => action.type === "startGame").mapTo("/game"),
+		router: action$.filter(action => action.type === "startGame").mapTo(
+			{ pathname: "/game", type: 'push', state: { round: 0 }}
+		),
     };
 
     return sinks;

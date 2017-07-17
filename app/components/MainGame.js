@@ -40,6 +40,7 @@ import delay from 'xstream/extra/delay'
 
 export function MainGame(sources) {
 	const {DOM, HTTP, datas$} = sources;
+	const round = sources.round ? sources.round : 0;
 	const random$ = sources.random;
 	
 	const windowResize$ = sources.windowResize;
@@ -191,6 +192,13 @@ export function MainGame(sources) {
 
 	const endGame$ = xs.merge(lastLocationReached$, noTimeRemaining$);
 
+	const roundNb = 3;
+	const routerSink$ = xs.combine(timeManagerSinks.elapsedTime$, endGame$).map(([elapsedTime, endGame]) =>
+		round + 1 < roundNb ? 
+			{ pathname: "/game", type: 'push', state: { round: round + 1 }} :
+			{ pathname: "/end", type: 'push', state: { elapsedTime }}
+	);
+
 	// View
 	const witnessesVTree$ = witnesses$.map(witnesses => xs.combine(...witnesses.map(witness => witness.DOM))).flatten();
 	const linksVTree$ = changeLocationButtons$.map(links => xs.combine(...links.map(link => link.DOM))).flatten();
@@ -205,7 +213,7 @@ export function MainGame(sources) {
 						<section className="city-content">
 							<section className="col-main">
 								<header className="header">
-									<h1>{currentLocation.name}</h1>
+									<h1>{currentLocation.name + " - Round : " + (round + 1)	}</h1>
 									{/*{mapVTree}*/}
 								</header>
 								<section className="place-list" >
@@ -248,9 +256,7 @@ export function MainGame(sources) {
 
 	const sinks = {
 		DOM: DOMSink$,
-		router: xs.combine(timeManagerSinks.elapsedTime$, endGame$).map(([elapsedTime, endGame]) =>
-			({ pathname: "/end", type: 'push', state: { elapsedTime }})
-		),
+		router: routerSink$,
 		HTTP: scenarioGenDataJsonRequest$,
 		random: randomRequests$,
 	};

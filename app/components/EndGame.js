@@ -9,10 +9,10 @@ function intent(DOM){
 }
 
 function view(value$, elapsedTime){
-    const success = elapsedTime.remainingTime.raw > 0;
+    const success = elapsedTime ? elapsedTime.remainingTime.raw > 0 : false;
 
     const vdom$ = value$.map(value => (
-        <div classNames="content end" style={{ backgroundImage: "url("+ (success ? value.settings.images.endWin : value.settings.images.endLoose) +")" }} >
+        <div classNames="content end" style={{ backgroundImage: "url("+ (success ? value.settings.images.endWin : value.settings.images.endLose) +")" }} >
             <div className="modal">
                 {success ? 
                     <div classNames="panel final-panel">
@@ -32,7 +32,8 @@ function view(value$, elapsedTime){
 }
 
 export function EndGame(sources) {
-	const {DOM, elapsedTime} = sources;
+	const DOM = sources.DOM;
+    const elapsedTime = sources.elapsedTime ? sources.elapsedTime : null;
 
     const datas$ = sources.datas$;
 
