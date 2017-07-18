@@ -4,29 +4,45 @@ import { svg } from '@cycle/dom';
 
 import { html } from 'snabbdom-jsx';
 
+const locationNbOnPath = 4;
+
 function model(pixelCoordinates$, progression$, path$, currentLocation$){
-    return xs.combine(pixelCoordinates$, progression$, path$, currentLocation$)
-        .map(([pixelCoordinates, progression, path, currentLocation]) => {
-            const pathLocations = [...path.slice(0, progression + 1).map(o => o.location), currentLocation.id];
-            
-            return pathLocations.slice(0, pathLocations.length - 1).map((item, i) => {
-                const curLocation = pixelCoordinates.filter(o => o.location.id === pathLocations[i])[0];
-                const nextLocation = pixelCoordinates.filter(o => o.location.id === pathLocations[i + 1])[0];
-                
-                return {
-                    x1: curLocation.pixelCoordinates.x, 
-                    y1: curLocation.pixelCoordinates.y, 
-                    x2: nextLocation.pixelCoordinates.x, 
-                    y2: nextLocation.pixelCoordinates.y
-                };
-            })
-    });
+    // Keep only correct locations
+    // const pathLocations$ = xs.combine(pixelCoordinates$, progression$, path$, currentLocation$)
+    // .map(([pixelCoordinates, progression, path, currentLocation]) => {
+    //     const pathLocationsIds = [...path.slice(0, progression + 1).map(o => o.location), currentLocation.id];
+    //     const pathLocations = pathLocationsIds.map(pathLocationId =>
+    //         pixelCoordinates.filter(o => o.location.id === pathLocationId)[0],
+    //     );
+    //     return pathLocations;
+    // });
+
+    // Keep all visited locations
+    // const pathLocations$ = xs.combine(pixelCoordinates$, currentLocation$)
+    // .map(([pixelCoordinates, currentLocation]) => 
+    //     pixelCoordinates.filter(o => o.location.id === currentLocation.id)[0]
+    // ).fold((stack, currentLocation) => [...stack, currentLocation], []);
+
+    // Keep last visited locations
+    const pathLocations$ = xs.combine(pixelCoordinates$, currentLocation$)
+    .map(([pixelCoordinates, currentLocation]) => 
+        pixelCoordinates.filter(o => o.location.id === currentLocation.id)[0]
+    ).fold((stack, currentLocation) => [...stack, currentLocation].slice(-locationNbOnPath), []).debug();
+
+    return pathLocations$.map(pathLocations =>
+        pathLocations.slice(0, pathLocations.length - 1).map((item, i) => ({
+            x1: pathLocations[i].pixelCoordinates.x, 
+            y1: pathLocations[i].pixelCoordinates.y, 
+            x2: pathLocations[i + 1].pixelCoordinates.x, 
+            y2: pathLocations[i + 1].pixelCoordinates.y,
+        }))
+    );
 }
 
 function view(value$){
     const vdom$ = value$.map(value => {
-        const lines = value.map(line => 
-            svg.line({ attrs: { 
+        const lines = value.map((line, i) => {console.log(value.length, i);
+            return svg.line({ attrs: { 
                 x1: line.x1, 
                 y1: line.y1, 
                 x2: line.x2, 
@@ -36,9 +52,10 @@ function view(value$){
                     stroke-width: 4; 
                     stroke-dasharray: 10, 10; 
                     stroke-linecap: round; 
-                    stroke-opacity: 0.5;`
+                    stroke-opacity: ${/* 0.5 OR */ (locationNbOnPath + i - value.length) / locationNbOnPath};
+                `
             }})
-        );
+        });
         
         return svg.g([
             ...lines
