@@ -2,6 +2,7 @@ import xs from 'xstream';
 import tween from 'xstream/extra/tween'
 import delay from 'xstream/extra/delay'
 import concat from 'xstream/extra/concat'
+import dropRepeats from 'xstream/extra/dropRepeats'
 
 import { svg } from '@cycle/dom';
 import isolate from '@cycle/isolate';
@@ -95,9 +96,9 @@ function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progres
     const changeLocationDelayedProxy$ = xs.create();
 
     const showMap$ = xs.merge(
-        action$.filter(action => action.type === "showMap"),
-        changeLocationDelayedProxy$,
-    ).fold((acc, x) => acc ? false : true, false);
+        action$.filter(action => action.type === "showMap").mapTo(true),
+        changeLocationDelayedProxy$.mapTo(false),
+    ).fold((acc, x) => x & !acc, false);
     
     const landmarkTooltipSink = LandmarkTooltip({DOM, windowResize$, landmarks$, datas$, showMap$});
 
@@ -165,8 +166,7 @@ function view(showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, 
         }})
     }).startWith("");
     
-    const vdom$ = //xs.combine(landmarksVdom$.debug("1"), pathVdom$.debug("2"), datas$.debug("3"), showMap$.debug("4"), travelAnimationVdom$.debug("5"), tooltipInfosVdom$.debug("6"))
-    xs.combine(landmarksVdom$.debug(e => console.log(Math.floor((Math.random() * 10000) + 1), e)), pathVdom$, datas$, showMap$, travelAnimationVdom$, tooltipInfosVdom$)
+    const vdom$ = xs.combine(landmarksVdom$.debug("1"), pathVdom$.debug("2"), datas$.debug("3"), showMap$.debug("4"), travelAnimationVdom$.debug("5"), tooltipInfosVdom$.debug("6"))
     .map(([landmarksVdom, pathVdom, datas, showMap, travelAnimationVdom, tooltipInfosVdom]) =>
         <div>
             <button className="js-show-map button-3d" type="button" >Afficher la carte</button>
