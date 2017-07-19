@@ -1,6 +1,7 @@
 import xs from 'xstream';
 import tween from 'xstream/extra/tween'
 import delay from 'xstream/extra/delay'
+import concat from 'xstream/extra/concat'
 
 import { svg } from '@cycle/dom';
 import isolate from '@cycle/isolate';
@@ -30,23 +31,19 @@ function intent(DOM){
 
 function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progression$, path$, windowResize$, datas$){
     const pixelCoordinates$ = datas$.map(datas => {
-        const baseLandmarkId1 = datas.settings.baseLandmarks[0].location;
-        const coordinateLandmark1 = datas.locations[baseLandmarkId1].coordinates;
-        const pixelCoordinateLandmark1 = datas.settings.baseLandmarks[0].pixelCoordinates;
-
-        const baseLandmarkId2 = datas.settings.baseLandmarks[1].location;
-        const coordinateLandmark2 = datas.locations[baseLandmarkId2].coordinates;
-        const pixelCoordinateLandmark2 = datas.settings.baseLandmarks[1].pixelCoordinates;
+        const baseLandmarkIds = datas.settings.baseLandmarks.map(baseLandmark => baseLandmark.location);
+        const coordinateLandmark = baseLandmarkIds.map(baseLandmarkId => datas.locations[baseLandmarkId].coordinates);
+        const pixelCoordinateLandmark = datas.settings.baseLandmarks.map(baseLandmark => baseLandmark.pixelCoordinates);
 
         return Object.keys(datas.locations).map((curLocationId, value) => {
             // Some boring arithmetic
             // Converts real latitude/longitude into pixel coordinates curX/curY
-            const xRatio = (coordinateLandmark2.latitude - coordinateLandmark1.latitude) / (pixelCoordinateLandmark2.x - pixelCoordinateLandmark1.x);
-            const x0 = (pixelCoordinateLandmark2.x * coordinateLandmark1.latitude - pixelCoordinateLandmark1.x * coordinateLandmark2.latitude) / (pixelCoordinateLandmark2.x - pixelCoordinateLandmark1.x);
+            const xRatio = (coordinateLandmark[1].latitude - coordinateLandmark[0].latitude) / (pixelCoordinateLandmark[1].x - pixelCoordinateLandmark[0].x);
+            const x0 = (pixelCoordinateLandmark[1].x * coordinateLandmark[0].latitude - pixelCoordinateLandmark[0].x * coordinateLandmark[1].latitude) / (pixelCoordinateLandmark[1].x - pixelCoordinateLandmark[0].x);
             const curX = (datas.locations[curLocationId].coordinates.latitude - x0) / xRatio;
             
-            const yRatio = (coordinateLandmark2.longitude - coordinateLandmark1.longitude) / (pixelCoordinateLandmark2.y - pixelCoordinateLandmark1.y);
-            const y0 = (pixelCoordinateLandmark2.y * coordinateLandmark1.longitude - pixelCoordinateLandmark1.y * coordinateLandmark2.longitude) / (pixelCoordinateLandmark2.y - pixelCoordinateLandmark1.y);
+            const yRatio = (coordinateLandmark[1].longitude - coordinateLandmark[0].longitude) / (pixelCoordinateLandmark[1].y - pixelCoordinateLandmark[0].y);
+            const y0 = (pixelCoordinateLandmark[1].y * coordinateLandmark[0].longitude - pixelCoordinateLandmark[0].y * coordinateLandmark[1].longitude) / (pixelCoordinateLandmark[1].y - pixelCoordinateLandmark[0].y);
             const curY = (datas.locations[curLocationId].coordinates.longitude - y0) / yRatio;
 
             return {
@@ -133,12 +130,17 @@ function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progres
     const travelAnimationDatas$ = xs.combine(
         currentLandmark$.map(currentLandmark => currentLandmark.pixelCoordinates$).flatten(),
         newLandmark$.map(newLandmark => newLandmark.pixelCoordinates$).flatten(),
-        changeLocation$.mapTo(tween({
-            from: 0,
-            to: 1,
-            ease: tween.power3.easeInOut,
-            duration: animationDuration * 1000, // milliseconds
-        })).flatten(),
+        changeLocation$.mapTo(
+            concat(
+                tween({
+                    from: 0,
+                    to: 1,
+                    ease: tween.power3.easeInOut,
+                    duration: animationDuration * 1000, // milliseconds
+                }),
+                xs.of(0),
+            )
+        ).flatten(),
     );
         
     const travelAnimationState$ = travelAnimationDatas$.map(([currentLocationPixelCoordinates, newLocationPixelCoordinates, animationState]) => {
@@ -163,7 +165,8 @@ function view(showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, 
         }})
     }).startWith("");
     
-    const vdom$ = xs.combine(landmarksVdom$, pathVdom$, datas$, showMap$, travelAnimationVdom$, tooltipInfosVdom$)
+    const vdom$ = //xs.combine(landmarksVdom$.debug("1"), pathVdom$.debug("2"), datas$.debug("3"), showMap$.debug("4"), travelAnimationVdom$.debug("5"), tooltipInfosVdom$.debug("6"))
+    xs.combine(landmarksVdom$.debug(e => console.log(Math.floor((Math.random() * 10000) + 1), e)), pathVdom$, datas$, showMap$, travelAnimationVdom$, tooltipInfosVdom$)
     .map(([landmarksVdom, pathVdom, datas, showMap, travelAnimationVdom, tooltipInfosVdom]) =>
         <div>
             <button className="js-show-map button-3d" type="button" >Afficher la carte</button>

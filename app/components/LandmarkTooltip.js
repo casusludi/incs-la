@@ -29,7 +29,7 @@ function model(action$, DOM, landmarks$, showMap$, datas$){
         xs.merge(
             action$.filter(action => action.type === "hideInfos"),
             changeLocation$,
-            showMap$,
+            showMap$//.filter(showMap => showMap),
         ).mapTo(null),
     );
 

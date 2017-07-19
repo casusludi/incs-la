@@ -27,7 +27,8 @@ function model(pixelCoordinates$, progression$, path$, currentLocation$){
     const pathLocations$ = xs.combine(pixelCoordinates$, currentLocation$)
     .map(([pixelCoordinates, currentLocation]) => 
         pixelCoordinates.filter(o => o.location.id === currentLocation.id)[0]
-    ).fold((stack, currentLocation) => [...stack, currentLocation].slice(-locationNbOnPath), []);
+    ).fold((stack, currentLocation) => [...stack, currentLocation].slice(-locationNbOnPath), [])
+    .filter(pathLocations => pathLocations.length !== 0);
 
     return pathLocations$.map(pathLocations =>
         pathLocations.slice(0, pathLocations.length - 1).map((item, i) => ({
