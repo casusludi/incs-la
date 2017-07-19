@@ -27,7 +27,7 @@ function model(pixelCoordinates$, progression$, path$, currentLocation$){
     const pathLocations$ = xs.combine(pixelCoordinates$, currentLocation$)
     .map(([pixelCoordinates, currentLocation]) => 
         pixelCoordinates.filter(o => o.location.id === currentLocation.id)[0]
-    ).fold((stack, currentLocation) => [...stack, currentLocation].slice(-locationNbOnPath), []).debug();
+    ).fold((stack, currentLocation) => [...stack, currentLocation].slice(-locationNbOnPath), []);
 
     return pathLocations$.map(pathLocations =>
         pathLocations.slice(0, pathLocations.length - 1).map((item, i) => ({
@@ -39,10 +39,10 @@ function model(pixelCoordinates$, progression$, path$, currentLocation$){
     );
 }
 
-function view(value$){
-    const vdom$ = value$.map(value => {
-        const lines = value.map((line, i) => {console.log(value.length, i);
-            return svg.line({ attrs: { 
+function view(state$){
+    const vdom$ = state$.map(state => {
+        const lines = state.map((line, i) =>
+            svg.line({ attrs: { 
                 x1: line.x1, 
                 y1: line.y1, 
                 x2: line.x2, 
@@ -52,10 +52,10 @@ function view(value$){
                     stroke-width: 4; 
                     stroke-dasharray: 10, 10; 
                     stroke-linecap: round; 
-                    stroke-opacity: ${/* 0.5 OR */ (locationNbOnPath + i - value.length) / locationNbOnPath};
+                    stroke-opacity: ${/* 0.5 OR */ (locationNbOnPath + i - state.length) / locationNbOnPath};
                 `
             }})
-        });
+        );
         
         return svg.g([
             ...lines
@@ -68,8 +68,8 @@ function view(value$){
 export function Path(sources) {
     const {pixelCoordinates$, progression$, path$, currentLocation$} = sources;
 
-    const value$ = model(pixelCoordinates$, progression$, path$, currentLocation$);
-    const vdom$ = view(value$);
+    const state$ = model(pixelCoordinates$, progression$, path$, currentLocation$);
+    const vdom$ = view(state$);
 
     const sinks = {
         DOM: vdom$,

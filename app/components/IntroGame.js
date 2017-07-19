@@ -12,20 +12,20 @@ function intent(DOM){
 }
 
 function model(action$, datas$){
-	const index$ = action$.filter(action => action.type === "nextSlide").fold((acc, x) => acc + 1, 0);
+	const slideIndex$ = action$.filter(action => action.type === "nextSlide").fold((acc, x) => acc + 1, 0);
 	
-	const value$ = xs.combine(index$, datas$).map(([index, datas]) => ({
-		image: datas.settings.images.intro[index >= datas.settings.images.intro.length ? datas.settings.images.intro.length - 1 : index],
-		ready: index >= datas.settings.images.intro.length - 1,
+	const state$ = xs.combine(slideIndex$, datas$).map(([slideIndex, datas]) => ({
+		image: datas.settings.images.intro[slideIndex >= datas.settings.images.intro.length ? datas.settings.images.intro.length - 1 : slideIndex],
+		ready: slideIndex >= datas.settings.images.intro.length - 1,
 	}));
 
-	return value$;
+	return state$;
 }
 
-function view(value$, datas$){
-    const vdom$ = xs.combine(value$, datas$).map(([value, datas]) =>
-		<div classNames="content intro" style={{backgroundImage: "url("+ value.image +")"}} >
-			{value.ready ?
+function view(state$, datas$){
+    const vdom$ = xs.combine(state$, datas$).map(([state, datas]) =>
+		<div classNames="content intro" style={{backgroundImage: "url("+ state.image +")"}} >
+			{state.ready ?
 			<div className="modal">
 				<div className="panel">
 					{datas.texts.intro}
@@ -40,13 +40,11 @@ function view(value$, datas$){
 }
 
 export function IntroGame(sources) {
-	const {DOM} = sources;
-
-	const datas$ = sources.datas$;
+	const {DOM, datas$} = sources;
 
     const action$ = intent(DOM);
-    const value$ = model(action$, datas$);
-    const vdom$ = view(value$, datas$);
+    const state$ = model(action$, datas$);
+    const vdom$ = view(state$, datas$);
 
     const sinks = {
         DOM: vdom$,

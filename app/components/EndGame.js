@@ -32,10 +32,7 @@ function view(value$, elapsedTime){
 }
 
 export function EndGame(sources) {
-	const DOM = sources.DOM;
-    const elapsedTime = sources.elapsedTime ? sources.elapsedTime : null;
-
-    const datas$ = sources.datas$;
+	const {DOM, elapsedTime, datas$} = sources;
 
     const action$ = intent(DOM);
     const vdom$ = view(datas$, elapsedTime);

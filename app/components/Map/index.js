@@ -105,7 +105,7 @@ function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progres
 
     const changeLocation$ = landmarkTooltipSink.changeLocation$;
 
-    const animationDuration = 3;
+    const animationDuration = 1.5;
     const changeLocationDelayed$ = changeLocation$.compose(delay(animationDuration * 1000));
 
     changeLocationDelayedProxy$.imitate(changeLocationDelayed$);
@@ -145,7 +145,6 @@ function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progres
         const y1 = currentLocationPixelCoordinates.y;
         const x2 = currentLocationPixelCoordinates.x + (newLocationPixelCoordinates.x - currentLocationPixelCoordinates.x) * animationState;
         const y2 = currentLocationPixelCoordinates.y + (newLocationPixelCoordinates.y - currentLocationPixelCoordinates.y) * animationState;
-        // console.log(x1, y1, x2, y2)
         return {x1, y1, x2, y2};
     });
 
@@ -156,7 +155,7 @@ function view(showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, 
     const landmarksVdom$ = landmarks$.map(landmarks => xs.combine(...landmarks.map(landmark => landmark.DOM))).flatten();
     const tooltipInfosVdom$ = landmarkTooltipSink.DOM;
     const pathVdom$ = pathSink.DOM;
-    const travelAnimationVdom$ = travelAnimationState$/*.debug()*/.map(({x1, y1, x2, y2}) => {
+    const travelAnimationVdom$ = travelAnimationState$.map(({x1, y1, x2, y2}) => {
         return svg.line({ attrs: {
             x1, y1, x2, y2, 
             style: 'stroke: rgb(200,0,0); stroke-width: 4; stroke-dasharray: 10, 10; stroke-linecap: round;'
@@ -193,7 +192,7 @@ function view(showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, 
 export function Map(sources) {
     const {DOM, windowResize$, currentLocation$, currentLocationLinksIds$, progression$, path$, datas$} = sources;
     
-    const action$ = intent(DOM)//.debug("action");
+    const action$ = intent(DOM);
     const {showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, changeLocationDelayed$} = model(DOM, action$, currentLocation$, currentLocationLinksIds$, progression$, path$, windowResize$, datas$);
     const vdom$ = view(showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, datas$);
 

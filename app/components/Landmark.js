@@ -30,9 +30,7 @@ function view(props$, datas$){
                             datas.settings.images.reachableLandmark : 
                             datas.settings.images.unreachableLandmark),
                 class: "js-show-info",
-                height: props.isCurrentLocation ? 
-                    datas.settings.landmarksImageHeight + "px" :
-                    datas.settings.landmarksImageHeight + "px",
+                height: datas.settings.landmarksImageHeight + "px",
                 y: - datas.settings.landmarksImageHeight + "px",
             }}),
         ])
@@ -41,16 +39,16 @@ function view(props$, datas$){
 
 export function Landmark(sources) {
     const {props$, datas$, DOM} = sources;
-    const p$ = props$.remember()
+    const remProps$ = props$.remember()
     const action$ = intent(DOM);
-    const value$ = model(p$, action$);
-    const vdom$ = view(p$, datas$);
+    const state$ = model(remProps$, action$);
+    const vdom$ = view(remProps$, datas$);
 
     const sinks = {
         DOM: vdom$,
-        tooltipInfos$: value$,
-        pixelCoordinates$: p$.map(props => props.pixelCoordinates),
-        id$: props$.map(props => props.location.id),
+        tooltipInfos$: state$,
+        pixelCoordinates$: remProps$.map(props => props.pixelCoordinates),
+        id$: remProps$.map(props => props.location.id),
     };
 
     return sinks;

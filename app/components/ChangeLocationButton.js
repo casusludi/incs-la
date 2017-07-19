@@ -23,12 +23,12 @@ function view(props$){
 export function ChangeLocationButton(sources) {
 	const {props$, DOM} = sources;
 	const action$ = intent(DOM);
-	const value$ = model(props$, action$);
+	const state$ = model(props$, action$);
 	const vdom$ = view(props$);
 
 	const sinks = {
 		DOM: vdom$,
-		changeLocation$: value$,
+		changeLocation$: state$,
 		linkValue$: props$,
 	};
 
