@@ -1,9 +1,10 @@
 import xs from 'xstream';
-import { dropNull } from '../utils';
 
 import { html } from 'snabbdom-jsx';
 
 import { getHtmlElementDimensions, getSvgElementDimensions } from '../utils';
+import { dropNull } from '../utils';
+import { mixMerge, mixCombine } from '../utils';
 
 function intent(DOM){
     return xs.merge(
@@ -16,9 +17,7 @@ function intent(DOM){
 }
 
 function model(action$, DOM, landmarks$, showMap$, datas$){
-    const landmarksTooltipInfos$ = landmarks$.map(landmarks =>
-        xs.merge(...landmarks.map(landmark => landmark.tooltipInfos$))
-    ).flatten();
+    const landmarksTooltipInfos$ = landmarks$.compose(mixMerge('tooltipInfos$'));
 
     const changeLocation$ = landmarksTooltipInfos$.map(landmarksTooltipInfos =>
         action$.filter(action => action.type === "travelTo")
@@ -39,7 +38,7 @@ function model(action$, DOM, landmarks$, showMap$, datas$){
     const toolTipContainerDimension$ = getHtmlElementDimensions(DOM, ".locationInfo", 1).startWith(null);
 
     const tooltipPosition$ = xs.combine(tooltipInfos$, datas$, svgTagDimension$, mapImageDimension$, toolTipContainerDimension$)
-    .filter(arr => arr[0])
+    .filter(([tooltipInfos, datas, svgTagDimension, mapImageDimension, toolTipContainerDimension]) => tooltipInfos)
     .map(([tooltipInfos, datas, svgTagDimension, mapImageDimension, toolTipContainerDimension]) => {
         var xPos, yPos;
         const ratio = mapImageDimension.width / datas.settings.mapImageDimension.width;
@@ -74,10 +73,12 @@ function view(DOM, windowResize$, tooltipInfos$, tooltipPosition$, datas$){
             }}>
                 <div className="headerToolTip">  
                     <img className="js-hide-infos"
-                    src={datas.settings.images.closeMapIcon} style={{
+                    src={datas.settings.images.closeMapIcon} 
+                    style={{
                         width: "20px", 
                         background: "rgb(200, 200, 200)", 
-                        padding: "3px",}} />
+                        padding: "3px",
+                    }} />
                     {tooltipInfos.isReachableLandmark ? <button className="js-travel-to button-3d" type="button">S'y rendre</button> : ""}
                 </div>
                 <h3>{tooltipInfos.location.name}</h3>

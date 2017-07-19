@@ -12,6 +12,7 @@ import {LandmarkTooltip} from '../LandmarkTooltip';
 import {Path} from '../Path';
 
 import {makeLocationObject} from '../../utils';
+import { mixMerge, mixCombine } from '../../utils';
 
 import * as _ from 'lodash';
 
@@ -152,7 +153,7 @@ function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progres
 }
 
 function view(showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, datas$){
-    const landmarksVdom$ = landmarks$.map(landmarks => xs.combine(...landmarks.map(landmark => landmark.DOM))).flatten();
+    const landmarksVdom$ = landmarks$.compose(mixCombine('DOM'));
     const tooltipInfosVdom$ = landmarkTooltipSink.DOM;
     const pathVdom$ = pathSink.DOM;
     const travelAnimationVdom$ = travelAnimationState$.map(({x1, y1, x2, y2}) => {

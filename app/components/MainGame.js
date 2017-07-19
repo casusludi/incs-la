@@ -17,6 +17,7 @@ import {JSONReader} from './JSONReader';
 import {ScenarioGenerator} from './ScenarioGenerator';
 
 import {makeLocationObject} from '../utils';
+import { mixMerge, mixCombine } from '../utils';
 
 import delay from 'xstream/extra/delay'
 
@@ -137,9 +138,7 @@ export function MainGame(sources) {
 	const mapSinks = Map({DOM, windowResize$, currentLocation$, currentLocationLinksIds$, progression$, path$, datas$});
 
 	const changeLocation$ = xs.merge(
-		changeLocationButtons$.map( 
-				links => xs.merge(...links.map(link => link.changeLocation$))
-		).flatten(),
+		changeLocationButtons$.compose(mixMerge('changeLocation$')),
 		mapSinks.changeLocation$,
 	);
 
@@ -200,8 +199,8 @@ export function MainGame(sources) {
 	);
 
 	// View
-	const witnessesVTree$ = witnesses$.map(witnesses => xs.combine(...witnesses.map(witness => witness.DOM))).flatten();
-	const linksVTree$ = changeLocationButtons$.map(links => xs.combine(...links.map(link => link.DOM))).flatten();
+	const witnessesVTree$ = witnesses$.compose(mixCombine('DOM'));
+	const linksVTree$ = changeLocationButtons$.compose(mixCombine('DOM'));
 	const timeManagerVTree$ = timeManagerSinks.DOM;
 	const mapVTree$ = mapSinks.DOM;
 
