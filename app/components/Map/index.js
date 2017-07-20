@@ -125,12 +125,12 @@ function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progres
         }).flatten();
     }
 
-    const currentLandmark$ = getLandmarkById(currentLocation$);
-    const newLandmark$ = getLandmarkById(changeLocation$);
+    const currentLocationLandmark$ = getLandmarkById(currentLocation$);
+    const newLocationLandmark$ = getLandmarkById(changeLocation$);
     
     const travelAnimationDatas$ = xs.combine(
-        currentLandmark$.map(currentLandmark => currentLandmark.pixelCoordinates$).flatten(),
-        newLandmark$.map(newLandmark => newLandmark.pixelCoordinates$).flatten(),
+        currentLocationLandmark$.map(currentLocationLandmark => currentLocationLandmark.pixelCoordinates$).flatten(),
+        newLocationLandmark$.map(newLocationLandmark => newLocationLandmark.pixelCoordinates$).flatten(),
         changeLocation$.mapTo(
             concat(
                 tween({
@@ -166,7 +166,7 @@ function view(showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, 
         }})
     }).startWith("");
     
-    const vdom$ = xs.combine(landmarksVdom$.debug("1"), pathVdom$.debug("2"), datas$.debug("3"), showMap$.debug("4"), travelAnimationVdom$.debug("5"), tooltipInfosVdom$.debug("6"))
+    const vdom$ = xs.combine(landmarksVdom$, pathVdom$, datas$, showMap$, travelAnimationVdom$, tooltipInfosVdom$)
     .map(([landmarksVdom, pathVdom, datas, showMap, travelAnimationVdom, tooltipInfosVdom]) =>
         <div>
             <button className="js-show-map button-3d" type="button" >Afficher la carte</button>

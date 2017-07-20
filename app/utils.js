@@ -1,6 +1,10 @@
 import xs from 'xstream';
 import dropRepeats from 'xstream/extra/dropRepeats';
 
+import { svg } from '@cycle/dom';
+
+import * as _ from 'lodash';
+
 const RE = /\[([^\]]*)\]\(([^)]*)\)/g;
 
 export function formatLinks(text){
@@ -50,4 +54,61 @@ export function mixMerge(att){
 
 export function mixCombine(att){
     return inputs$ => inputs$.map(inputs => xs.combine(...inputs.map(input => input[att]))).flatten();
+}
+
+export function makeShadedLine(path, sectionsNb){
+    if(path.length === 0)
+        return [];
+    const segmentsLengths = path.map(path => {console.log(path); return Math.sqrt(Math.pow(path.x1 - path.x2, 2) + Math.pow(path.y1 - path.y2, 2))});
+    const segmentsAddedLengths = segmentsLengths.map((o, i) => segmentsLengths.slice(0, i).reduce((a, b) => a + b, 0));
+    const totalLength = segmentsLengths.reduce((a, b) => a + b, 0);
+    const sectionLength = totalLength / sectionsNb;
+
+    var totalLengthTraveled = 0;
+    var curCoord = {x: path[0].x1, y: path[0].y1};
+    var curSegmentIndex = 0;
+    
+    const sectionsDatas = (new Array(sectionsNb)).fill(null).map((section, i) => {
+        var curLengthTraveled = 0;
+        var returnedVal = [{x: curCoord.x, y: curCoord.y, offset: totalLengthTraveled}];
+        
+        while(totalLengthTraveled + sectionLength > segmentsAddedLengths[curSegmentIndex + 1] && curLengthTraveled < sectionLength){
+            curSegmentIndex += 1;
+            curLengthTraveled += Math.sqrt(Math.pow(curCoord.x - path[curSegmentIndex].x1, 2) + Math.pow(curCoord.y - path[curSegmentIndex].y1, 2));
+            curCoord = {x: path[curSegmentIndex].x1, y: path[curSegmentIndex].y1};
+            returnedVal.push({x: curCoord.x, y: curCoord.y, offset: totalLengthTraveled + curLengthTraveled});
+        }
+        var remainingLength = totalLengthTraveled + sectionLength - segmentsAddedLengths[curSegmentIndex];
+        curLengthTraveled = sectionLength;
+        
+        var curX = path[curSegmentIndex].x1 + (path[curSegmentIndex].x2 - path[curSegmentIndex].x1) * (remainingLength / segmentsLengths[curSegmentIndex]);
+        var curY = path[curSegmentIndex].y1 + (path[curSegmentIndex].y2 - path[curSegmentIndex].y1) * (remainingLength / segmentsLengths[curSegmentIndex]);
+        
+        returnedVal.push({x: curX, y: curY, offset: totalLengthTraveled + curLengthTraveled});
+        totalLengthTraveled += sectionLength;
+        curCoord = {x: curX, y: curY};
+
+        return returnedVal;
+    });
+
+    const pathSvgLines = sectionsDatas.map((sectionData, i) =>
+        sectionData.slice(0, -1).map((v, j) =>
+            svg.line({ attrs: { 
+                x1: sectionData[j].x, 
+                y1: sectionData[j].y, 
+                x2: sectionData[j + 1].x,   
+                y2: sectionData[j + 1].y, 
+                style: `
+                    stroke: rgb(200,0,0); 
+                    stroke-width: 4; 
+                    stroke-dasharray: 10, 10; 
+                    stroke-linecap: round; 
+                    stroke-opacity: ${i / sectionsDatas.length};
+                    stroke-dashoffset: ${sectionData[j].offset};
+                `
+            }})
+        )
+    );
+
+    return _.flatten(pathSvgLines);
 }

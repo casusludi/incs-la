@@ -4,6 +4,8 @@ import { svg } from '@cycle/dom';
 
 import { html } from 'snabbdom-jsx';
 
+import { makeShadedLine } from '../utils';
+
 const locationNbOnPath = 4;
 
 function model(pixelCoordinates$, progression$, path$, currentLocation$){
@@ -42,6 +44,9 @@ function model(pixelCoordinates$, progression$, path$, currentLocation$){
 
 function view(state$){
     const vdom$ = state$.map(state => {
+        const lines = makeShadedLine(state, 10);
+        
+        /*
         const lines = state.map((line, i) =>
             svg.line({ attrs: { 
                 x1: line.x1, 
@@ -53,10 +58,12 @@ function view(state$){
                     stroke-width: 4; 
                     stroke-dasharray: 10, 10; 
                     stroke-linecap: round; 
-                    stroke-opacity: ${/* 0.5 OR */ (locationNbOnPath + i - state.length) / locationNbOnPath};
+                    stroke-opacity: 0.5;
+                    // stroke-opacity: ${(locationNbOnPath + i - state.length) / locationNbOnPath};
                 `
             }})
         );
+        */
         
         return svg.g([
             ...lines
