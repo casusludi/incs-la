@@ -2,7 +2,7 @@
 	{
 		"location":"nantes",
 		"clues":{
-			"temoins":[
+			"witnesses":[
 				"Indice 1 nantes",
 				"Indice 2 nantes"
 			],
@@ -15,7 +15,7 @@
 	{
 		"location":"chateaubriant",
 		"clues":{
-			"temoins":[
+			"witnesses":[
 				"Il a parlé d'un [cinéma](http://data.loire-atlantique.fr/donnees/detail/salles-de-cinema-en-loire-atlantique/?tx_icsoddatastore_pi1[page]=5&visualization=2) qui avait un rapport avec l'océan.",
 				"J'ai cru l'entendre parler d'un écrivain célèbre, mais il parlait d'un nom qui ne finissait pas par la bonne lettre."
 			],
@@ -27,7 +27,7 @@
 	{
 		"location":"guerande",
 		"clues":{
-			"temoins":[
+			"witnesses":[
 				"Il avait rendez-vous avec un [paludier](https://fr.wikipedia.org/wiki/Saunier).",
 				"Il voulait brouiller sa piste dans des [marais](http://data.loire-atlantique.fr/donnees/detail/carte-des-implantations-des-reserves-naturelles-regionales-en-pays-de-la-loire/?tx_icsoddatastore_pi1[page]=1&visualization=2)."
 			],
@@ -39,7 +39,7 @@
 	{
 		"location":"guemene",
 		"clues":{
-			"temoins":[
+			"witnesses":[
 				"Il voulait peut-être faire du ski, parce qu'il a parlé de mont Blanc.",
 				"Il a ri en disant qu'il n'aillait pas faire l'andouille."
 			],
@@ -51,7 +51,7 @@
 	{
 		"location":"ancenis",
 		"clues":{
-			"temoins":[
+			"witnesses":[
 				"J'ai entendu le suspect dire qu'il se rendait à la frontière du département.",
 				"Il prévoyait d'être près d'un fleuve."
 			],
@@ -63,7 +63,7 @@
 	{
 		"location":"coueron",
 		"clues":{
-			"temoins":[
+			"witnesses":[
 				"Il était tout content parce qu'il allait prendre le [bac](http://data.loire-atlantique.fr/donnees/detail/embarcaderes-des-bacs-de-loire-en-loire-atlantique/?tx_icsoddatastore_pi1[page]=5) pour la première fois.",
 				"Il parlait de passer voir la maison d'enfance d'[Audubon](https://fr.wikipedia.org/wiki/Jean-Jacques_Audubon)."
 			],
@@ -75,7 +75,7 @@
 	{
 		"location":"la-boissiere-du-dore",
 		"clues":{
-			"temoins":[
+			"witnesses":[
 				"Il devait se rendre à proximité d'[éoliennes](http://data.loire-atlantique.fr/donnees/detail/localisation-des-projets-eoliens/?tx_icsoddatastore_pi1[page]=6).",
 				"Je crois qu'il a parlé d'une visite au zoo ou dans un parc [animalier](https://www.google.fr/webhp?sourceid=chrome-instant&ion=1&espv=2&ie=UTF-8#q=parc+animalier+loire+atlantique)."
 			],
@@ -87,7 +87,7 @@
 	{
 		"location":"saint-nazaire",
 		"clues":{
-			"temoins":[
+			"witnesses":[
 				"Il a parlé de prendre de la hauteur sur un [pont](http://data.loire-atlantique.fr/donnees/?keywords=pont&sort_search=date).",
 				"Il m'a demandé où il pourrait voir des bateaux, je lui ai dit d'aller dans un port !"
 			],
@@ -99,7 +99,7 @@
 	{
 		"location":"saint-jean-de-boiseau",
 		"clues":{
-			"temoins":[
+			"witnesses":[
 				"Je l'ai entendu dire un truc étrange : il a dit que Goldorak était un [pinacle](https://fr.wikipedia.org/wiki/Pinacle).",
 				"Il semblait pressé, et il voulait de quoi photographier une chapelle."
 			],
@@ -111,7 +111,7 @@
 	{
 		"location":"vallet",
 		"clues":{
-			"temoins":[
+			"witnesses":[
 				"Je crois qu'il se rendait dans une ville dont le nom n'est pas composé, mais je peux avoir mal entendu.",
 				"Il me semble que son GPS a dit 'En direction de la [N249](https://www.google.fr/maps/place/N249/@47.0803835,-1.2457566,10z/data=!4m5!3m4!1s0x48066bf75a00d961:0x2a40565d0fb50458!8m2!3d47.0803835!4d-0.9656053)'"
 			],
@@ -123,7 +123,7 @@
 	{
 		"location":"clisson",
 		"clues":{
-			"temoins":[
+			"witnesses":[
 				"Il voulait se rendre là où se tiennent des fêtes d'enfer, mais je n'ai pas su le renseigner.",
 				"Il était charmant, mais il m'a dit chercher l'Italienne."
 			],
@@ -135,7 +135,7 @@
 	{
 		"location":"la-baule",
 		"clues":{
-			"temoins":[
+			"witnesses":[
 				"Je crois qu'il a dit avoir été au [collège](http://data.loire-atlantique.fr/donnees/detail/colleges-publics-en-loire-atlantique/?visualization=3) avec Jules Verne (ce qui serait surprenant). J'ai du mal comprendre.",
 				"Il avait pris ses affaires de [plage](http://data.loire-atlantique.fr/donnees/detail/plages-en-loire-atlantique/?visualization=2), il se rendait probablement sur la côte."
 			],
@@ -147,7 +147,7 @@
 	{
 		"location":"haute-goulaine",
 		"clues":{
-			"temoins":[
+			"witnesses":[
 				"Indice 1 haute-goulaine",
 				"Indice 2 haute-goulaine"
 			],
@@ -160,7 +160,7 @@
 	{
 		"location":"la-montagne",
 		"clues":{
-			"temoins":[
+			"witnesses":[
 				"Indice 1 la-montagne",
 				"Indice 2 la-montagne"
 			],
@@ -173,7 +173,7 @@
 	{
 		"location":"saint-sebastien",
 		"clues":{
-			"temoins":[
+			"witnesses":[
 				"Indice 1 saint-sebastien",
 				"Indice 2 saint-sebastien"
 			],
@@ -186,7 +186,7 @@
 	{
 		"location":"nozay",
 		"clues":{
-			"temoins":[
+			"witnesses":[
 				"Indice 1 nozay",
 				"Indice 2 nozay"
 			],
@@ -199,7 +199,7 @@
 	{
 		"location":"port-saint-pere",
 		"clues":{
-			"temoins":[
+			"witnesses":[
 				"Indice 1 port-saint-pere",
 				"Indice 2 port-saint-pere"
 			],
@@ -212,7 +212,7 @@
 	{
 		"location":"la-chapelle-sur-erdre",
 		"clues":{
-			"temoins":[
+			"witnesses":[
 				"Indice 1 la-chapelle-sur-erdre",
 				"Indice 2 la-chapelle-sur-erdre"
 			],
@@ -225,7 +225,7 @@
 	{
 		"location":"gorges",
 		"clues":{
-			"temoins":[
+			"witnesses":[
 				"Indice 1 gorges",
 				"Indice 2 gorges"
 			],
@@ -238,7 +238,7 @@
 	{
 		"location":"indre",
 		"clues":{
-			"temoins":[
+			"witnesses":[
 				"Indice 1 indre",
 				"Indice 2 indre"
 			],
@@ -251,7 +251,7 @@
 	{
 		"location":"pornic",
 		"clues":{
-			"temoins":[
+			"witnesses":[
 				"Indice 1 pornic",
 				"Indice 2 pornic"
 			],
@@ -264,7 +264,7 @@
 	{
 		"location":"la-chapelle-des-marais",
 		"clues":{
-			"temoins":[
+			"witnesses":[
 				"Indice 1 la-chapelle-des-marais",
 				"Indice 2 la-chapelle-des-marais"
 			],
@@ -277,7 +277,7 @@
 	{
 		"location":"la-roche-blanche",
 		"clues":{
-			"temoins":[
+			"witnesses":[
 				"Indice 1 la-roche-blanche",
 				"Indice 2 la-roche-blanche"
 			],
@@ -290,7 +290,7 @@
 	{
 		"location":"prefailles",
 		"clues":{
-			"temoins":[
+			"witnesses":[
 				"Indice 1 prefailles",
 				"Indice 2 prefailles"
 			],
@@ -303,7 +303,7 @@
 	{
 		"location":"la-chapelle-basse-mer",
 		"clues":{
-			"temoins":[
+			"witnesses":[
 				"Indice 1 la-chapelle-basse-mer",
 				"Indice 2 la-chapelle-basse-mer"
 			],
@@ -316,7 +316,7 @@
 	{
 		"location":"saint-brevin",
 		"clues":{
-			"temoins":[
+			"witnesses":[
 				"Indice 1 saint-brevin",
 				"Indice 2 saint-brevin"
 			],

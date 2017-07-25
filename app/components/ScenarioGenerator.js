@@ -34,7 +34,7 @@ export function ScenarioGenerator(sources) {
 		)
 	);
 
-	const cluesIndexesRequest$ = selectedLocations$.map(selectedLocations => 
+	const cluesIndexesRequests$ = selectedLocations$.map(selectedLocations => 
 		xs.merge(...selectedLocations.filter((selectedLocation, index) => index < selectedLocations.length - 1)
 			.map((selectedLocation, index) => {
 				const locationId = selectedLocation.location;
@@ -43,7 +43,7 @@ export function ScenarioGenerator(sources) {
 				
 				const selectedWitnessesIndexesRequest = {
 					id: {locationId, type: "witnesses"}, 
-					range: nextLocation.clues.temoins.length - 1, 
+					range: nextLocation.clues.witnesses.length - 1, 
 					number: 2, 
 					unique: true
 				};
@@ -60,22 +60,87 @@ export function ScenarioGenerator(sources) {
 		)
 	).flatten();
 
-	const path$ = xs.combine(selectedLocations$, jsonResponse$).map(([selectedLocations, jsonResponse]) => {
-		const pathTemp = selectedLocations.map((selectedLocation, index) => {
+	/*
+	const ploysIndexesRequests$ = xs.combine(selectedLocations$, jsonResponse$).map(([selectedLocations, jsonResponse]) => {
+		return xs.merge(...selectedLocations.slice(0, -1).map(selectedLocation => {
 			const locationId = selectedLocation.location;
+			
+			const test$ = selectedValue$//.filter(selectedValue => selectedValue.id.locationId === locationId)// && selectedValue.id.type === "witnesses");
+			test$.addListener({
+				next: i => console.log(i.id.locationId),
+			});
+			
+			// console.log(locationId);
+			const selectedWitness1IndexRequest = {
+				id: {locationId, type: "witness1Ploy"}, 
+				range: 3//nextLocation.clues.witnesses[selectedWitnessesIndexes[0]].ploys.length - 1,
+			};
+			const selectedWitness2IndexRequest = {
+				id: {locationId, type: "witness2Ploy"}, 
+				range: 6//nextLocation.clues.witnesses[selectedWitnessesIndexes[1]].ploys.length - 1,
+			};
+			const selectedDataIndexRequest = {
+				id: {locationId, type: "dataPloy"}, 
+				range: 1//nextLocation.clues.data[selectedDataIndex].ploys.length - 1,
+			};
+			
+			return xs.merge(
+				xs.of(selectedWitness1IndexRequest),
+				xs.of(selectedWitness2IndexRequest),
+				xs.of(selectedDataIndexRequest),
+			);
+
+			return xs.combine(
+				selectedValue$.filter(selectedValue => selectedValue.id.locationId === locationId && selectedValue.id.type === "witnesses"),
+				selectedValue$.filter(selectedValue => selectedValue.id.locationId === locationId && selectedValue.id.type === "data"),
+			).map(([selectedWitnesses, selectedData]) => {
+				// console.log(selectedWitnesses);
+				const selectedWitnessesIndexes = selectedWitnesses.val;
+				const selectedDataIndex = selectedData.val;
+				
+				const selectedWitness1IndexRequest = {
+					id: {locationId, type: "witness1Ploy"}, 
+					range: 3//nextLocation.clues.witnesses[selectedWitnessesIndexes[0]].ploys.length - 1,
+				};
+				const selectedWitness2IndexRequest = {
+					id: {locationId, type: "witness2Ploy"}, 
+					range: 6//nextLocation.clues.witnesses[selectedWitnessesIndexes[1]].ploys.length - 1,
+				};
+				const selectedDataIndexRequest = {
+					id: {locationId, type: "dataPloy"}, 
+					range: 1//nextLocation.clues.data[selectedDataIndex].ploys.length - 1,
+				};
+				
+				return xs.merge(
+					xs.of(selectedWitness1IndexRequest),
+					xs.of(selectedWitness2IndexRequest),
+					xs.of(selectedDataIndexRequest),
+				);
+			}).flatten();
+		}))
+	}).flatten();
+	*/
+
+	const path$ = xs.combine(selectedLocations$, jsonResponse$).map(([selectedLocations, jsonResponse]) =>
+		xs.combine(...selectedLocations.map((selectedLocation, index) => {
+			const locationId = selectedLocation.location;
+			const selectedLocationSelectedValues$ = selectedValue$.filter(selectedValue => selectedValue.id.locationId === locationId);
 
 			const result$ = index < selectedLocations.length - 1 ? 
 				xs.combine(
-					selectedValue$.filter(selectedValue => selectedValue.id.locationId === locationId && selectedValue.id.type === "witnesses"),
-					selectedValue$.filter(selectedValue => selectedValue.id.locationId === locationId && selectedValue.id.type === "data"),
-				).map(([selectedWitnesses, selectedData]) => {
+					selectedLocationSelectedValues$.filter(selectedValue => selectedValue.id.type === "witnesses"),
+					selectedLocationSelectedValues$.filter(selectedValue => selectedValue.id.type === "data"),
+					// selectedLocationSelectedValues$.filter(selectedValue => selectedValue.id.type === "witness1_ploy"),
+					// selectedLocationSelectedValues$.filter(selectedValue => selectedValue.id.type === "witness2_ploy"),
+					// selectedLocationSelectedValues$.filter(selectedValue => selectedValue.id.type === "data_ploy"),
+				).map(([selectedWitnesses, selectedData/*, witness1Ploy, witness2Ploy, dataPloy*/]) => {
 					const nextLocation = selectedLocations[index + 1];
 					
 					const selectedWitnessesIndexes = selectedWitnesses.val;
 					const selectedDataIndex = selectedData.val;
 
-					const witness1 = nextLocation.clues.temoins[selectedWitnessesIndexes[0]];
-					const witness2 = nextLocation.clues.temoins[selectedWitnessesIndexes[1]];
+					const witness1 = nextLocation.clues.witnesses[selectedWitnessesIndexes[0]];
+					const witness2 = nextLocation.clues.witnesses[selectedWitnessesIndexes[1]];
 					const data = nextLocation.clues.data[selectedDataIndex];
 					
 					return {
@@ -90,7 +155,12 @@ export function ScenarioGenerator(sources) {
 							"data":{
 								"text": data
 							}
-						}
+						},/*
+						"ploys": [
+							witness1Ploy,
+							witness2Ploy,
+							dataPloy
+						]*/
 					};
 				}) :
 				xs.of({
@@ -109,14 +179,13 @@ export function ScenarioGenerator(sources) {
 				});
 
 			return result$;
-		});
-
-		return xs.combine(...pathTemp);
-	}).flatten().remember();
+		}))
+	).flatten().remember();
 
 	const randomRequests$ = xs.merge(
 		selectedLocationsIndexesRequest$,
-		cluesIndexesRequest$,
+		cluesIndexesRequests$,
+		// ploysIndexesRequests$,
 	);
 
 	const sinks = {

@@ -77,7 +77,7 @@ export function MainGame(sources) {
 	const {path$, randomRequests$} = ScenarioGenerator({jsonResponse$: scenarioGenDataJsonResponse$, selectedValue$: /*pathPresets$*/ random$ })
 
 	// Get the first location
-	const currentLocationInit$ = xs.combine(path$, datas$).map(([path, datas]) =>
+	const currentLocationInit$ = xs.combine(path$.debug(), datas$).map(([path, datas]) =>
 		makeLocationObject(path[0].location, datas)
 	);
 

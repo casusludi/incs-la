@@ -56,10 +56,11 @@ export function mixCombine(att){
     return inputs$ => inputs$.map(inputs => xs.combine(...inputs.map(input => input[att]))).flatten();
 }
 
+// Not pure at all but works pretty well
 export function makeShadedLine(path, sectionsNb){
     if(path.length === 0)
         return [];
-    const segmentsLengths = path.map(path => {console.log(path); return Math.sqrt(Math.pow(path.x1 - path.x2, 2) + Math.pow(path.y1 - path.y2, 2))});
+    const segmentsLengths = path.map(path => Math.sqrt(Math.pow(path.x1 - path.x2, 2) + Math.pow(path.y1 - path.y2, 2)));
     const segmentsAddedLengths = segmentsLengths.map((o, i) => segmentsLengths.slice(0, i).reduce((a, b) => a + b, 0));
     const totalLength = segmentsLengths.reduce((a, b) => a + b, 0);
     const sectionLength = totalLength / sectionsNb;
@@ -99,7 +100,7 @@ export function makeShadedLine(path, sectionsNb){
                 x2: sectionData[j + 1].x,   
                 y2: sectionData[j + 1].y, 
                 style: `
-                    stroke: rgb(200,0,0); 
+                    stroke: rgb(200,200,200); 
                     stroke-width: 4; 
                     stroke-dasharray: 10, 10; 
                     stroke-linecap: round; 
