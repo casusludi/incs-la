@@ -3,7 +3,6 @@ import * as _ from 'lodash';
 export function makeRandomDriver(){
 	function randomDriver(sink$){
 		const source$ = sink$.map(sink => {
-            // console.log(sink.id);
 			const {id, range, number, unique} = sink;
 
             const rangeDef = typeof range === "number" ? {min: 0, max: range} : range;

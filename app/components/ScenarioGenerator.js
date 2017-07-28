@@ -3,10 +3,10 @@ import xs from 'xstream';
 import * as _ from 'lodash';
 
 export function ScenarioGenerator(sources) {
-	const {jsonResponse$, selectedValue$} = sources;
+	const {scenarioProps$, jsonResponse$, selectedValue$} = sources;
 	
-	const selectedLocationsIndexesRequest$ = jsonResponse$.map(jsonResponse => {
-		const pathLocationsNumber = 10;
+	const selectedLocationsIndexesRequest$ = xs.combine(scenarioProps$, jsonResponse$).map(([scenarioProps, jsonResponse]) => {
+		const pathLocationsNumber = scenarioProps.pathLocationsNumber;
 		const locationsTotalNumber = jsonResponse.length;
 		
 		const selectedLocationsIndexesRequest = {
@@ -60,68 +60,64 @@ export function ScenarioGenerator(sources) {
 		)
 	).flatten();
 
-	/*
-	const ploysIndexesRequests$ = xs.combine(selectedLocations$, jsonResponse$).map(([selectedLocations, jsonResponse]) => {
-		return xs.merge(...selectedLocations.slice(0, -1).map(selectedLocation => {
+	const ploysIndexesRequests$ = xs.combine(scenarioProps$, selectedLocations$).map(([scenarioProps, selectedLocations]) =>
+		xs.merge(...selectedLocations.slice(0, -1).map((selectedLocation, index) => {
 			const locationId = selectedLocation.location;
-			
-			const test$ = selectedValue$//.filter(selectedValue => selectedValue.id.locationId === locationId)// && selectedValue.id.type === "witnesses");
-			test$.addListener({
-				next: i => console.log(i.id.locationId),
-			});
-			
-			// console.log(locationId);
-			const selectedWitness1IndexRequest = {
-				id: {locationId, type: "witness1Ploy"}, 
-				range: 3//nextLocation.clues.witnesses[selectedWitnessesIndexes[0]].ploys.length - 1,
-			};
-			const selectedWitness2IndexRequest = {
-				id: {locationId, type: "witness2Ploy"}, 
-				range: 6//nextLocation.clues.witnesses[selectedWitnessesIndexes[1]].ploys.length - 1,
-			};
-			const selectedDataIndexRequest = {
-				id: {locationId, type: "dataPloy"}, 
-				range: 1//nextLocation.clues.data[selectedDataIndex].ploys.length - 1,
-			};
-			
-			return xs.merge(
-				xs.of(selectedWitness1IndexRequest),
-				xs.of(selectedWitness2IndexRequest),
-				xs.of(selectedDataIndexRequest),
-			);
+			const selectedLocationSelectedValues$ = selectedValue$.filter(selectedValue => selectedValue.id.locationId === locationId);
 
-			return xs.combine(
-				selectedValue$.filter(selectedValue => selectedValue.id.locationId === locationId && selectedValue.id.type === "witnesses"),
-				selectedValue$.filter(selectedValue => selectedValue.id.locationId === locationId && selectedValue.id.type === "data"),
-			).map(([selectedWitnesses, selectedData]) => {
-				// console.log(selectedWitnesses);
-				const selectedWitnessesIndexes = selectedWitnesses.val;
-				const selectedDataIndex = selectedData.val;
-				
-				const selectedWitness1IndexRequest = {
-					id: {locationId, type: "witness1Ploy"}, 
-					range: 3//nextLocation.clues.witnesses[selectedWitnessesIndexes[0]].ploys.length - 1,
-				};
-				const selectedWitness2IndexRequest = {
-					id: {locationId, type: "witness2Ploy"}, 
-					range: 6//nextLocation.clues.witnesses[selectedWitnessesIndexes[1]].ploys.length - 1,
-				};
-				const selectedDataIndexRequest = {
-					id: {locationId, type: "dataPloy"}, 
-					range: 1//nextLocation.clues.data[selectedDataIndex].ploys.length - 1,
-				};
-				
-				return xs.merge(
-					xs.of(selectedWitness1IndexRequest),
-					xs.of(selectedWitness2IndexRequest),
-					xs.of(selectedDataIndexRequest),
-				);
-			}).flatten();
+			const result$ = xs.combine(
+					selectedLocationSelectedValues$.filter(selectedValue => selectedValue.id.type === "witnesses"),
+					selectedLocationSelectedValues$.filter(selectedValue => selectedValue.id.type === "data"),
+				).map(([selectedWitnesses, selectedData]) => {
+					const nextLocation = selectedLocations[index + 1];
+					
+					const selectedWitnessesIndexes = selectedWitnesses.val;
+					const selectedDataIndex = selectedData.val;
+
+					const selectedWitness1IndexRequest = nextLocation.clues.witnesses[selectedWitnessesIndexes[0]].ploys && nextLocation.clues.witnesses[selectedWitnessesIndexes[0]].ploys.length > 0 ? 
+						{
+							id: {locationId, type: "witness1Ploy"},
+							range: nextLocation.clues.witnesses[selectedWitnessesIndexes[0]].ploys.length - 1
+						} :
+						{
+							id: {locationId, type: "witness1Ploy", payload: "randomPloy"},
+							range: scenarioProps.availableLocations.length
+						};
+					const selectedWitness2IndexRequest = nextLocation.clues.witnesses[selectedWitnessesIndexes[1]].ploys && nextLocation.clues.witnesses[selectedWitnessesIndexes[1]].ploys.length > 0 ?
+						{
+							id: {locationId, type: "witness2Ploy"},
+							range: nextLocation.clues.witnesses[selectedWitnessesIndexes[1]].ploys.length - 1
+						} :
+						{
+							id: {locationId, type: "witness2Ploy", payload: "randomPloy"},
+							range: scenarioProps.availableLocations.length
+						};
+					const selectedDataIndexRequest = nextLocation.clues.data[selectedDataIndex].ploys && nextLocation.clues.data[selectedDataIndex].ploys.length > 0 ? 
+						{
+							id: {locationId, type: "dataPloy"},
+							range: nextLocation.clues.data[selectedDataIndex].ploys.length - 1
+						} : 
+						{
+							id: {locationId, type: "dataPloy", payload: "randomPloy"},
+							range: scenarioProps.availableLocations.length
+						};
+					
+					return xs.merge(
+						xs.of(selectedWitness1IndexRequest),
+						xs.of(selectedWitness2IndexRequest),
+						xs.of(selectedDataIndexRequest),
+					);
+				}).flatten();
+
+			return result$;
 		}))
-	}).flatten();
-	*/
+	).flatten();
+	
+	ploysIndexesRequests$.addListener({
+		next: i => i
+	});
 
-	const path$ = xs.combine(selectedLocations$, jsonResponse$).map(([selectedLocations, jsonResponse]) =>
+	const path$ = xs.combine(scenarioProps$, selectedLocations$).map(([scenarioProps, selectedLocations]) =>
 		xs.combine(...selectedLocations.map((selectedLocation, index) => {
 			const locationId = selectedLocation.location;
 			const selectedLocationSelectedValues$ = selectedValue$.filter(selectedValue => selectedValue.id.locationId === locationId);
@@ -130,18 +126,35 @@ export function ScenarioGenerator(sources) {
 				xs.combine(
 					selectedLocationSelectedValues$.filter(selectedValue => selectedValue.id.type === "witnesses"),
 					selectedLocationSelectedValues$.filter(selectedValue => selectedValue.id.type === "data"),
-					// selectedLocationSelectedValues$.filter(selectedValue => selectedValue.id.type === "witness1_ploy"),
-					// selectedLocationSelectedValues$.filter(selectedValue => selectedValue.id.type === "witness2_ploy"),
-					// selectedLocationSelectedValues$.filter(selectedValue => selectedValue.id.type === "data_ploy"),
-				).map(([selectedWitnesses, selectedData/*, witness1Ploy, witness2Ploy, dataPloy*/]) => {
+					selectedLocationSelectedValues$.filter(selectedValue => selectedValue.id.type === "witness1Ploy"),
+					selectedLocationSelectedValues$.filter(selectedValue => selectedValue.id.type === "witness2Ploy"),
+					selectedLocationSelectedValues$.filter(selectedValue => selectedValue.id.type === "dataPloy"),
+				).map(([selectedWitnesses, selectedData, selectedWitness1Ploy, selectedWitness2Ploy, selectedDataPloy]) => {
 					const nextLocation = selectedLocations[index + 1];
 					
 					const selectedWitnessesIndexes = selectedWitnesses.val;
 					const selectedDataIndex = selectedData.val;
+					const selectedWitness1PloyIndex = selectedWitness1Ploy.val;
+					const selectedWitness2PloyIndex = selectedWitness2Ploy.val;
+					const selectedDataPloyIndex = selectedDataPloy.val;
 
-					const witness1 = nextLocation.clues.witnesses[selectedWitnessesIndexes[0]];
-					const witness2 = nextLocation.clues.witnesses[selectedWitnessesIndexes[1]];
-					const data = nextLocation.clues.data[selectedDataIndex];
+					const witness1 = nextLocation.clues.witnesses[selectedWitnessesIndexes[0]].text;
+					const witness2 = nextLocation.clues.witnesses[selectedWitnessesIndexes[1]].text;
+					const data = nextLocation.clues.data[selectedDataIndex].text;
+					const witness1Ploy = selectedWitness1Ploy.id.payload === "randomPloy" ?
+						scenarioProps.availableLocations[selectedWitness1PloyIndex] :
+						nextLocation.clues.witnesses[selectedWitnessesIndexes[0]].ploys[selectedWitness1PloyIndex];
+					const witness2Ploy = selectedWitness2Ploy.id.payload === "randomPloy" ?
+						scenarioProps.availableLocations[selectedWitness2PloyIndex] :
+						nextLocation.clues.witnesses[selectedWitnessesIndexes[1]].ploys[selectedWitness2PloyIndex];
+					const dataPloy = selectedDataPloy.id.payload === "randomPloy" ?
+						scenarioProps.availableLocations[selectedDataPloyIndex] :
+						nextLocation.clues.data[selectedDataIndex].ploys[selectedDataPloyIndex];
+
+					// console.log('selectedDataPloy.id.payload === "randomPloy"', selectedDataPloy.id.payload === "randomPloy");
+					// console.log("witness1Ploy", witness1Ploy);
+					// console.log("witness2Ploy", witness2Ploy);
+					// console.log("dataPloy", dataPloy);
 					
 					return {
 						"location": locationId,
@@ -155,12 +168,12 @@ export function ScenarioGenerator(sources) {
 							"data":{
 								"text": data
 							}
-						},/*
+						},
 						"ploys": [
 							witness1Ploy,
 							witness2Ploy,
 							dataPloy
-						]*/
+						]
 					};
 				}) :
 				xs.of({
@@ -175,7 +188,8 @@ export function ScenarioGenerator(sources) {
 						"data":{
 							"text": null
 						}
-					}
+					},
+					"ploys": []
 				});
 
 			return result$;
@@ -185,7 +199,7 @@ export function ScenarioGenerator(sources) {
 	const randomRequests$ = xs.merge(
 		selectedLocationsIndexesRequest$,
 		cluesIndexesRequests$,
-		// ploysIndexesRequests$,
+		ploysIndexesRequests$,
 	);
 
 	const sinks = {

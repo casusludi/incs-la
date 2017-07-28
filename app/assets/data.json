@@ -1,6 +1,6 @@
 {
 	"settings":{
-
+		"pathLocationsNumber": [3, 3, 5, 2],
 		"cost":{
 			"travel": 0.75,
 			"investigate": 0.25
@@ -47,7 +47,8 @@
 			"currentLocationLandmark": "images/carte/currentLocationLandmark.png",
 			"reachableLandmark": "images/carte/reachableLandmark.png",
 			"unreachableLandmark": "images/carte/unreachableLandmark.png"
-		}
+		},
+		"travelAnimationDuration": 1
 	},
 	"texts":{
 		"gameDescription": "N'oubliez pas, agent, que vous devez faire vite : le touriste que vous poursuivez va recharger son module de translocation en 24 heures. Le compte à rebours ci-dessous indique le temps restant pour le retrouver.",

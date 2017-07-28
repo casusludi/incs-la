@@ -104,8 +104,7 @@ function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progres
 
     const changeLocation$ = landmarkTooltipSink.changeLocation$;
 
-    const animationDuration = 1.5;
-    const changeLocationDelayed$ = changeLocation$.compose(delay(animationDuration * 1000));
+    const changeLocationDelayed$ = datas$.map(datas => changeLocation$.compose(delay(datas.settings.travelAnimationDuration * 1000))).flatten();
 
     changeLocationDelayedProxy$.imitate(changeLocationDelayed$);
     
@@ -128,21 +127,23 @@ function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progres
     const currentLocationLandmark$ = getLandmarkById(currentLocation$);
     const newLocationLandmark$ = getLandmarkById(changeLocation$);
     
-    const travelAnimationDatas$ = xs.combine(
-        currentLocationLandmark$.map(currentLocationLandmark => currentLocationLandmark.pixelCoordinates$).flatten(),
-        newLocationLandmark$.map(newLocationLandmark => newLocationLandmark.pixelCoordinates$).flatten(),
-        changeLocation$.mapTo(
-            concat(
-                tween({
-                    from: 0,
-                    to: 1,
-                    ease: tween.power3.easeInOut,
-                    duration: animationDuration * 1000, // milliseconds
-                }),
-                xs.of(0),
-            )
-        ).flatten(),
-    );
+    const travelAnimationDatas$ = datas$.map(datas =>
+        xs.combine(
+            currentLocationLandmark$.map(currentLocationLandmark => currentLocationLandmark.pixelCoordinates$).flatten(),
+            newLocationLandmark$.map(newLocationLandmark => newLocationLandmark.pixelCoordinates$).flatten(),
+            changeLocation$.mapTo(
+                concat(
+                    tween({
+                        from: 0,
+                        to: 1,
+                        ease: tween.power3.easeInOut,
+                        duration: datas.settings.travelAnimationDuration * 1000, // milliseconds
+                    }),
+                    xs.of(0),
+                )
+            ).flatten(),
+        )
+    ).flatten();
         
     const travelAnimationState$ = travelAnimationDatas$.map(([currentLocationPixelCoordinates, newLocationPixelCoordinates, animationState]) => {
         const x1 = currentLocationPixelCoordinates.x;

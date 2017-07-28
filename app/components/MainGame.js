@@ -74,10 +74,14 @@ export function MainGame(sources) {
 		xs.of({id: {locationId: "gorges", type: "data"}, val: 0}),
 	);
 
-	const {path$, randomRequests$} = ScenarioGenerator({jsonResponse$: scenarioGenDataJsonResponse$, selectedValue$: /*pathPresets$*/ random$ })
+	const scenarioProps$ = datas$.map(datas => ({
+		pathLocationsNumber: datas.settings.pathLocationsNumber[round],
+		availableLocations: Object.keys(datas.locations),
+	}));
+	const {path$, randomRequests$} = ScenarioGenerator({scenarioProps$, jsonResponse$: scenarioGenDataJsonResponse$, selectedValue$: /*pathPresets$*/ random$ })
 
 	// Get the first location
-	const currentLocationInit$ = xs.combine(path$.debug(), datas$).map(([path, datas]) =>
+	const currentLocationInit$ = xs.combine(path$, datas$).map(([path, datas]) =>
 		makeLocationObject(path[0].location, datas)
 	);
 
@@ -101,23 +105,26 @@ export function MainGame(sources) {
 			null
 	);
 
+	const currentCorrectLocation$ = xs.combine(path$, progression$).map(([path, progression]) =>
+		path[progression]
+	).debug();
+
 	// Array stream of current location's links' ids
 	// It's made of the current location's list of links in the json and the last location visited
 	// sampleCombine to avoid duplicate signal on the stream (currentLocation and lastLocation emitting at the same time)
-	const currentLocationLinksIds$ = 
-	// xs.combine(currentLocation$, lastLocation$, nextCorrectLocation$) 
-	// currentLocation$.compose(sampleCombine(lastLocation$, nextCorrectLocation$))
-	// .map(([currentLocation, lastLocation, nextCorrectLocation]) =>
-	nextCorrectLocation$.compose(sampleCombine(lastLocation$, currentLocation$))
-	.map(([nextCorrectLocation, lastLocation, currentLocation]) =>
-		_.chain(currentLocation.links || [])
-		.concat(lastLocation ? [lastLocation.id] : [])
-		.concat(nextCorrectLocation ? [nextCorrectLocation.id] : [])
+	const currentLocationLinksIds$ =
+	// nextCorrectLocation$.compose(sampleCombine(lastLocation$, currentLocation$))
+	// .map(([nextCorrectLocation, lastLocation, currentLocation]) =>
+	xs.combine(currentLocation$, lastLocation$, nextCorrectLocation$, currentCorrectLocation$) 
+	.map(([currentLocation, lastLocation, nextCorrectLocation, currentCorrectLocation]) =>
+		_.chain(lastLocation ? [lastLocation.id] : [])
+		.concat(currentCorrectLocation.location === currentLocation.id ? currentCorrectLocation.ploys : currentLocation.links)
+		.concat(nextCorrectLocation && currentCorrectLocation.location === currentLocation.id ? [nextCorrectLocation.id] : [])
 		.uniq()
 		.filter((o) => o !== currentLocation.id)
 		.shuffle()
 		.value()
-	);
+	).debug();
 	
 	const currentLocationLinks$ = xs.combine(currentLocationLinksIds$, datas$)
 	.map(([currentLocationLinksIds, datas]) => 
@@ -147,7 +154,7 @@ export function MainGame(sources) {
 	const correctNextChoosenLocation$ = 
 	xs.combine(changeLocation$, nextCorrectLocation$)
 	.filter(([changeLocation, nextCorrectLocation]) =>
-		changeLocation.id === nextCorrectLocation.id
+		nextCorrectLocation && changeLocation.id === nextCorrectLocation.id
 	).mapTo(true);
 
 	correctNextChoosenLocationProxy$.imitate(correctNextChoosenLocation$);
@@ -191,12 +198,13 @@ export function MainGame(sources) {
 
 	const endGame$ = xs.merge(lastLocationReached$, noTimeRemaining$);
 
-	const roundNb = 3;
-	const routerSink$ = xs.combine(timeManagerSinks.elapsedTime$, endGame$).map(([elapsedTime, endGame]) =>
-		round + 1 < roundNb ? 
+	const routerSink$ = xs.combine(timeManagerSinks.elapsedTime$, endGame$, datas$).map(([elapsedTime, endGame, datas]) => {
+		const roundNb = datas.settings.pathLocationsNumber.length;	
+		
+		return round + 1 < roundNb ? 
 			{ pathname: "/game", type: 'push', state: { round: round + 1 }} :
 			{ pathname: "/end", type: 'push', state: { elapsedTime }}
-	);
+	});
 
 	// View
 	const witnessesVTree$ = witnesses$.compose(mixCombine('DOM'));
