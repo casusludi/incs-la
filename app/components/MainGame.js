@@ -21,28 +21,14 @@ import { mixMerge, mixCombine } from '../utils';
 
 import delay from 'xstream/extra/delay'
 
-// function intent(sources){
-// 	const action$ = xs.of(null);
-
-// 	return action$;
-// }
-
-// function model(action$, props$){
-// 	const state$ = xs.of(null);
-
-// 	return state$;
-// }
-
-// function view(state$){
-// 	const vdom$ = xs.of(null);
-
-// 	return vdom$;
-// }
-
 export function MainGame(sources) {
 	const {DOM, HTTP, datas$} = sources;
 	const round = sources.round ? sources.round : 0;
 	const random$ = sources.random;
+
+	// const test$ = random$.fold((acc, x) => acc +'\n'+ JSON.stringify(x), "").addListener({
+	// 	next: i => console.log(i)
+	// });
 	
 	const windowResize$ = sources.windowResize;
 
@@ -50,7 +36,7 @@ export function MainGame(sources) {
 	const scenarioGenDataJsonRequest$ = scenarioGenDataJsonSinks.request;
 	const scenarioGenDataJsonResponse$ = scenarioGenDataJsonSinks.JSON;
 
-	const pathPresets$ = xs.merge(
+	/*const pathPresets$ = xs.merge(
 		xs.of({id: "selectedLocationsIndexes", val: [18, 12, 2, 23, 9, 4, 20, 16, 5]}),
 		xs.of({id: {locationId: "nantes", type: "witnesses"}, val: [1, 0]}),
 		xs.of({id: {locationId: "nantes", type: "data"}, val: 1}),
@@ -72,6 +58,55 @@ export function MainGame(sources) {
 		xs.of({id: {locationId: "coueron", type: "data"}, val: 1}),
 		xs.of({id: {locationId: "gorges", type: "witnesses"}, val: [0, 1]}),
 		xs.of({id: {locationId: "gorges", type: "data"}, val: 0}),
+	);*/
+
+	const pathPresets$ = xs.merge(
+		xs.of({"id":"selectedLocationsIndexes","val":[24,15,3,13,12,7,18,16,17]}),
+		xs.of({"id":{"locationId":"nantes","type":"witnesses"},"val":[0,1]}),
+		xs.of({"id":{"locationId":"nantes","type":"data"},"val":0}),
+		xs.of({"id":{"locationId":"nantes","type":"witness1Ploy","payload":"randomPloy"},"val":19}),
+		xs.of({"id":{"locationId":"nantes","type":"witness2Ploy","payload":"randomPloy"},"val":13}),
+		xs.of({"id":{"locationId":"nantes","type":"dataPloy","payload":"randomPloy"},"val":12}),
+		xs.of({"id":{"locationId":"la-chapelle-basse-mer","type":"witnesses"},"val":[0,1]}),
+		xs.of({"id":{"locationId":"la-chapelle-basse-mer","type":"data"},"val":1}),
+		xs.of({"id":{"locationId":"la-chapelle-basse-mer","type":"witness1Ploy","payload":"randomPloy"},"val":14}),
+		xs.of({"id":{"locationId":"la-chapelle-basse-mer","type":"witness2Ploy","payload":"randomPloy"},"val":20}),
+		xs.of({"id":{"locationId":"la-chapelle-basse-mer","type":"dataPloy","payload":"randomPloy"},"val":25}),
+		xs.of({"id":{"locationId":"nozay","type":"witnesses"},"val":[0,1]}),
+		xs.of({"id":{"locationId":"nozay","type":"data"},"val":0}),
+		xs.of({"id":{"locationId":"nozay","type":"witness1Ploy","payload":"randomPloy"},"val":21}),
+		xs.of({"id":{"locationId":"nozay","type":"witness2Ploy","payload":"randomPloy"},"val":10}),
+		xs.of({"id":{"locationId":"nozay","type":"dataPloy","payload":"randomPloy"},"val":16}),
+		xs.of({"id":{"locationId":"guemene","type":"witnesses"},"val":[0,1]}),
+		xs.of({"id":{"locationId":"guemene","type":"data"},"val":0}),
+		xs.of({"id":{"locationId":"guemene","type":"witness1Ploy","payload":"randomPloy"},"val":16}),
+		xs.of({"id":{"locationId":"guemene","type":"witness2Ploy","payload":"randomPloy"},"val":11}),
+		xs.of({"id":{"locationId":"guemene","type":"dataPloy","payload":"randomPloy"},"val":22}),
+		xs.of({"id":{"locationId":"la-montagne","type":"witnesses"},"val":[0,1]}),
+		xs.of({"id":{"locationId":"la-montagne","type":"data"},"val":0}),
+		xs.of({"id":{"locationId":"la-montagne","type":"witness1Ploy","payload":"randomPloy"},"val":25}),
+		xs.of({"id":{"locationId":"la-montagne","type":"witness2Ploy","payload":"randomPloy"},"val":2}),
+		xs.of({"id":{"locationId":"la-montagne","type":"dataPloy","payload":"randomPloy"},"val":25}),
+		xs.of({"id":{"locationId":"haute-goulaine","type":"witnesses"},"val":[0,1]}),
+		xs.of({"id":{"locationId":"haute-goulaine","type":"data"},"val":0}),
+		xs.of({"id":{"locationId":"haute-goulaine","type":"witness1Ploy","payload":"randomPloy"},"val":19}),
+		xs.of({"id":{"locationId":"haute-goulaine","type":"witness2Ploy","payload":"randomPloy"},"val":23}),
+		xs.of({"id":{"locationId":"haute-goulaine","type":"dataPloy","payload":"randomPloy"},"val":3}),
+		xs.of({"id":{"locationId":"saint-nazaire","type":"witnesses"},"val":[1,0]}),
+		xs.of({"id":{"locationId":"saint-nazaire","type":"data"},"val":0}),
+		xs.of({"id":{"locationId":"saint-nazaire","type":"witness1Ploy","payload":"randomPloy"},"val":8}),
+		xs.of({"id":{"locationId":"saint-nazaire","type":"witness2Ploy","payload":"randomPloy"},"val":26}),
+		xs.of({"id":{"locationId":"saint-nazaire","type":"dataPloy","payload":"randomPloy"},"val":9}),
+		xs.of({"id":{"locationId":"gorges","type":"witnesses"},"val":[1,0]}),
+		xs.of({"id":{"locationId":"gorges","type":"data"},"val":0}),
+		xs.of({"id":{"locationId":"gorges","type":"witness1Ploy","payload":"randomPloy"},"val":10}),
+		xs.of({"id":{"locationId":"gorges","type":"witness2Ploy","payload":"randomPloy"},"val":1}),
+		xs.of({"id":{"locationId":"gorges","type":"dataPloy","payload":"randomPloy"},"val":10}),
+		xs.of({"id":{"locationId":"port-saint-pere","type":"witnesses"},"val":[1,0]}),
+		xs.of({"id":{"locationId":"port-saint-pere","type":"data"},"val":0}),
+		xs.of({"id":{"locationId":"port-saint-pere","type":"witness1Ploy","payload":"randomPloy"},"val":23}),
+		xs.of({"id":{"locationId":"port-saint-pere","type":"witness2Ploy","payload":"randomPloy"},"val":5}),
+		xs.of({"id":{"locationId":"port-saint-pere","type":"dataPloy","payload":"randomPloy"},"val":20}),
 	);
 
 	const scenarioProps$ = datas$.map(datas => ({
@@ -91,7 +126,6 @@ export function MainGame(sources) {
 	
 	const progression$ = correctNextChoosenLocationProxy$.fold((acc, x) => acc + 1, 0);
 
-	// map path$ to wait for the json loading
 	const currentLocation$ = xs.merge(
 		currentLocationInit$,
 		changeLocationProxy$,
@@ -107,7 +141,7 @@ export function MainGame(sources) {
 
 	const currentCorrectLocation$ = xs.combine(path$, progression$).map(([path, progression]) =>
 		path[progression]
-	).debug();
+	);
 
 	// Array stream of current location's links' ids
 	// It's made of the current location's list of links in the json and the last location visited
@@ -124,7 +158,7 @@ export function MainGame(sources) {
 		.filter((o) => o !== currentLocation.id)
 		.shuffle()
 		.value()
-	).debug();
+	);
 	
 	const currentLocationLinks$ = xs.combine(currentLocationLinksIds$, datas$)
 	.map(([currentLocationLinksIds, datas]) => 
