@@ -27,6 +27,14 @@
 				}
 			}
 		],
+		"cutscenes": {
+			"intro": {
+				"path": "images/cutscenes/intro",
+				"message": "INCS : Loire-Atlantique",
+				"button": "Commencer l'enquête",
+				"length": 10
+			} 
+		},
 		"images": {
 			"intro": [
 				"images/intro/slide1.jpg",

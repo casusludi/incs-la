@@ -14,6 +14,7 @@ import {createBrowserHistory} from 'history';
 
 import {MainMenu} from './components/MainMenu';
 import {IntroGame} from './components/IntroGame';
+import {Cutscene} from './components/Cutscene';
 import {MainGame} from './components/MainGame';
 import {EndGame} from './components/EndGame';
 import {NotFound} from './components/NotFound';
@@ -32,6 +33,7 @@ function main(sources) {
 	const match$ = sources.router.define({
 		'*': NotFound,
 		'/': MainMenu,
+		'/cutscene': Cutscene,
 		'/intro': IntroGame,
 		'/game': MainGame,
 		'/end': EndGame,

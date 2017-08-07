@@ -7,17 +7,19 @@ export function MainMenu(sources) {
 	const {DOM} = sources;
 	const save = sources.save ? sources.save : {};
 
-	console.log(save);
-
 	const action$ = xs.merge(
 		DOM.select('.js-new-game').events('click').mapTo({type: "newGame"}),
 		DOM.select('.js-resume-game').events('click').mapTo({type: "loadGame"}),
-	).debug();
+	);
 
 	const routerSink$ = action$.map(action => {
 		switch(action.type) {
 			case "newGame":
-				return "/intro";
+				return { pathname: "/cutscene", type: 'push', state: { props: {
+					cutsceneName: "intro",
+					redirect: { pathname: "/game", type: 'push', state: { round: 0 }}
+				}}};
+				// return "/intro";
 			case "loadGame":
 				return { pathname: "/game", type: 'push', state: { save }};
 		};
