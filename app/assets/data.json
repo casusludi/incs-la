@@ -1,6 +1,6 @@
 {
 	"settings":{
-		"pathLocationsNumber": [10, 3, 5, 2],
+		"pathLocationsNumber": [2, 3, 5, 2],
 		"cost":{
 			"travel": 0.75,
 			"investigate": 0.25

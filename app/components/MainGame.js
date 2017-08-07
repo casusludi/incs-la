@@ -19,46 +19,18 @@ import {ScenarioGenerator} from './ScenarioGenerator';
 import {makeLocationObject} from '../utils';
 import { mixMerge, mixCombine } from '../utils';
 
-import delay from 'xstream/extra/delay'
-
 export function MainGame(sources) {
 	const {DOM, HTTP, datas$} = sources;
-	const round = sources.round ? sources.round : 0;
+	const save = sources.save ? sources.save : {};
+	const round = save.round ? save.round : 0;
 	const random$ = sources.random;
-
-	// const test$ = random$.fold((acc, x) => acc +'\n'+ JSON.stringify(x), "").addListener({
-	// 	next: i => console.log(i)
-	// });
 	
+	// Emits an {widht, height} object containing the dimensions of the browser window each time it is resized
 	const windowResize$ = sources.windowResize;
 
 	const scenarioGenDataJsonSinks = JSONReader({HTTP, jsonPath$: xs.of("/scenarioGenData.json")});
 	const scenarioGenDataJsonRequest$ = scenarioGenDataJsonSinks.request;
 	const scenarioGenDataJsonResponse$ = scenarioGenDataJsonSinks.JSON;
-
-	/*const pathPresets$ = xs.merge(
-		xs.of({id: "selectedLocationsIndexes", val: [18, 12, 2, 23, 9, 4, 20, 16, 5]}),
-		xs.of({id: {locationId: "nantes", type: "witnesses"}, val: [1, 0]}),
-		xs.of({id: {locationId: "nantes", type: "data"}, val: 1}),
-		xs.of({id: {locationId: "port-saint-pere", type: "witnesses"}, val: [1, 0]}),
-		xs.of({id: {locationId: "port-saint-pere", type: "data"}, val: 0}),
-		xs.of({id: {locationId: "guerande", type: "witnesses"}, val: [0, 1]}),
-		xs.of({id: {locationId: "guerande", type: "data"}, val: 0}),
-		xs.of({id: {locationId: "vallet", type: "witnesses"}, val: [0, 1]}),
-		xs.of({id: {locationId: "vallet", type: "data"}, val: 0}),
-		xs.of({id: {locationId: "haute-goulaine", type: "witnesses"}, val: [0, 1]}),
-		xs.of({id: {locationId: "haute-goulaine", type: "data"}, val: 0}),
-		xs.of({id: {locationId: "pornic", type: "witnesses"}, val: [0, 1]}),
-		xs.of({id: {locationId: "pornic", type: "data"}, val: 0}),
-		xs.of({id: {locationId: "prefailles", type: "witnesses"}, val: [1, 0]}),
-		xs.of({id: {locationId: "prefailles", type: "data"}, val: 0}),
-		xs.of({id: {locationId: "ancenis", type: "witnesses"}, val: [1, 0]}),
-		xs.of({id: {locationId: "ancenis", type: "data"}, val: 0}),
-		xs.of({id: {locationId: "coueron", type: "witnesses"}, val: [1, 0]}),
-		xs.of({id: {locationId: "coueron", type: "data"}, val: 1}),
-		xs.of({id: {locationId: "gorges", type: "witnesses"}, val: [0, 1]}),
-		xs.of({id: {locationId: "gorges", type: "data"}, val: 0}),
-	);*/
 
 	const pathPresets$ = xs.merge(
 		xs.of({"id":"selectedLocationsIndexes","val":[24,15,3,13,12,7,18,16,17]}),
@@ -113,18 +85,21 @@ export function MainGame(sources) {
 		pathLocationsNumber: datas.settings.pathLocationsNumber[round],
 		availableLocations: Object.keys(datas.locations),
 	}));
-	const {path$, randomRequests$} = ScenarioGenerator({scenarioProps$, jsonResponse$: scenarioGenDataJsonResponse$, selectedValue$: /*pathPresets$*/ random$ })
 
-	// Get the first location
-	const currentLocationInit$ = xs.combine(path$, datas$).map(([path, datas]) =>
-		makeLocationObject(path[0].location, datas)
-	);
+	const scenarioGeneratorSinks = ScenarioGenerator({scenarioProps$, jsonResponse$: scenarioGenDataJsonResponse$, selectedValue$: /*pathPresets$*/ random$ })
+
+	const {path$, randomRequests$} = save.path ? {path$: xs.of(save.path)} : scenarioGeneratorSinks;
 
 	// Proxys creation
 	const changeLocationProxy$ = xs.create();
 	const correctNextChoosenLocationProxy$ = xs.create();
 	
-	const progression$ = correctNextChoosenLocationProxy$.fold((acc, x) => acc + 1, 0);
+	const progression$ = correctNextChoosenLocationProxy$.fold((acc, x) => acc + 1, save.progression ? save.progression : 0);
+
+	// Get the first location
+	const currentLocationInit$ = xs.combine(path$, progression$, datas$).map(([path, progression, datas]) =>
+		makeLocationObject(path[progression].location, datas)
+	);
 
 	const currentLocation$ = xs.merge(
 		currentLocationInit$,
@@ -137,7 +112,7 @@ export function MainGame(sources) {
 		progression + 1 < path.length ? 
 			makeLocationObject(path[progression + 1].location, datas) : 
 			null
-	);
+	).remember();
 
 	const currentCorrectLocation$ = xs.combine(path$, progression$).map(([path, progression]) =>
 		path[progression]
@@ -232,13 +207,28 @@ export function MainGame(sources) {
 
 	const endGame$ = xs.merge(lastLocationReached$, noTimeRemaining$);
 
-	const routerSink$ = xs.combine(timeManagerSinks.elapsedTime$, endGame$, datas$).map(([elapsedTime, endGame, datas]) => {
+	const endGameRouter$ = xs.combine(timeManagerSinks.elapsedTime$, endGame$, datas$).map(([elapsedTime, endGame, datas]) => {
 		const roundNb = datas.settings.pathLocationsNumber.length;	
 		
 		return round + 1 < roundNb ? 
-			{ pathname: "/game", type: 'push', state: { round: round + 1 }} :
+			{ pathname: "/game", type: 'push', state: { save: { round: round + 1 }}} :
 			{ pathname: "/end", type: 'push', state: { elapsedTime }}
 	});
+
+	const goToMainMenu$ = DOM.select('.js-go-to-main-menu').events('click');
+
+	const menuRouter$ = xs.combine(goToMainMenu$, path$, progression$).map(([goToMainMenu, path, progression]) =>
+		({ pathname: "/", type: 'push', state: { save:
+			{path,
+			progression,
+			round}
+		}})
+	);
+
+	const routerSink$ = xs.merge(
+		endGameRouter$,
+		menuRouter$,
+	);
 
 	// View
 	const witnessesVTree$ = witnesses$.compose(mixCombine('DOM'));
@@ -271,6 +261,7 @@ export function MainGame(sources) {
 								<div classNames="game-time panel red-panel">
 									{timeManagerVTree}
 								</div>
+            					<button className="js-go-to-main-menu button-3d" type="button" >Menu Principal</button>
 							</aside>
 						</section>
 						<footer>

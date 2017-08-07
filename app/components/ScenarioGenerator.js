@@ -114,7 +114,7 @@ export function ScenarioGenerator(sources) {
 	).flatten();
 	
 	ploysIndexesRequests$.addListener({
-		next: i => i
+		next: () => {}
 	});
 
 	const path$ = xs.combine(scenarioProps$, selectedLocations$).map(([scenarioProps, selectedLocations]) =>

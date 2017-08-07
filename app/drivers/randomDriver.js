@@ -2,6 +2,10 @@ import * as _ from 'lodash';
 
 export function makeRandomDriver(){
 	function randomDriver(sink$){
+		sink$.addListener({
+			next: () => {}
+		});
+	
 		const source$ = sink$.map(sink => {
 			const {id, range, number, unique} = sink;
 
@@ -20,6 +24,9 @@ export function makeRandomDriver(){
 			return ret;
 		});
 		
+		source$.addListener({
+			next: () => {}
+		});
 
 		return source$;
 	}

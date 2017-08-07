@@ -12,6 +12,7 @@ import switchPath from 'switch-path';
 
 import {createBrowserHistory} from 'history';
 
+import {MainMenu} from './components/MainMenu';
 import {IntroGame} from './components/IntroGame';
 import {MainGame} from './components/MainGame';
 import {EndGame} from './components/EndGame';
@@ -30,7 +31,8 @@ function main(sources) {
 	
 	const match$ = sources.router.define({
 		'*': NotFound,
-		'/': IntroGame,
+		'/': MainMenu,
+		'/intro': IntroGame,
 		'/game': MainGame,
 		'/end': EndGame,
 	});
@@ -46,8 +48,8 @@ function main(sources) {
 	);
 
 	const sinks = {
-		DOM: page$.map(c => c.DOM).flatten(),
-		router: page$.map(c => c.router).flatten(),
+		DOM: page$.filter(c => c.DOM).map(c => c.DOM).flatten(),
+		router: page$.filter(c => c.router).map(c => c.router).flatten(),
 		HTTP: xs.merge(
 			dataJsonRequest$,
 			page$.filter(c => c.HTTP).map(c => c.HTTP).flatten(),
