@@ -1,9 +1,9 @@
 import isolate from '@cycle/isolate';
 
 import xs from 'xstream';
-import pairwise from 'xstream/extra/pairwise'
-import sampleCombine from 'xstream/extra/sampleCombine'
-import dropRepeats from 'xstream/extra/dropRepeats'
+import pairwise from 'xstream/extra/pairwise';
+import sampleCombine from 'xstream/extra/sampleCombine';
+import dropRepeats from 'xstream/extra/dropRepeats';
 
 import * as _ from 'lodash';
 
