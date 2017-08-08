@@ -44,7 +44,7 @@ function view(state$, props$, datas$){
 
 export function Cutscene(sources) {
 	const {DOM, datas$} = sources;
-	const props$ = xs.of(sources.props).debug();
+	const props$ = xs.of(sources.props);
 
     const action$ = intent(DOM);
     const state$ = model(action$, props$, datas$);

@@ -179,9 +179,14 @@ export function MainGame(sources) {
 	).mapTo(true);
 
 	correctNextChoosenLocationProxy$.imitate(correctNextChoosenLocation$);
+	
+	const witnessesProps$ = xs.merge(
+		props$,
+		changeLocation$.mapTo(null),
+	);
 
-	const witnesses$ = xs.combine(currentLocation$, progression$, path$, props$)
-	.map(([currentLocation, progression, path, props]) => 
+	const witnesses$ = xs.combine(currentLocation$, progression$, path$, witnessesProps$)
+	.map(([currentLocation, progression, path, witnessesProps]) => 
 		Object.keys(currentLocation.places).map((key, value) =>
 			isolate(Witness, key)({
 				DOM: sources.DOM,
@@ -192,7 +197,7 @@ export function MainGame(sources) {
 					path[progression].location === currentLocation.id ? 
 						{clue: path[progression].clues[key]} : 
 						{},
-					{showResult: false /*props.questionnedWitnesses[key]*/},
+					{showResult: witnessesProps ? witnessesProps.questionnedWitnesses[key] : false},
 				)),
 			})
 		)
@@ -207,14 +212,14 @@ export function MainGame(sources) {
 			questionnedWitness$,
 			changeLocation$.mapTo('reset')
 		).fold((acc, item) => item === 'reset' ? {} : Object.assign(acc, {[item]: true}), props.questionnedWitnesses)
-	).flatten().debug();
+	).flatten();
 
 	const showDestinationLinks$ = props$.map(props =>
 		xs.merge(
 			questionnedWitness$.mapTo(true),
 			changeLocation$.mapTo(false),
 		).startWith(props.showDestinationLinks).compose(dropRepeats())
-	).flatten();
+	).flatten().remember();
 
 	const timeManagerSinks = TimeManager({DOM, props$/*: props$.map(props => props.elapsedTime)*/, datas$, changeLocation$, questionnedWitness$});
 
