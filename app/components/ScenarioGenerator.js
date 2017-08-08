@@ -117,7 +117,7 @@ export function ScenarioGenerator(sources) {
 		next: () => {}
 	});
 
-	const path$ = xs.combine(scenarioProps$, selectedLocations$).map(([scenarioProps, selectedLocations]) =>
+	const generatedPath$ = xs.combine(scenarioProps$, selectedLocations$).map(([scenarioProps, selectedLocations]) =>
 		xs.combine(...selectedLocations.map((selectedLocation, index) => {
 			const locationId = selectedLocation.location;
 			const selectedLocationSelectedValues$ = selectedValue$.filter(selectedValue => selectedValue.id.locationId === locationId);
@@ -203,7 +203,7 @@ export function ScenarioGenerator(sources) {
 	);
 
 	const sinks = {
-		path$, 
+		generatedPath$, 
 		randomRequests$,
 	};
 

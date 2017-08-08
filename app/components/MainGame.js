@@ -22,6 +22,7 @@ import { mixMerge, mixCombine } from '../utils';
 export function MainGame(sources) {
 	const {DOM, HTTP, datas$} = sources;
 	const save = sources.save ? sources.save : {};
+	const save$ = xs.of(sources.save ? sources.save : {});
 	const round = save.round ? save.round : 0;
 	const random$ = sources.random;
 	
@@ -86,19 +87,23 @@ export function MainGame(sources) {
 		availableLocations: Object.keys(datas.locations),
 	}));
 
-	const scenarioGeneratorSinks = ScenarioGenerator({scenarioProps$, jsonResponse$: scenarioGenDataJsonResponse$, selectedValue$: /*pathPresets$*/ random$ })
+	const {generatedPath$, randomRequests$} = ScenarioGenerator({scenarioProps$, jsonResponse$: scenarioGenDataJsonResponse$, selectedValue$: /*pathPresets$*/ random$ })
 
-	const {path$, randomRequests$} = save.path ? {path$: xs.of(save.path)} : scenarioGeneratorSinks;
+	const path$ = xs.combine(generatedPath$, save$).map(([generatedPath, save]) =>
+		save.path ? save.path : generatedPath
+	);
 
 	// Proxys creation
 	const changeLocationProxy$ = xs.create();
 	const correctNextChoosenLocationProxy$ = xs.create();
 	
-	const progression$ = correctNextChoosenLocationProxy$.fold((acc, x) => acc + 1, save.progression ? save.progression : 0);
+	const progression$ = save$.map(save =>
+		correctNextChoosenLocationProxy$.fold((acc, x) => acc + 1, save.progression ? save.progression : 0)
+	).flatten().remember();
 
 	// Get the first location
-	const currentLocationInit$ = xs.combine(path$, progression$, datas$).map(([path, progression, datas]) =>
-		makeLocationObject(path[progression].location, datas)
+	const currentLocationInit$ = xs.combine(path$, progression$, save$, datas$).map(([path, progression, save, datas]) =>
+		save.currentLocation ? save.currentLocation : makeLocationObject(path[0].location, datas)
 	);
 
 	const currentLocation$ = xs.merge(
@@ -217,12 +222,13 @@ export function MainGame(sources) {
 
 	const goToMainMenu$ = DOM.select('.js-go-to-main-menu').events('click');
 
-	const menuRouter$ = xs.combine(goToMainMenu$, path$, progression$).map(([goToMainMenu, path, progression]) =>
-		({ pathname: "/", type: 'push', state: { save:
-			{path,
+	const menuRouter$ = xs.combine(goToMainMenu$, path$, currentLocation$, progression$).map(([goToMainMenu, path, currentLocation, progression]) =>
+		({ pathname: "/", type: 'push', state: { save: {
+			path,
+			currentLocation,
 			progression,
-			round}
-		}})
+			round
+		}}})
 	);
 
 	const routerSink$ = xs.merge(
