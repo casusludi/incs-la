@@ -5,15 +5,17 @@ import { html } from 'snabbdom-jsx';
 import * as _ from 'lodash';
 
 function model(sources){
-    const {DOM, datas$, changeLocation$, witnessQuestionned$} = sources;
+    const {DOM, props$, datas$, changeLocation$, questionnedWitness$} = sources;
 
-    const elapsedTime$ = datas$.map(datas =>
-      xs.merge(
-        changeLocation$.mapTo(datas.settings.cost.travel), 
-        witnessQuestionned$.map(witnessQuestionned => witnessQuestionned ? datas.settings.cost.investigate : 0),
-      )
-    ).flatten()
-    .fold((acc, x) => acc + x, 0);
+    const elapsedTime$ = props$.map(props =>
+      datas$.map(datas =>
+        xs.merge(
+          changeLocation$.mapTo(datas.settings.cost.travel), 
+          questionnedWitness$.mapTo(datas.settings.cost.investigate),
+        )
+      ).flatten()
+      .fold((acc, x) => acc + x, props.elapsedTime)
+    ).flatten();
     
     return xs.combine(elapsedTime$, datas$).map(([elapsedTime, datas]) => {
       const elapsedHours = parseInt(elapsedTime);
@@ -50,12 +52,12 @@ function view(value$){
 }
 
 export function TimeManager(sources) {
-    const value$ = model(sources);
+    const value$ = model(sources).remember();
     const vdom$ = view(value$);
 
     const sinks = {
         DOM: vdom$,
-        elapsedTime$: value$,
+        timeDatas$: value$,
     };
 
     return sinks;

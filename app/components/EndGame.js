@@ -8,8 +8,8 @@ function intent(DOM){
     return click$;
 }
 
-function view(value$, elapsedTime){
-    const success = elapsedTime ? elapsedTime.remainingTime.raw > 0 : false;
+function view(value$, timeDatas){
+    const success = timeDatas ? timeDatas.remainingTime.raw > 0 : false;
 
     const vdom$ = value$.map(value => (
         <div classNames="content end" style={{ backgroundImage: "url("+ (success ? value.settings.images.endWin : value.settings.images.endLose) +")" }} >
@@ -17,7 +17,7 @@ function view(value$, elapsedTime){
                 {success ? 
                     <div classNames="panel final-panel">
                         {value.texts.win}
-                        {/*elapsedTime.remainingTime.formatted*/}
+                        {/*timeDatas.remainingTime.formatted*/}
                     </div> :
                     <div classNames="panel final-panel">
                         {value.texts.loose}
@@ -32,10 +32,10 @@ function view(value$, elapsedTime){
 }
 
 export function EndGame(sources) {
-	const {DOM, elapsedTime, datas$} = sources;
+	const {DOM, timeDatas, datas$} = sources;
 
     const action$ = intent(DOM);
-    const vdom$ = view(datas$, elapsedTime);
+    const vdom$ = view(datas$, timeDatas);
 
     const sinks = {
         DOM: vdom$,

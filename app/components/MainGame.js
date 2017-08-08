@@ -21,9 +21,14 @@ import { mixMerge, mixCombine } from '../utils';
 
 export function MainGame(sources) {
 	const {DOM, HTTP, datas$} = sources;
-	const save = sources.save ? sources.save : {};
-	const save$ = xs.of(sources.save ? sources.save : {});
-	const round = save.round ? save.round : 0;
+	const props$ = xs.of(Object.assign({
+		round: 0,
+		progression: 0,
+		lastLocation: null,
+		elapsedTime: 0,
+		questionnedWitnesses: {},
+		showDestinationLinks: false,
+	}, sources.props));
 	const random$ = sources.random;
 	
 	// Emits an {widht, height} object containing the dimensions of the browser window each time it is resized
@@ -82,28 +87,28 @@ export function MainGame(sources) {
 		xs.of({"id":{"locationId":"port-saint-pere","type":"dataPloy","payload":"randomPloy"},"val":20}),
 	);
 
-	const scenarioProps$ = datas$.map(datas => ({
-		pathLocationsNumber: datas.settings.pathLocationsNumber[round],
+	const scenarioProps$ = xs.combine(props$, datas$).map(([props, datas]) => ({
+		pathLocationsNumber: datas.settings.pathLocationsNumber[props.round],
 		availableLocations: Object.keys(datas.locations),
-	}));
+	})).remember();
 
 	const {generatedPath$, randomRequests$} = ScenarioGenerator({scenarioProps$, jsonResponse$: scenarioGenDataJsonResponse$, selectedValue$: /*pathPresets$*/ random$ })
 
-	const path$ = xs.combine(generatedPath$, save$).map(([generatedPath, save]) =>
-		save.path ? save.path : generatedPath
+	const path$ = xs.combine(generatedPath$, props$).map(([generatedPath, props]) =>
+		props.path ? props.path : generatedPath
 	);
 
 	// Proxys creation
 	const changeLocationProxy$ = xs.create();
 	const correctNextChoosenLocationProxy$ = xs.create();
 	
-	const progression$ = save$.map(save =>
-		correctNextChoosenLocationProxy$.fold((acc, x) => acc + 1, save.progression ? save.progression : 0)
+	const progression$ = props$.map(props =>
+		correctNextChoosenLocationProxy$.fold((acc, x) => acc + 1, props.progression)
 	).flatten().remember();
 
 	// Get the first location
-	const currentLocationInit$ = xs.combine(path$, progression$, save$, datas$).map(([path, progression, save, datas]) =>
-		save.currentLocation ? save.currentLocation : makeLocationObject(path[0].location, datas)
+	const currentLocationInit$ = xs.combine(path$, progression$, props$, datas$).map(([path, progression, props, datas]) =>
+		props.currentLocation ? props.currentLocation : makeLocationObject(path[0].location, datas)
 	);
 
 	const currentLocation$ = xs.merge(
@@ -111,7 +116,9 @@ export function MainGame(sources) {
 		changeLocationProxy$,
 	).remember();
 	
-	const lastLocation$ = currentLocation$.compose(pairwise).map(item => item[0]).startWith(null);
+	const lastLocation$ = props$.map(props =>
+		currentLocation$.startWith(props.lastLocation).compose(pairwise).map(item => item[0])
+	).flatten();
 
 	const nextCorrectLocation$ = xs.combine(progression$, path$, datas$).map(([progression, path, datas]) =>
 		progression + 1 < path.length ? 
@@ -173,62 +180,80 @@ export function MainGame(sources) {
 
 	correctNextChoosenLocationProxy$.imitate(correctNextChoosenLocation$);
 
-	const witnesses$ = xs.combine(currentLocation$, progression$, path$)
-	.map(([currentLocation, progression, path]) => 
+	const witnesses$ = xs.combine(currentLocation$, progression$, path$, props$)
+	.map(([currentLocation, progression, path, props]) => 
 		Object.keys(currentLocation.places).map((key, value) =>
 			isolate(Witness, key)({
 				DOM: sources.DOM,
 				props$: xs.of(Object.assign(
-					{}, 
+					{},
+					{key},
 					currentLocation.places[key], 
 					path[progression].location === currentLocation.id ? 
 						{clue: path[progression].clues[key]} : 
 						{},
+					{showResult: false /*props.questionnedWitnesses[key]*/},
 				)),
 			})
 		)
 	).remember();
 
-	const witnessQuestionned$ = witnesses$.map(witnesses =>
+	const questionnedWitness$ = witnesses$.map(witnesses =>
 		xs.merge(...witnesses.map(witness => witness.questionned$))
 	).flatten();
+	
+	const questionnedWitnesses$ = props$.map(props =>
+		xs.merge(
+			questionnedWitness$,
+			changeLocation$.mapTo('reset')
+		).fold((acc, item) => item === 'reset' ? {} : Object.assign(acc, {[item]: true}), props.questionnedWitnesses)
+	).flatten().debug();
 
-	const showDestinationLinks$ = xs.merge(
-		witnessQuestionned$.mapTo(true),
-		changeLocation$.mapTo(false),
-	).startWith(false).compose(dropRepeats());
+	const showDestinationLinks$ = props$.map(props =>
+		xs.merge(
+			questionnedWitness$.mapTo(true),
+			changeLocation$.mapTo(false),
+		).startWith(props.showDestinationLinks).compose(dropRepeats())
+	).flatten();
 
-	const timeManagerSinks = TimeManager({DOM, datas$, changeLocation$, witnessQuestionned$});
+	const timeManagerSinks = TimeManager({DOM, props$/*: props$.map(props => props.elapsedTime)*/, datas$, changeLocation$, questionnedWitness$});
 
 	// End game reached ?
 	const lastLocationReached$ = xs.combine(path$, progression$)
 	.filter(([path, progression]) =>
 		progression === (path.length - 1)
-	).mapTo(true);
+	).mapTo({type: "lastLocationReached"});
 
-	const noTimeRemaining$ = timeManagerSinks.elapsedTime$.filter(elapsedTime =>
-		elapsedTime.remainingTime.raw <= 0
-	).mapTo(true);
+	const noTimeRemaining$ = timeManagerSinks.timeDatas$.filter(timeDatas =>
+		timeDatas.remainingTime.raw <= 0
+	).mapTo({type: "noTimeRemaining"});
 
 	const endGame$ = xs.merge(lastLocationReached$, noTimeRemaining$);
 
-	const endGameRouter$ = xs.combine(timeManagerSinks.elapsedTime$, endGame$, datas$).map(([elapsedTime, endGame, datas]) => {
+	const endGameRouter$ = xs.combine(timeManagerSinks.timeDatas$, endGame$, props$, datas$).map(([timeDatas, endGame, props, datas]) => {
 		const roundNb = datas.settings.pathLocationsNumber.length;	
 		
-		return round + 1 < roundNb ? 
-			{ pathname: "/game", type: 'push', state: { save: { round: round + 1 }}} :
-			{ pathname: "/end", type: 'push', state: { elapsedTime }}
+		if(endGame.type === "lastLocationReached" && props.round + 1 < roundNb)
+			return { pathname: "/game", type: 'push', state: { props: { round: props.round + 1 }}}
+		else if(endGame.type === "noTimeRemaining")
+			return { pathname: "/end", type: 'push', state: { timeDatas }}
 	});
 
 	const goToMainMenu$ = DOM.select('.js-go-to-main-menu').events('click');
 
-	const menuRouter$ = xs.combine(goToMainMenu$, path$, currentLocation$, progression$).map(([goToMainMenu, path, currentLocation, progression]) =>
-		({ pathname: "/", type: 'push', state: { save: {
-			path,
-			currentLocation,
-			progression,
-			round
-		}}})
+	const menuRouter$ = xs.combine(goToMainMenu$, props$, path$, currentLocation$, lastLocation$, progression$, timeManagerSinks.timeDatas$, questionnedWitnesses$, showDestinationLinks$)
+	.map(([goToMainMenu, props, path, currentLocation, lastLocation, progression, timeDatas, questionnedWitnesses, showDestinationLinks]) =>
+		({ pathname: "/", type: 'push', state: { 
+			props: Object.assign(props, {
+				path,
+				currentLocation,
+				lastLocation,
+				progression,
+				elapsedTime: timeDatas.elapsedTime.raw,
+				questionnedWitnesses,
+				showDestinationLinks
+			})
+		}})
 	);
 
 	const routerSink$ = xs.merge(
@@ -242,15 +267,15 @@ export function MainGame(sources) {
 	const timeManagerVTree$ = timeManagerSinks.DOM;
 	const mapVTree$ = mapSinks.DOM;
 
-	const DOMSink$ = xs.combine(linksVTree$, currentLocation$, witnessesVTree$, timeManagerVTree$, mapVTree$, datas$, showDestinationLinks$).map(
-		([linksVTree, currentLocation, witnessesVTree, timeManagerVTree, mapVTree, datas, showDestinationLinks]) =>
+	const DOMSink$ = xs.combine(linksVTree$, currentLocation$, witnessesVTree$, timeManagerVTree$, mapVTree$, props$, datas$, showDestinationLinks$).map(
+		([linksVTree, currentLocation, witnessesVTree, timeManagerVTree, mapVTree, props, datas, showDestinationLinks]) =>
 			<section className="main">
 				<section className="main-content" >
 					<section className="city" style={{backgroundImage: "url("+currentLocation.image+")"}} >
 						<section className="city-content">
 							<section className="col-main">
 								<header className="header">
-									<h1>{currentLocation.name + " - Round : " + (round + 1)	}</h1>
+									<h1>{currentLocation.name + " - Round : " + (props.round + 1)	}</h1>
 									{/*{mapVTree}*/}
 								</header>
 								<section className="place-list" >
@@ -272,19 +297,9 @@ export function MainGame(sources) {
 						</section>
 						<footer>
 							<div className="travel-panel">
-								{showDestinationLinks ?
-									mapVTree
-									/*<div className="travel-panel-content">
-										<div className="travel-label">{datas.texts.travelLabel}</div>
-										<nav>
-											{linksVTree}
-										</nav>
-									</div> */
-									:
-									<div className="travel-panel-content">
-										{datas.texts.travelDescription}
-									</div>
-								}
+								<div className="travel-panel-content">
+									{showDestinationLinks ? mapVTree : datas.texts.travelDescription}
+								</div>
 							</div>
 						</footer>
 					</section>

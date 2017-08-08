@@ -52,12 +52,14 @@ function view(value$) {
 export function Witness(sources) {
     const { props$, DOM } = sources;
     const action$ = intent(DOM);
-    const value$ = model(props$, action$);
+    const value$ = model(props$.debug("props"), action$);
     const vdom$ = view(value$);
 
     const sinks = {
         DOM: vdom$,
-        questionned$: action$.mapTo(true),
+        questionned$: props$.map(props =>
+            action$.mapTo(props.key)
+        ).flatten(),
     };
 
     return sinks;
