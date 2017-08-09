@@ -251,7 +251,7 @@ export function MainGame(sources) {
 		if(endGame.type === "lastLocationReached" && props.round + 1 < roundNb)
 			return { pathname: "/redirect", type: 'push', state: { props: { round: props.round + 1/*, newGame: true*/ }}}
 			// return { pathname: "/game", type: 'push', state: { props: { round: props.round + 1/*, newGame: true*/ }}}
-		else if(endGame.type === "noTimeRemaining")
+		else/* if(endGame.type === "noTimeRemaining")*/
 			return { pathname: "/end", type: 'push', state: { timeDatas }}
 	}).debug("endGame");
 
