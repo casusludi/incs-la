@@ -14,8 +14,9 @@ import switchPath from 'switch-path';
 import {createBrowserHistory} from 'history';
 
 import {MainMenu} from './components/MainMenu';
-import {IntroGame} from './components/IntroGame';
 import {Cutscene} from './components/Cutscene';
+import {Redirect} from './components/Redirect';
+import {IntroGame} from './components/IntroGame';
 import {MainGame} from './components/MainGame';
 import {EndGame} from './components/EndGame';
 import {NotFound} from './components/NotFound';
@@ -35,6 +36,7 @@ function main(sources) {
 		'*': NotFound,
 		'/': MainMenu,
 		'/cutscene': Cutscene,
+		'/redirect': Redirect,
 		'/intro': IntroGame,
 		'/game': MainGame,
 		'/end': EndGame,

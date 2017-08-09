@@ -1,4 +1,5 @@
 import xs from 'xstream';
+import delay from 'xstream/extra/delay';
 
 import {html} from 'snabbdom-jsx';
 
@@ -16,17 +17,7 @@ export function MainMenu(sources) {
 		DOM.select('.js-resume-game').events('click').mapTo({type: "loadGame"}),
 	);
 
-	const routerSink$ = action$.map(action => {
-		switch(action.type) {
-			case "newGame":
-				return { pathname: "/cutscene", type: 'push', state: { props: {
-					cutsceneName: "intro",
-					redirect: "/game",
-				}}};
-			case "loadGame":
-				return "/game";
-		};
-	});
+	const routerSink$ = action$.map(action => "/redirect").compose(delay(1));
 
 	const resetSave$ = action$.filter(action => action.type === "newGame").mapTo({key: 'save', value: null});
 

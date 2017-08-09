@@ -52,13 +52,21 @@ export function Cutscene(sources) {
     const state$ = model(action$, props$, datas$);
     const vdom$ = view(state$, props$, datas$);
 
+	const save$ = props$.map(props => ({ 
+		key: 'save',
+		value: JSON.stringify(props),
+	}));
+
     const sinks = {
         DOM: vdom$,
 		router: props$.map(props =>
-			action$.filter(action => action.type === "endCutScene").mapTo(
-				props.redirect
-			)
+			action$.filter(action => action.type === "endCutScene").map(a => {
+				//props.redirect
+				console.log('roundround', props);
+				return ({ pathname: "/redirect", type: 'push', state:{ props: Object.assign(props, {round: props.round + 1}) }})
+			})
 		).flatten(),
+		storage: save$,
     };
 
     return sinks;

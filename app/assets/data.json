@@ -1,6 +1,6 @@
 {
 	"settings":{
-		"pathLocationsNumber": [2, 3, 5, 2],
+		"pathLocationsNumber": ["intro", 2, "test", 2],
 		"cost":{
 			"travel": 0.75,
 			"investigate": 0.25
@@ -33,7 +33,13 @@
 				"message": "INCS : Loire-Atlantique",
 				"button": "Commencer l'enquête",
 				"length": 10
-			} 
+			},
+			"test": {
+				"path": "images/cutscenes/test",
+				"message": "Ceci est un super test",
+				"button": "Clique ici on t'a dit !",
+				"length": 2
+			}
 		},
 		"images": {
 			"intro": [
