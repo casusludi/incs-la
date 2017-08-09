@@ -17,18 +17,38 @@ import {JSONReader} from './JSONReader';
 import {ScenarioGenerator} from './ScenarioGenerator';
 
 import {makeLocationObject} from '../utils';
-import { mixMerge, mixCombine } from '../utils';
+import {mixMerge, mixCombine} from '../utils';
 
 export function MainGame(sources) {
-	const {DOM, HTTP, datas$} = sources;
-	const props$ = xs.of(Object.assign({
-		round: 0,
-		progression: 0,
-		lastLocation: null,
-		elapsedTime: 0,
-		questionnedWitnesses: {},
-		showDestinationLinks: false,
-	}, sources.props));
+	const {DOM, HTTP} = sources;
+	// const propsOLD$ = xs.of(Object.assign({
+	// 	round: 0,
+	// 	progression: 0,
+	// 	lastLocation: null,
+	// 	elapsedTime: 0,
+	// 	questionnedWitnesses: {},
+	// 	showDestinationLinks: false,
+	// }, sources.props));
+
+	const datas$ = sources.datas$;
+	
+	const props$ = sources.storage.local.getItem('save')/*.debug("beforeTake")*/.take(1)/*.debug("afterTake")*/.map(save => {
+		//console.log(JSON.parse(save));
+
+		return Object.assign(
+			{
+				round: 0,
+				progression: 0,
+				// lastLocation: null,
+				elapsedTime: 0,
+				questionnedWitnesses: {},
+				showDestinationLinks: false,
+			},
+			JSON.parse(save),
+			// sources.props && sources.props.newGame ? JSON.parse(save) : {},
+			sources.props && sources.props.round ? {round: sources.props.round} : {}
+		)
+	});//.debug('props');
 	const random$ = sources.random;
 	
 	// Emits an {widht, height} object containing the dimensions of the browser window each time it is resized
@@ -107,8 +127,8 @@ export function MainGame(sources) {
 	).flatten().remember();
 
 	// Get the first location
-	const currentLocationInit$ = xs.combine(path$, progression$, props$, datas$).map(([path, progression, props, datas]) =>
-		props.currentLocation ? props.currentLocation : makeLocationObject(path[0].location, datas)
+	const currentLocationInit$ = xs.combine(path$, props$, datas$).map(([path, props, datas]) =>
+		makeLocationObject(props.currentLocation ? props.currentLocation : path[0].location, datas)
 	);
 
 	const currentLocation$ = xs.merge(
@@ -116,8 +136,8 @@ export function MainGame(sources) {
 		changeLocationProxy$,
 	).remember();
 	
-	const lastLocation$ = props$.map(props =>
-		currentLocation$.startWith(props.lastLocation).compose(pairwise).map(item => item[0])
+	const lastLocation$ = xs.combine(props$, datas$).map(([props, datas]) =>
+		currentLocation$.startWith(props.lastLocation ? makeLocationObject(props.lastLocation, datas) : props.lastLocation).compose(pairwise).map(item => item[0])
 	).flatten();
 
 	const nextCorrectLocation$ = xs.combine(progression$, path$, datas$).map(([progression, path, datas]) =>
@@ -234,31 +254,56 @@ export function MainGame(sources) {
 	).mapTo({type: "noTimeRemaining"});
 
 	const endGame$ = xs.merge(lastLocationReached$, noTimeRemaining$);
+	
+	const resetSave$ = endGame$.mapTo({key: 'save', value: null}).debug("reset");
 
-	const endGameRouter$ = xs.combine(timeManagerSinks.timeDatas$, endGame$, props$, datas$).map(([timeDatas, endGame, props, datas]) => {
+	const endGameRouter$ = xs.combine(resetSave$, timeManagerSinks.timeDatas$, endGame$, props$, datas$)
+	.map(([resetSave, timeDatas, endGame, props, datas]) => {
 		const roundNb = datas.settings.pathLocationsNumber.length;	
 		
 		if(endGame.type === "lastLocationReached" && props.round + 1 < roundNb)
-			return { pathname: "/game", type: 'push', state: { props: { round: props.round + 1 }}}
+			return { pathname: "/game", type: 'push', state: { props: { round: props.round + 1/*, newGame: true*/ }}}
 		else if(endGame.type === "noTimeRemaining")
 			return { pathname: "/end", type: 'push', state: { timeDatas }}
-	});
+	}).debug("endGame");
 
-	const goToMainMenu$ = DOM.select('.js-go-to-main-menu').events('click');
+	const menuRouter$ = DOM.select('.js-go-to-main-menu').events('click').map(goToMainMenu => "/");
 
-	const menuRouter$ = xs.combine(goToMainMenu$, props$, path$, currentLocation$, lastLocation$, progression$, timeManagerSinks.timeDatas$, questionnedWitnesses$, showDestinationLinks$)
-	.map(([goToMainMenu, props, path, currentLocation, lastLocation, progression, timeDatas, questionnedWitnesses, showDestinationLinks]) =>
-		({ pathname: "/", type: 'push', state: { 
-			props: Object.assign(props, {
-				path,
-				currentLocation,
-				lastLocation,
-				progression,
-				elapsedTime: timeDatas.elapsedTime.raw,
-				questionnedWitnesses,
-				showDestinationLinks
-			})
-		}})
+	// const menuRouter$ = xs.combine(goToMainMenu$, props$, path$, currentLocation$, lastLocation$, progression$, timeManagerSinks.timeDatas$, questionnedWitnesses$, showDestinationLinks$)
+	// .map(([goToMainMenu, props, path, currentLocation, lastLocation, progression, timeDatas, questionnedWitnesses, showDestinationLinks]) =>
+	// 	({ pathname: "/", type: 'push', state: { 
+	// 		props: Object.assign(props, {
+	// 			path,
+	// 			currentLocation,
+	// 			lastLocation,
+	// 			progression,
+	// 			elapsedTime: timeDatas.elapsedTime.raw,
+	// 			questionnedWitnesses,
+	// 			showDestinationLinks
+	// 		})
+	// 	}})
+	// );
+
+	const save$ = xs.combine(props$, path$, currentLocation$, lastLocation$, progression$, timeManagerSinks.timeDatas$, questionnedWitnesses$, showDestinationLinks$)
+	.map(([props, path, currentLocation, lastLocation, progression, timeDatas, questionnedWitnesses, showDestinationLinks]) =>
+		({ 
+			key: 'save',
+			value: JSON.stringify(
+				Object.assign(
+					{},
+					props,
+					{
+						currentLocation: currentLocation.id,
+						progression,
+						elapsedTime: timeDatas.elapsedTime.raw,
+						questionnedWitnesses,
+						showDestinationLinks,
+						path,
+					},
+					lastLocation ? {lastLocation: lastLocation.id} : {},
+				)
+			)
+		})
 	);
 
 	const routerSink$ = xs.merge(
@@ -297,7 +342,7 @@ export function MainGame(sources) {
 								<div classNames="game-time panel red-panel">
 									{timeManagerVTree}
 								</div>
-            					<button className="js-go-to-main-menu button-3d" type="button" >Menu Principal</button>
+            					<button className="js-go-to-main-menu button-3d" type="button">Menu Principal</button>
 							</aside>
 						</section>
 						<footer>
@@ -317,6 +362,11 @@ export function MainGame(sources) {
 		router: routerSink$,
 		HTTP: scenarioGenDataJsonRequest$,
 		random: randomRequests$,
+		storage: xs.merge(
+			save$,
+			// save$.endWhen(resetSave$),
+			resetSave$,
+		)
 	};
 	return sinks;
 }

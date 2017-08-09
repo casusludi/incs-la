@@ -5,9 +5,11 @@ import {html} from 'snabbdom-jsx';
 export function MainMenu(sources) {
 
 	const {DOM} = sources;
-	const props = Object.assign({
-		round: null
-	}, sources.props);
+	const props$ = sources.storage.local.getItem('save').take(1).map(save => 
+		Object.assign({
+			round: null
+		}, JSON.parse(save))
+	);
 
 	const action$ = xs.merge(
 		DOM.select('.js-new-game').events('click').mapTo({type: "newGame"}),
@@ -22,11 +24,13 @@ export function MainMenu(sources) {
 					redirect: "/game",
 				}}};
 			case "loadGame":
-				return { pathname: "/game", type: 'push', state: { props }};
+				return "/game";
 		};
 	});
 
-	const DOMSink$ = xs.of(
+	const resetSave$ = action$.filter(action => action.type === "newGame").mapTo({key: 'save', value: null});
+
+	const DOMSink$ = props$.map(props =>
 		<div className="menu-principal">
 			<h1>Menu Principal</h1>
 			<button className="js-new-game button-3d">NEW GAME</button>
@@ -37,6 +41,7 @@ export function MainMenu(sources) {
     const sinks = {
 		DOM: DOMSink$,
 		router: routerSink$,
+		storage: resetSave$,
 	};
 
 	return sinks;

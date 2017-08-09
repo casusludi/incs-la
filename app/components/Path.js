@@ -10,7 +10,7 @@ const locationNbOnPath = 4;
 
 function model(pixelCoordinates$, progression$, path$, currentLocation$){
     // Keep only correct locations
-    // const pathLocations$ = xs.combine(pixelCoordinates$, progression$, path$, currentLocation$)
+    // const pathLocationsV1$ = xs.combine(pixelCoordinates$, progression$, path$, currentLocation$)
     // .map(([pixelCoordinates, progression, path, currentLocation]) => {
     //     const pathLocationsIds = [...path.slice(0, progression + 1).map(o => o.location), currentLocation.id];
     //     const pathLocations = pathLocationsIds.map(pathLocationId =>
@@ -20,19 +20,19 @@ function model(pixelCoordinates$, progression$, path$, currentLocation$){
     // });
 
     // Keep all visited locations
-    // const pathLocations$ = xs.combine(pixelCoordinates$, currentLocation$)
+    // const pathLocationsV2$ = xs.combine(pixelCoordinates$, currentLocation$)
     // .map(([pixelCoordinates, currentLocation]) => 
     //     pixelCoordinates.filter(o => o.location.id === currentLocation.id)[0]
     // ).fold((stack, currentLocation) => [...stack, currentLocation], []);
 
     // Keep last visited locations
-    const pathLocations$ = xs.combine(pixelCoordinates$, currentLocation$)
+    const pathLocationsV3$ = xs.combine(pixelCoordinates$, currentLocation$)
     .map(([pixelCoordinates, currentLocation]) => 
         pixelCoordinates.filter(o => o.location.id === currentLocation.id)[0]
     ).fold((stack, currentLocation) => [...stack, currentLocation].slice(-locationNbOnPath), [])
     .filter(pathLocations => pathLocations.length !== 0);
 
-    return pathLocations$.map(pathLocations =>
+    return pathLocationsV3$.map(pathLocations =>
         pathLocations.slice(0, pathLocations.length - 1).map((item, i) => ({
             x1: pathLocations[i].pixelCoordinates.x, 
             y1: pathLocations[i].pixelCoordinates.y, 

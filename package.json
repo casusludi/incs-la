@@ -62,6 +62,7 @@
     "@cycle/http": "^13.3.0",
     "@cycle/isolate": "^2.1.0",
     "@cycle/run": "^3.1.0",
+    "@cycle/storage": "^4.0.0",
     "cycle-onionify": "^3.3.0",
     "cycle-time-travel": "^0.1.2",
     "cyclic-router": "^4.0.5",

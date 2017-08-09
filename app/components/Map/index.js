@@ -177,7 +177,7 @@ function view(showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, 
                         {
                             svg(".svgMapTag", { attrs: { viewBox:"0 0 792 574", width: "100%", height: "100%", 'background-color': "green"}}, [
                                 svg.image(".mapImageTag", { attrs: { width: "100%", height: "100%", 'xlink:href': datas.settings.images.map}}),
-                                pathVdom,
+                                //pathVdom,
                                 travelAnimationVdom,
                                 ...landmarksVdom,
                                 svg.image(".js-show-map", { attrs: { width: "20px", height: "20px", x: "10px", y: "10px", 'xlink:href': datas.settings.images.closeMapIcon}}),

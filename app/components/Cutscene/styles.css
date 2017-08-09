@@ -1,0 +1,11 @@
+.skip-button-container {
+	display: flex;
+	justify-content: flex-end;
+	align-items: flex-end;
+	width: 100%;
+	height: 100%;
+}
+
+.skip-button-container a {
+	margin: 15px;
+}

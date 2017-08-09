@@ -35,7 +35,9 @@ function view(state$, props$, datas$){
 				</div>
 				<a classNames="js-end-cut-scene button-3d">{datas.settings.cutscenes[props.cutsceneName].button}</a>
 			</div> :
-			""}
+			<div className="skip-button-container">
+				<a classNames="js-end-cut-scene button-3d">Skip ►</a>
+			</div>}
 		</div>
 	);
 

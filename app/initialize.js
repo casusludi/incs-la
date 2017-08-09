@@ -2,6 +2,7 @@ import {run} from '@cycle/run';
 
 import {makeDOMDriver} from '@cycle/dom';
 import {makeHTTPDriver} from '@cycle/http';
+import storageDriver from '@cycle/storage';
 import {makeRouterDriver} from 'cyclic-router'
 import {makeWindowResizeDriver} from './drivers/windowResizeDriver';
 import {makeRandomDriver} from './drivers/randomDriver';
@@ -57,6 +58,7 @@ function main(sources) {
 			page$.filter(c => c.HTTP).map(c => c.HTTP).flatten(),
 		),
 		random: page$.filter(c => c.random).map(c => c.random).flatten(),
+		storage: page$.filter(c => c.storage).map(c => c.storage).flatten(),
 	};
 	
 	return sinks;
@@ -68,6 +70,7 @@ const drivers = {
 	router: makeRouterDriver(createBrowserHistory(), switchPath),
 	windowResize: makeWindowResizeDriver(),
 	random: makeRandomDriver(),
+	storage: storageDriver,
 };  
 
 run(main, drivers);
