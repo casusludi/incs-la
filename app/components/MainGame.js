@@ -243,22 +243,21 @@ export function MainGame(sources) {
 
 	const endGame$ = xs.merge(lastLocationReached$, noTimeRemaining$);
 	
-	const resetSave$ = endGame$.mapTo({key: 'save', value: null}).debug("reset");
+	const resetSave$ = endGame$.mapTo({key: 'save', value: null});
 
 	const endGameRouter$ = xs.combine(resetSave$, timeManagerSinks.timeDatas$, endGame$, props$, datas$)
 	.map(([resetSave, timeDatas, endGame, props, datas]) => {
-		const roundNb = datas.settings.scenarioStucture[props.round].payload.pathLocationsNumber;
 		const numberOfSuccessesNeeded = datas.settings.scenarioStucture[props.round].payload.numberOfSuccessesNeeded;
 		
 		if(endGame.type === "lastLocationReached"){
 			if(props.successesNumber + 1 >= numberOfSuccessesNeeded)
 				return { pathname: "/redirect", type: 'push', state: { props: { round: props.round + 1 }}}
 			else
-				return { pathname: "/game", type: 'push', state: { props: { round: props.round, successesNumber: props.successesNumber + 1  }}}
+				return { pathname: "/game", type: 'push', state: { props: { round: props.round, successesNumber: props.successesNumber + 1 }}}
 		}
 		else if(endGame.type === "noTimeRemaining")
-			return { pathname: "/end", type: 'push', state: { timeDatas }}
-	}).debug("endGame");
+			return { pathname: "/game", type: 'push', state: { props: { round: props.round, successesNumber: props.successesNumber }}}
+	});
 
 	const menuRouter$ = DOM.select('.js-go-to-main-menu').events('click').map(goToMainMenu => "/");
 
@@ -303,7 +302,7 @@ export function MainGame(sources) {
 						<section className="city-content">
 							<section className="col-main">
 								<header className="header">
-									<h1>{currentLocation.name + " - Round : " + (props.round + 1)	}</h1>
+									<h1>{currentLocation.name + " - Round : " + (props.round + 1) + " - Successes : " + props.successesNumber}</h1>
 								</header>
 								<section className="place-list" >
 									{witnessesVTree}

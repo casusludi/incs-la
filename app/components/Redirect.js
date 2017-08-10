@@ -12,9 +12,13 @@ export function Redirect(sources) {
 	);
 	
 	const routerSink$ = xs.combine(props$, datas$).map(([props, datas]) => {
-		if(datas.settings.scenarioStucture[props.round].type === 'cutscene')
+		const roundNb = datas.settings.scenarioStucture.length;
+
+		if(props.round >= roundNb)
+			return "/end";
+		else if(datas.settings.scenarioStucture[props.round].type === 'cutscene')
 			return ({ pathname: "/cutscene", type: 'push', state:{ props: Object.assign(props, {cutsceneName: datas.settings.scenarioStucture[props.round].payload.cutsceneName}) }})
-		if(datas.settings.scenarioStucture[props.round].type === 'investigation')
+		else if(datas.settings.scenarioStucture[props.round].type === 'investigation')
 			return ({ pathname: "/game", type: 'push', state:{ props }})
 	});
 

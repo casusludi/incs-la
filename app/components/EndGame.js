@@ -14,7 +14,7 @@ function view(value$, timeDatas){
     const vdom$ = value$.map(value => (
         <div classNames="content end" style={{ backgroundImage: "url("+ (success ? value.settings.images.endWin : value.settings.images.endLose) +")" }} >
             <div className="modal">
-                {success ? 
+                {true /*success*/ ? 
                     <div classNames="panel final-panel">
                         {value.texts.win}
                         {/*timeDatas.remainingTime.formatted*/}
