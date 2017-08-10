@@ -95,13 +95,14 @@ export function MainGame(sources) {
 		xs.of({"id":{"locationId":"port-saint-pere","type":"dataPloy","payload":"randomPloy"},"val":20}),
 	);
 
-	const scenarioProps$ = xs.combine(props$.debug("props"), datas$).map(([props, datas]) => ({
+	const scenarioProps$ = xs.combine(props$, datas$).map(([props, datas]) => ({
 		pathLocationsNumber: datas.settings.scenarioStucture[props.round].payload.pathLocationsNumber,
 		availableLocations: Object.keys(datas.locations),
 	})).remember();
 
-	const {generatedPath$, randomRequests$} = ScenarioGenerator({scenarioProps$, jsonResponse$: scenarioGenDataJsonResponse$, selectedValue$: /*pathPresets$*/ random$ })
-
+	const scenarioGeneratorSinks = ScenarioGenerator({scenarioProps$, jsonResponse$: scenarioGenDataJsonResponse$, selectedValue$: /*pathPresets$*/ random$ })
+	const scenarioGeneratorRandomRequests$ = scenarioGeneratorSinks.randomRequests$;
+	const generatedPath$ = scenarioGeneratorSinks.generatedPath$;
 	const path$ = xs.combine(generatedPath$, props$).map(([generatedPath, props]) =>
 		props.path ? props.path : generatedPath
 	);
@@ -126,7 +127,7 @@ export function MainGame(sources) {
 	
 	const lastLocation$ = xs.combine(props$, datas$).map(([props, datas]) =>
 		currentLocation$.startWith(props.lastLocation ? makeLocationObject(props.lastLocation, datas) : props.lastLocation).compose(pairwise).map(item => item[0])
-	).flatten();
+	).flatten().remember();
 
 	const nextCorrectLocation$ = xs.combine(progression$, path$, datas$).map(([progression, path, datas]) =>
 		progression + 1 < path.length ? 
@@ -138,16 +139,47 @@ export function MainGame(sources) {
 		path[progression]
 	);
 
+	const otherLinksIndexesRandomRequest$ = xs.combine(currentLocation$, currentCorrectLocation$)/*.filter(([currentLocation, currentCorrectLocation]) =>
+		currentCorrectLocation.location !== currentLocation.id
+	)*/.mapTo(	
+		xs.combine(datas$, lastLocation$).map(([datas, lastLocation]) => {
+			const locations = Object.keys(datas.locations);
+			const locationsNumber = locations.length;
+			const lastLocationIndex = lastLocation ? locations.indexOf(lastLocation.id) : -1;
+			
+			const otherLinksIndexesRandomRequest = Object.assign(
+				{
+					id: "otherLinksIndexes", 
+					range: {
+						min: 0, 
+						max: locationsNumber - 1
+					},
+					number: 3, 
+					unique: true
+				},
+				lastLocationIndex !== -1 ? {exclude: [lastLocationIndex]} : {}
+			);
+			
+			return otherLinksIndexesRandomRequest;
+		})
+	).flatten();
+	
+	const otherLinksIndexesRandomResponse$ = random$.filter(random => random.id === "otherLinksIndexes").map(selectedValue => selectedValue.val);
+
+	const otherLinksIds$ = xs.combine(datas$, otherLinksIndexesRandomResponse$).map(([datas, otherLinksIndexesRandomResponse]) =>
+		otherLinksIndexesRandomResponse.map(index => Object.keys(datas.locations)[index])
+	);
+
 	// Array stream of current location's links' ids
 	// It's made of the current location's list of links in the json and the last location visited
 	// sampleCombine to avoid duplicate signal on the stream (currentLocation and lastLocation emitting at the same time)
 	const currentLocationLinksIds$ =
 	// nextCorrectLocation$.compose(sampleCombine(lastLocation$, currentLocation$))
 	// .map(([nextCorrectLocation, lastLocation, currentLocation]) =>
-	xs.combine(currentLocation$, lastLocation$, nextCorrectLocation$, currentCorrectLocation$) 
-	.map(([currentLocation, lastLocation, nextCorrectLocation, currentCorrectLocation]) =>
+	xs.combine(currentLocation$, lastLocation$, nextCorrectLocation$, currentCorrectLocation$, otherLinksIds$) 
+	.map(([currentLocation, lastLocation, nextCorrectLocation, currentCorrectLocation, otherLinksIds]) =>
 		_.chain(lastLocation ? [lastLocation.id] : [])
-		.concat(currentCorrectLocation.location === currentLocation.id ? currentCorrectLocation.ploys : currentLocation.links)
+		.concat(currentCorrectLocation.location === currentLocation.id ? currentCorrectLocation.ploys : otherLinksIds /*currentLocation.links*/)
 		.concat(nextCorrectLocation && currentCorrectLocation.location === currentLocation.id ? [nextCorrectLocation.id] : [])
 		.uniq()
 		.filter((o) => o !== currentLocation.id)
@@ -337,7 +369,10 @@ export function MainGame(sources) {
 		DOM: DOMSink$,
 		router: routerSink$,
 		HTTP: scenarioGenDataJsonRequest$,
-		random: randomRequests$,
+		random: xs.merge(
+			scenarioGeneratorRandomRequests$,
+			otherLinksIndexesRandomRequest$,
+		),
 		storage: xs.merge(
 			save$,
 			resetSave$,
