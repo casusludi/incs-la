@@ -1,6 +1,13 @@
 {
 	"settings":{
-		"pathLocationsNumber": ["intro", 2, "test", 2],
+		"scenarioStucture": [
+			{"type": "cutscene", "payload": {"cutsceneName": "intro"}},
+			{"type": "investigation", "payload": {"pathLocationsNumber": 2, "numberOfSuccessesNeeded": 3}},
+			{"type": "cutscene", "payload": {"cutsceneName": "test"}},
+			{"type": "investigation", "payload": {"pathLocationsNumber": 5, "numberOfSuccessesNeeded": 3}},
+			{"type": "cutscene", "payload": {"cutsceneName": "test"}},
+			{"type": "investigation", "payload": {"pathLocationsNumber": 7, "numberOfSuccessesNeeded": 3}}
+		],
 		"cost":{
 			"travel": 0.75,
 			"investigate": 0.25

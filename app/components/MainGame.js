@@ -31,9 +31,10 @@ export function MainGame(sources) {
 				elapsedTime: 0,
 				questionnedWitnesses: {},
 				showDestinationLinks: false,
+				successesNumber: 0,
 			},
 			JSON.parse(save),
-			sources.props && sources.props.round ? {round: sources.props.round} : {}
+			sources.props,
 		)
 	);
 	const random$ = sources.random;
@@ -94,8 +95,8 @@ export function MainGame(sources) {
 		xs.of({"id":{"locationId":"port-saint-pere","type":"dataPloy","payload":"randomPloy"},"val":20}),
 	);
 
-	const scenarioProps$ = xs.combine(props$, datas$).map(([props, datas]) => ({
-		pathLocationsNumber: datas.settings.pathLocationsNumber[props.round],
+	const scenarioProps$ = xs.combine(props$.debug("props"), datas$).map(([props, datas]) => ({
+		pathLocationsNumber: datas.settings.scenarioStucture[props.round].payload.pathLocationsNumber,
 		availableLocations: Object.keys(datas.locations),
 	})).remember();
 
@@ -246,12 +247,16 @@ export function MainGame(sources) {
 
 	const endGameRouter$ = xs.combine(resetSave$, timeManagerSinks.timeDatas$, endGame$, props$, datas$)
 	.map(([resetSave, timeDatas, endGame, props, datas]) => {
-		const roundNb = datas.settings.pathLocationsNumber.length;	
+		const roundNb = datas.settings.scenarioStucture[props.round].payload.pathLocationsNumber;
+		const numberOfSuccessesNeeded = datas.settings.scenarioStucture[props.round].payload.numberOfSuccessesNeeded;
 		
-		if(endGame.type === "lastLocationReached" && props.round + 1 < roundNb)
-			return { pathname: "/redirect", type: 'push', state: { props: { round: props.round + 1/*, newGame: true*/ }}}
-			// return { pathname: "/game", type: 'push', state: { props: { round: props.round + 1/*, newGame: true*/ }}}
-		else/* if(endGame.type === "noTimeRemaining")*/
+		if(endGame.type === "lastLocationReached"){
+			if(props.successesNumber + 1 >= numberOfSuccessesNeeded)
+				return { pathname: "/redirect", type: 'push', state: { props: { round: props.round + 1 }}}
+			else
+				return { pathname: "/game", type: 'push', state: { props: { round: props.round, successesNumber: props.successesNumber + 1  }}}
+		}
+		else if(endGame.type === "noTimeRemaining")
 			return { pathname: "/end", type: 'push', state: { timeDatas }}
 	}).debug("endGame");
 

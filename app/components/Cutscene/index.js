@@ -61,8 +61,6 @@ export function Cutscene(sources) {
         DOM: vdom$,
 		router: props$.map(props =>
 			action$.filter(action => action.type === "endCutScene").map(a => {
-				//props.redirect
-				console.log('roundround', props);
 				return ({ pathname: "/redirect", type: 'push', state:{ props: Object.assign(props, {round: props.round + 1}) }})
 			})
 		).flatten(),
