@@ -23,7 +23,7 @@ export function randomDriver(sink$){
 		.value();
 
 		var val;
-		if(!number) // Si l'att number n'est pas précisé alors un tire un unique nombre
+		if(!number) // Si l'att number n'est pas précisé alors on tire un unique nombre
 			val = randomArray[0];
 		else if(unique)
 			val = _.take(randomArray, number);

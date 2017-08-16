@@ -4,9 +4,14 @@ import { html } from 'snabbdom-jsx';
 
 import * as _ from 'lodash';
 
+/*
+Composant dont le but est de gérer le temps ingame, d'en faire le décompte en fonction des actions effectuées par le joueur.
+*/
+
 function model(sources){
     const {DOM, props$, datas$, changeLocation$, questionnedWitness$} = sources;
 
+    // Représente le temps écoulé compté de façon croissante. Une heure étant égale à 1. (ex: 2h30 = 2.5)
     const elapsedTime$ = props$.map(props =>
       datas$.map(datas =>
         xs.merge(
@@ -14,7 +19,7 @@ function model(sources){
           questionnedWitness$.mapTo(datas.settings.cost.investigate),
         )
       ).flatten()
-      .fold((acc, x) => acc + x, props.elapsedTime)
+      .fold((acc, x) => acc + x, props.elapsedTime) // Ce compteur débute avec la valeur du temps déjà écoulé dans la sauvegarde (si elle est fournie)
     ).flatten();
     
     return xs.combine(elapsedTime$, datas$).map(([elapsedTime, datas]) => {
@@ -25,6 +30,16 @@ function model(sources){
       const remainingHours = parseInt(remainingTime);
       const remainingMinutes = (remainingTime - remainingHours) * 60;
 
+      /*
+      Met en forme le temps de différente façon : temps écoulé (croissant) ou temps restant (décroissant)
+      De façon brute, uniquement les heures, les minutes ou formaté pour l'affichage
+      Exemple :
+        raw: 2.5
+        hours: 2
+        minutes: 30
+        formatted: 02h30
+      Dans les faits peu de ces données sont réellement utilisées. (mais on sait jamais)
+      */
       return {
         totalTime: datas.settings.totalTime,
         elapsedTime: {
