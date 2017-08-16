@@ -1,5 +1,6 @@
 import * as _ from 'lodash';
 
+// Driver déprécié qui servait à générer le scénario de façon plus simple qu'avec le composant ScenarioGenerator couplé au driver random mais respectant moins la convention établie par CycleJS de séparer logique et side-effects. La logique d'une partie du jeu se retrouvant alors dans un driver.
 export function makeScenarioGeneratorDriver(){
 	function scenarioGeneratorDriver(sink$){
 		const source$ = sink$.map(sink => {

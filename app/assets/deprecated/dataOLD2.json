@@ -98,6 +98,7 @@
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
+			"links":["la-baule","prefailles","saint-brevin","chateaubriant"],
 			"coordinates": {
 				"longitude": 47.218371,
 				"latitude": -1.553621000000021
@@ -124,6 +125,7 @@
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
+			"links":["guerande","haute-goulaine","la-chapelle-des-marais","coueron"],
 			"coordinates": {
 				"longitude": 47.720948,
 				"latitude": -1.3762239000000136
@@ -150,6 +152,7 @@
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
+			"links":["guemene","la-montagne","la-roche-blanche","saint-nazaire"],
 			"coordinates": {
 				"longitude": 47.328003,
 				"latitude": -2.4297589000000244
@@ -176,6 +179,7 @@
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
+			"links":["saint-sebastien","clisson","la-chapelle-sur-erdre","ancenis"],
 			"coordinates": {
 				"longitude": 47.628671,
 				"latitude": -1.834333000000015
@@ -202,6 +206,7 @@
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
+			"links":["indre","nozay","clisson","coueron"],
 			"coordinates": {
 				"longitude": 47.365464,
 				"latitude": -1.1774910000000318
@@ -228,6 +233,7 @@
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
+			"links":["la-boissiere-du-dore","port-saint-pere","nozay","la-roche-blanche"],
 			"coordinates": {
 				"longitude": 47.210999,
 				"latitude": -1.7288499999999658
@@ -254,6 +260,7 @@
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
+			"links":["saint-nazaire","port-saint-pere","pornic","saint-brevin"],
 			"coordinates": {
 				"longitude": 47.231741,
 				"latitude": -1.2177119000000403
@@ -280,6 +287,7 @@
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
+			"links":["saint-jean-de-boiseau","la-chapelle-basse-mer","la-chapelle-des-marais","la-chapelle-sur-erdre"],
 			"coordinates": {
 				"longitude": 47.2734979,
 				"latitude": -2.2138479999999845
@@ -306,6 +314,7 @@
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
+			"links":["vallet","gorges","haute-goulaine","la-boissiere-du-dore"],
 			"coordinates": {
 				"longitude": 47.195556,
 				"latitude": -1.7241989999999987
@@ -332,6 +341,7 @@
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
+			"links":["clisson","indre","la-montagne","haute-goulaine"],
 			"coordinates": {
 				"longitude": 47.160929,
 				"latitude": -1.265137999999979
@@ -358,6 +368,7 @@
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
+			"links":["la-baule","pornic","saint-brevin","prefailles"],
 			"coordinates": {
 				"longitude": 47.0864509,
 				"latitude": -1.2804680000000417
@@ -384,6 +395,7 @@
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
+			"links":["nantes","la-roche-blanche","nozay","vallet"],
 			"coordinates": {
 				"longitude": 47.2869183,
 				"latitude": -2.391377700000021
@@ -410,6 +422,7 @@
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
+			"links":["nantes","la-roche-blanche","nozay","vallet"],
 			"coordinates": {
 				"longitude": 47.1982209,
 				"latitude": -1.431196
@@ -436,6 +449,7 @@
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
+			"links":["nantes","la-roche-blanche","nozay","vallet"],
 			"coordinates": {
 				"longitude": 47.1904899,
 				"latitude": -1.6851920000000291
@@ -462,6 +476,7 @@
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
+			"links":["nantes","la-roche-blanche","nozay","vallet"],
 			"coordinates": {
 				"longitude": 47.205376,
 				"latitude": -1.50310300000001
@@ -488,6 +503,7 @@
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
+			"links":["nantes","la-roche-blanche","nozay","vallet"],
 			"coordinates": {
 				"longitude": 47.564751,
 				"latitude": -1.6269159999999374
@@ -514,6 +530,7 @@
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
+			"links":["nantes","la-roche-blanche","nozay","vallet"],
 			"coordinates": {
 				"longitude": 47.133401,
 				"latitude": -1.7488479999999527
@@ -540,6 +557,7 @@
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
+			"links":["nantes","la-roche-blanche","nozay","vallet"],
 			"coordinates": {
 				"longitude": 47.29957599999999,
 				"latitude": -1.5506379999999353
@@ -566,6 +584,7 @@
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
+			"links":["nantes","la-roche-blanche","nozay","vallet"],
 			"coordinates": {
 				"longitude": 47.10184,
 				"latitude": -1.3038990000000013
@@ -592,6 +611,7 @@
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
+			"links":["nantes","la-roche-blanche","nozay","vallet"],
 			"coordinates": {
 				"longitude": 47.19964119999999,
 				"latitude": -1.6717693000000509
@@ -618,6 +638,7 @@
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
+			"links":["nantes","la-roche-blanche","nozay","vallet"],
 			"coordinates": {
 				"longitude": 47.115491,
 				"latitude": -2.1044440000000577
@@ -644,6 +665,7 @@
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
+			"links":["nantes","la-roche-blanche","nozay","vallet"],
 			"coordinates": {
 				"longitude": 47.447403,
 				"latitude": -2.2433619999999337
@@ -670,6 +692,7 @@
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
+			"links":["nantes","la-roche-blanche","nozay","vallet"],
 			"coordinates": {
 				"longitude": 47.4329224,
 				"latitude": -1.2049666000000343
@@ -696,6 +719,7 @@
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
+			"links":["nantes","la-roche-blanche","nozay","vallet"],
 			"coordinates": {
 				"longitude": 47.12935299999999,
 				"latitude": -2.2181759999999713
@@ -722,6 +746,7 @@
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
+			"links":["nantes","la-roche-blanche","nozay","vallet"],
 			"coordinates": {
 				"longitude": 47.271643,
 				"latitude": -1.3389099999999416
@@ -748,6 +773,7 @@
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
+			"links":["nantes","la-roche-blanche","nozay","vallet"],
 			"coordinates": {
 				"longitude": 47.246659,
 				"latitude": -2.1658069999999725

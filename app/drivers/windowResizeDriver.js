@@ -1,5 +1,6 @@
 import fromEvent from 'xstream/extra/fromEvent';
 
+// Driver emettant chaque fois que la fenêtre du navigateur est redimensionnée 
 export function makeWindowResizeDriver(){
   function windowSize () {
     return {

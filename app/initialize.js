@@ -5,7 +5,7 @@ import {makeHTTPDriver} from '@cycle/http';
 import storageDriver from '@cycle/storage';
 import {makeRouterDriver} from 'cyclic-router'
 import {makeWindowResizeDriver} from './drivers/windowResizeDriver';
-import {makeRandomDriver} from './drivers/randomDriver';
+import {randomDriver} from './drivers/randomDriver';
 
 import xs from 'xstream';
 
@@ -16,10 +16,9 @@ import {createBrowserHistory} from 'history';
 import {MainMenu} from './components/MainMenu';
 import {Cutscene} from './components/Cutscene';
 import {Redirect} from './components/Redirect';
-import {IntroGame} from './components/IntroGame';
 import {MainGame} from './components/MainGame';
 import {EndGame} from './components/EndGame';
-import {NotFound} from './components/NotFound';
+// import {NotFound} from './components/NotFound';
 
 import {JSONReader} from './components/JSONReader';
 
@@ -27,40 +26,46 @@ function main(sources) {
 
 	const HTTP = sources.HTTP;
 
-	// JSON management
+	// Lit le .json de données pour l'envoyer aux différent(e)s composants/pages
 	const dataJsonSinks = JSONReader({HTTP, jsonPath$: xs.of("/data.json")});
 	const dataJsonRequest$ = dataJsonSinks.request;
 	const dataJsonResponse$ = dataJsonSinks.JSON;
 	
+	// Définie les routes associées à chaque composant
 	const match$ = sources.router.define({
-		'*': NotFound,
+		// '*': NotFound,
 		'/': MainMenu,
 		'/cutscene': Cutscene,
 		'/redirect': Redirect,
-		'/intro': IntroGame,
 		'/game': MainGame,
 		'/end': EndGame,
 	});
 	
+
+	// Définie les sources à envoyer à chaque page
 	const page$ = match$.map(({path, value, location, createHref}) =>
 		value(Object.assign(
 				{}, 
 				sources,
-				location.state,
-				{datas$: dataJsonResponse$},
+				location.state, // Permet de transmettre des données entre pages
+				{datas$: dataJsonResponse$}, // .json de données fixes
 				{router: sources.router.path(path)}
 		))
 	);
 
+	// Factorise l'expression permettant de récupérer les sinks des pages
+	const getPagesSink = (stream$, sinkName) => stream$.filter(s => s[sinkName]).map(s => s[sinkName]).flatten();
+
 	const sinks = {
-		DOM: page$.filter(c => c.DOM).map(c => c.DOM).flatten(),
+		DOM: getPagesSink(page$, 'DOM'),
+		router: getPagesSink(page$, 'router'),
+		random: getPagesSink(page$, 'random'),
+		storage: getPagesSink(page$, 'storage'),
 		router: page$.filter(c => c.router).map(c => c.router).flatten(),
 		HTTP: xs.merge(
 			dataJsonRequest$,
-			page$.filter(c => c.HTTP).map(c => c.HTTP).flatten(),
+			getPagesSink(page$, 'HTTP'),
 		),
-		random: page$.filter(c => c.random).map(c => c.random).flatten(),
-		storage: page$.filter(c => c.storage).map(c => c.storage).flatten(),
 	};
 	
 	return sinks;
@@ -71,7 +76,7 @@ const drivers = {
 	HTTP: makeHTTPDriver(),
 	router: makeRouterDriver(createBrowserHistory(), switchPath),
 	windowResize: makeWindowResizeDriver(),
-	random: makeRandomDriver(),
+	random: randomDriver,
 	storage: storageDriver,
 };  
 

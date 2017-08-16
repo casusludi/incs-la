@@ -3,10 +3,9 @@ import xs from 'xstream';
 import * as _ from 'lodash';
 
 export function ScenarioGenerator(sources) {
-	const {scenarioProps$, jsonResponse$, selectedValue$} = sources;
+	const {props$, jsonResponse$, selectedValue$} = sources;
 	
-	const selectedLocationsIndexesRequest$ = xs.combine(scenarioProps$, jsonResponse$).map(([scenarioProps, jsonResponse]) => {
-		const pathLocationsNumber = scenarioProps.pathLocationsNumber;
+	const selectedLocationsIndexesRequest$ = xs.combine(props$, jsonResponse$).map(([props, jsonResponse]) => {
 		const locationsTotalNumber = jsonResponse.length;
 		
 		const selectedLocationsIndexesRequest = {
@@ -15,7 +14,7 @@ export function ScenarioGenerator(sources) {
 				min: 1, 
 				max: locationsTotalNumber - 1
 			}, 
-			number: pathLocationsNumber - 1, 
+			number: props.pathLocationsNumber - 1, 
 			unique: true
 		};
 		
@@ -60,11 +59,13 @@ export function ScenarioGenerator(sources) {
 		)
 	).flatten();
 
-	const ploysIndexesRequests$ = xs.combine(scenarioProps$, selectedLocations$).map(([scenarioProps, selectedLocations]) =>
+	const luresIndexesRequests$ = xs.combine(jsonResponse$, selectedLocations$).map(([jsonResponse, selectedLocations]) =>
 		xs.merge(...selectedLocations.slice(0, -1).map((selectedLocation, index) => {
 			const locationId = selectedLocation.location;
 			const selectedLocationSelectedValues$ = selectedValue$.filter(selectedValue => selectedValue.id.locationId === locationId);
-
+			
+			const locationsTotalNumber = jsonResponse.length;
+		
 			const result$ = xs.combine(
 					selectedLocationSelectedValues$.filter(selectedValue => selectedValue.id.type === "witnesses"),
 					selectedLocationSelectedValues$.filter(selectedValue => selectedValue.id.type === "data"),
@@ -74,32 +75,32 @@ export function ScenarioGenerator(sources) {
 					const selectedWitnessesIndexes = selectedWitnesses.val;
 					const selectedDataIndex = selectedData.val;
 
-					const selectedWitness1IndexRequest = nextLocation.clues.witnesses[selectedWitnessesIndexes[0]].ploys && nextLocation.clues.witnesses[selectedWitnessesIndexes[0]].ploys.length > 0 ? 
+					const selectedWitness1IndexRequest = nextLocation.clues.witnesses[selectedWitnessesIndexes[0]].lures && nextLocation.clues.witnesses[selectedWitnessesIndexes[0]].lures.length > 0 ? 
 						{
 							id: {locationId, type: "witness1Ploy"},
-							range: nextLocation.clues.witnesses[selectedWitnessesIndexes[0]].ploys.length - 1
+							range: nextLocation.clues.witnesses[selectedWitnessesIndexes[0]].lures.length - 1
 						} :
 						{
 							id: {locationId, type: "witness1Ploy", payload: "randomPloy"},
-							range: scenarioProps.availableLocations.length
+							range: locationsTotalNumber - 1
 						};
-					const selectedWitness2IndexRequest = nextLocation.clues.witnesses[selectedWitnessesIndexes[1]].ploys && nextLocation.clues.witnesses[selectedWitnessesIndexes[1]].ploys.length > 0 ?
+					const selectedWitness2IndexRequest = nextLocation.clues.witnesses[selectedWitnessesIndexes[1]].lures && nextLocation.clues.witnesses[selectedWitnessesIndexes[1]].lures.length > 0 ?
 						{
 							id: {locationId, type: "witness2Ploy"},
-							range: nextLocation.clues.witnesses[selectedWitnessesIndexes[1]].ploys.length - 1
+							range: nextLocation.clues.witnesses[selectedWitnessesIndexes[1]].lures.length - 1
 						} :
 						{
 							id: {locationId, type: "witness2Ploy", payload: "randomPloy"},
-							range: scenarioProps.availableLocations.length
+							range: locationsTotalNumber - 1
 						};
-					const selectedDataIndexRequest = nextLocation.clues.data[selectedDataIndex].ploys && nextLocation.clues.data[selectedDataIndex].ploys.length > 0 ? 
+					const selectedDataIndexRequest = nextLocation.clues.data[selectedDataIndex].lures && nextLocation.clues.data[selectedDataIndex].lures.length > 0 ? 
 						{
 							id: {locationId, type: "dataPloy"},
-							range: nextLocation.clues.data[selectedDataIndex].ploys.length - 1
+							range: nextLocation.clues.data[selectedDataIndex].lures.length - 1
 						} : 
 						{
 							id: {locationId, type: "dataPloy", payload: "randomPloy"},
-							range: scenarioProps.availableLocations.length
+							range: locationsTotalNumber - 1
 						};
 					
 					return xs.merge(
@@ -113,11 +114,11 @@ export function ScenarioGenerator(sources) {
 		}))
 	).flatten();
 	
-	ploysIndexesRequests$.addListener({
+	luresIndexesRequests$.addListener({
 		next: () => {}
 	});
 
-	const generatedPath$ = xs.combine(scenarioProps$, selectedLocations$).map(([scenarioProps, selectedLocations]) =>
+	const generatedPath$ = xs.combine(jsonResponse$, selectedLocations$).map(([jsonResponse, selectedLocations]) =>
 		xs.combine(...selectedLocations.map((selectedLocation, index) => {
 			const locationId = selectedLocation.location;
 			const selectedLocationSelectedValues$ = selectedValue$.filter(selectedValue => selectedValue.id.locationId === locationId);
@@ -138,18 +139,20 @@ export function ScenarioGenerator(sources) {
 					const selectedWitness2PloyIndex = selectedWitness2Ploy.val;
 					const selectedDataPloyIndex = selectedDataPloy.val;
 
+					const availableLocations = jsonResponse.map(el => el.location);
+
 					const witness1 = nextLocation.clues.witnesses[selectedWitnessesIndexes[0]].text;
 					const witness2 = nextLocation.clues.witnesses[selectedWitnessesIndexes[1]].text;
 					const data = nextLocation.clues.data[selectedDataIndex].text;
 					const witness1Ploy = selectedWitness1Ploy.id.payload === "randomPloy" ?
-						scenarioProps.availableLocations[selectedWitness1PloyIndex] :
-						nextLocation.clues.witnesses[selectedWitnessesIndexes[0]].ploys[selectedWitness1PloyIndex];
+						availableLocations[selectedWitness1PloyIndex] :
+						nextLocation.clues.witnesses[selectedWitnessesIndexes[0]].lures[selectedWitness1PloyIndex];
 					const witness2Ploy = selectedWitness2Ploy.id.payload === "randomPloy" ?
-						scenarioProps.availableLocations[selectedWitness2PloyIndex] :
-						nextLocation.clues.witnesses[selectedWitnessesIndexes[1]].ploys[selectedWitness2PloyIndex];
+						availableLocations[selectedWitness2PloyIndex] :
+						nextLocation.clues.witnesses[selectedWitnessesIndexes[1]].lures[selectedWitness2PloyIndex];
 					const dataPloy = selectedDataPloy.id.payload === "randomPloy" ?
-						scenarioProps.availableLocations[selectedDataPloyIndex] :
-						nextLocation.clues.data[selectedDataIndex].ploys[selectedDataPloyIndex];
+						availableLocations[selectedDataPloyIndex] :
+						nextLocation.clues.data[selectedDataIndex].lures[selectedDataPloyIndex];
 
 					// console.log('selectedDataPloy.id.payload === "randomPloy"', selectedDataPloy.id.payload === "randomPloy");
 					// console.log("witness1Ploy", witness1Ploy);
@@ -169,7 +172,7 @@ export function ScenarioGenerator(sources) {
 								"text": data
 							}
 						},
-						"ploys": [
+						"lures": [
 							witness1Ploy,
 							witness2Ploy,
 							dataPloy
@@ -189,7 +192,7 @@ export function ScenarioGenerator(sources) {
 							"text": null
 						}
 					},
-					"ploys": []
+					"lures": []
 				});
 
 			return result$;
@@ -199,7 +202,7 @@ export function ScenarioGenerator(sources) {
 	const randomRequests$ = xs.merge(
 		selectedLocationsIndexesRequest$,
 		cluesIndexesRequests$,
-		ploysIndexesRequests$,
+		luresIndexesRequests$,
 	);
 
 	const sinks = {
