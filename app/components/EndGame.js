@@ -1,8 +1,12 @@
 import { html } from 'snabbdom-jsx';
 
+/*
+Affiche juste une simple boîte de dialogue redirigeant vers le menu principal.
+*/
+
 function intent(DOM){
     const click$ = DOM
-        .select('.button-3d')
+        .select('.js-go-to-main-menu')
         .events('click');
 
     return click$;
@@ -15,7 +19,7 @@ function view(value$){
                 <div classNames="panel final-panel">
                     {value.texts.win}
                 </div>
-                <a className="button-3d">Rejouer</a>
+                <a className="button-3d js-go-to-main-menu">Rejouer</a>
             </div>
         </div>
 	));
