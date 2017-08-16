@@ -43,7 +43,7 @@ export function MainGame(sources) {
 				// lastLocation: null,
 				elapsedTime: 0,
 				questionnedWitnesses: {},
-				showDestinationLinks: false,
+				canTravel: false,
 				successesNumber: 0,
 			},
 			// Props enregistrés localement
@@ -175,7 +175,7 @@ export function MainGame(sources) {
 	);
 
 	// Requête permettant de récupérer les index des villes suivantes suggérées au joueur (en plus de celle d'où il arrive) lorsqu'il se trompe et sort du chemin prévu par le scénario
-	const otherLinksIndexesRandomRequest$ = xs.combine(currentLocation$, datas$, lastLocation$).map(([currentLocation, datas, lastLocation]) => {
+	const linksIndexesRandomRequest$ = xs.combine(currentLocation$, datas$, lastLocation$).map(([currentLocation, datas, lastLocation]) => {
 		const locations = Object.keys(datas.locations);
 		const locationsNumber = locations.length;
 
@@ -185,8 +185,8 @@ export function MainGame(sources) {
 		// On veut 3 nombres uniques parmis la liste des index des lieux
 		// On exclue le lieu d'où arrive le joueur car il est automatiquement ajouté plus loin
 		// On exclue bien sûr aussi le lieu où il se trouve
-		const otherLinksIndexesRandomRequest = {
-			id: "otherLinksIndexes", 
+		const linksIndexesRandomRequest = {
+			id: "linksIndexes", 
 			range: {
 				min: 0, 
 				max: locationsNumber - 1
@@ -196,25 +196,25 @@ export function MainGame(sources) {
 			unique: true
 		};
 		
-		return otherLinksIndexesRandomRequest;
+		return linksIndexesRandomRequest;
 	});
 
 	// Réponse à la requête ci-dessus
-	const otherLinksIndexesRandomResponse$ = random$.filter(random => random.id === "otherLinksIndexes").map(selectedValue => selectedValue.val);
+	const linksIndexesRandomResponse$ = random$.filter(random => random.id === "linksIndexes").map(selectedValue => selectedValue.val);
 
-	// Remplace les index  par les ids des lieux
-	const otherLinksIds$ = xs.combine(datas$, otherLinksIndexesRandomResponse$).map(([datas, otherLinksIndexesRandomResponse]) =>
-		otherLinksIndexesRandomResponse.map(index => Object.keys(datas.locations)[index])
+	// Remplace les index par les ids des lieux
+	const linksIds$ = xs.combine(datas$, linksIndexesRandomResponse$).map(([datas, linksIndexesRandomResponse]) =>
+		linksIndexesRandomResponse.map(index => Object.keys(datas.locations)[index])
 	);
 
 	// Tableau contenant les ids des lieux vers lesquels le joueur peut se diriger (liens)
 	// Si le joueur se trouve dans la bonne ville alors les villes suggérées sont la prochaine ville correcte ainsi que les leurres contenus dans le scenario
 	// Si le joueur ne se trouve pas dans le bonne ville alors les villes suggérées sont celles d'où il vient ainsi que 3 villes tirées au hasard
-	const currentLocationLinksIds$ = xs.combine(currentLocation$, lastLocation$, nextCorrectLocation$, isCurrentLocationCorrect$, otherLinksIds$) 
-	.map(([currentLocation, lastLocation, nextCorrectLocation, isCurrentLocationCorrect, otherLinksIds]) =>
+	const currentLocationLinksIds$ = xs.combine(currentLocation$, lastLocation$, nextCorrectLocation$, currentCorrectLocation$, isCurrentLocationCorrect$, linksIds$) 
+	.map(([currentLocation, lastLocation, nextCorrectLocation, currentCorrectLocation, isCurrentLocationCorrect, linksIds]) =>
 		_.chain([])
 		.concat(lastLocation ? [lastLocation.id] : [])
-		.concat(isCurrentLocationCorrect ? currentLocation.lures : otherLinksIds)
+		.concat(isCurrentLocationCorrect ? currentCorrectLocation.lures : linksIds)
 		.concat(nextCorrectLocation && isCurrentLocationCorrect ? [nextCorrectLocation.id] : [])
 		.uniq()
 		.filter((o) => o !== currentLocation.id)
@@ -255,8 +255,8 @@ export function MainGame(sources) {
 	);
 
 	// Créer les composants représentant les témoins
-	const witnesses$ = xs.combine(currentLocation$, progression$, path$, witnessesProps$)
-	.map(([currentLocation, progression, path, witnessesProps]) => 
+	const witnesses$ = xs.combine(currentLocation$, progression$, path$, isCurrentLocationCorrect$, witnessesProps$)
+	.map(([currentLocation, progression, path, isCurrentLocationCorrect, witnessesProps]) => 
 		Object.keys(currentLocation.places).map((key, value) =>
 			isolate(Witness, key)({
 				DOM: sources.DOM,
@@ -264,148 +264,188 @@ export function MainGame(sources) {
 					{},
 					{key}, // type de témoins (temoin-1, temoin-2 ou data)
 					currentLocation.places[key], // données concernant le témoin actuel
-					path[progression].location === currentLocation.id ? // 
+					isCurrentLocationCorrect ? // On ajoute les indices donnés par les témoins si le joueur se trouve dans le bon lieu
 						{clue: path[progression].clues[key]} : 
 						{},
-					{showResult: witnessesProps ? witnessesProps.questionnedWitnesses[key] : false},
+					{showResult: witnessesProps ? witnessesProps.questionnedWitnesses[key] : false}, // Défini si le témoin est déjà interrogé ou pas dans la sauvegarde (si elle est fournie)
 				)),
 			})
 		)
 	).remember();
 
+	// Emet les props d'un témoin quand qu'il est interrogé
 	const questionnedWitness$ = witnesses$.map(witnesses =>
 		xs.merge(...witnesses.map(witness => witness.questionned$))
 	).flatten();
 	
+	// Un objet contenant chaque clé de témoin (temoin-1, temoin-2 ou data) déjà interrogé associer à true. Exemple :
+	// {'temoin-1': true, 'data': true}
+	// Il est remis à zero lors d'un changement de lieu
+	// Il sert à conserver une trace des témoins déjà interrogés dans la sauvegarde
+	// (Sa valeur de départ est contenue dans la sauvegarde si elle est fournie)
 	const questionnedWitnesses$ = props$.map(props =>
 		xs.merge(
-			questionnedWitness$,
+			questionnedWitness$.map(questionnedWitness => questionnedWitness.key),
 			changeLocation$.mapTo('reset')
 		).fold((acc, item) => item === 'reset' ? {} : Object.assign(acc, {[item]: true}), props.questionnedWitnesses)
-	).flatten();
-
-	const showDestinationLinks$ = props$.map(props =>
+	).flatten().remember();
+	
+	// Un booléen représentant si le peut se déplacer ou non
+	// Il peut se déplacer à partir du moment où il a interrogé au moins un des témoins du lieu où il se trouve
+	const canTravel$ = props$.map(props =>
 		xs.merge(
 			questionnedWitness$.mapTo(true),
 			changeLocation$.mapTo(false),
-		).startWith(props.showDestinationLinks).compose(dropRepeats())
+		).startWith(props.canTravel).compose(dropRepeats())
 	).flatten().remember();
 
-	const timeManagerSinks = TimeManager({DOM, props$/*: props$.map(props => props.elapsedTime)*/, datas$, changeLocation$, questionnedWitness$});
+	/* DEPRECATED
+	const showDestinationLinks$ = props$.map(props =>
+		xs.merge(
+			questionnedWitnesses$.map(questionnedWitnesses => Object.keys(questionnedWitnesses).length > 0),
+			changeLocation$.mapTo(false),
+		).compose(dropRepeats())
+	).flatten().remember();
+	*/
 
-	// End game reached ?
+	// Instancie le composant qui va gérer le temps ingame
+	const timeManagerProps$ = props$.map(props => props ? {elapsedTime: props.elapsedTime} : {});
+	const timeManagerSinks = TimeManager({DOM, props$: timeManagerProps$, datas$, changeLocation$, questionnedWitness$});
+
+	// Emet lorsque le joueur atteint le dernier lieu du chemin
 	const lastLocationReached$ = xs.combine(path$, progression$)
 	.filter(([path, progression]) =>
 		progression === (path.length - 1)
 	).mapTo({type: "lastLocationReached"});
 
+	// Emet lorsque le joueur a épuisé le temps qui lui était imparti
 	const noTimeRemaining$ = timeManagerSinks.timeDatas$.filter(timeDatas =>
 		timeDatas.remainingTime.raw <= 0
 	).mapTo({type: "noTimeRemaining"});
 
+	// Merge des 2 façons de finir une partie (dernier lieu atteint ou temps épuisé)
 	const endGame$ = xs.merge(lastLocationReached$, noTimeRemaining$);
 	
+	// Détruit la sauvegarde présente dans la mémoire locale car la partie est terminée
 	const resetSave$ = endGame$.mapTo({key: 'save', value: null});
 
-	const endGameRouter$ = xs.combine(resetSave$, timeManagerSinks.timeDatas$, endGame$, props$, datas$)
+	// Redirige à la fin de la partie
+	const endGameRouter$ = xs.combine(resetSave$ /*combine resetSave$ car la sauvegarde doit être détruite avant d'effectuer la redirection. C'est pas très propre j'ai pas su faire autrement.*/, timeManagerSinks.timeDatas$, endGame$, props$, datas$)
 	.map(([resetSave, timeDatas, endGame, props, datas]) => {
+		// Nombre de victoires à obtenir pour terminer le round
 		const numberOfSuccessesNeeded = datas.settings.scenarioStucture[props.round].payload.numberOfSuccessesNeeded;
 		
 		if(endGame.type === "lastLocationReached"){
 			if(props.successesNumber + 1 >= numberOfSuccessesNeeded)
+				// Si le joueur a atteint le dernier lieu et qu'il a obtenu suffisamment de victoires
+				// Alors il est envoyé vers la page de redirection (en incrémentant le compteur de round) qui le redirigera vers le prochain round
 				return { pathname: "/redirect", type: 'push', state: { props: { round: props.round + 1 }}}
 			else
+				// Sinon il on relance une partie en incrémentant le compteur de victoires
 				return { pathname: "/game", type: 'push', state: { props: { round: props.round, successesNumber: props.successesNumber + 1 }}}
 		}
 		else if(endGame.type === "noTimeRemaining")
+			// S'il a juste épuisé son temps alors on relance simplement une partie
 			return { pathname: "/game", type: 'push', state: { props: { round: props.round, successesNumber: props.successesNumber }}}
 	});
 
+	// Redirection vers le menu principal quand le joueur clique sur le bouton menu
 	const menuRouter$ = DOM.select('.js-go-to-main-menu').events('click').map(goToMainMenu => "/");
 
-	const save$ = xs.combine(props$, path$, currentLocation$, lastLocation$, progression$, timeManagerSinks.timeDatas$, questionnedWitnesses$, showDestinationLinks$)
-	.map(([props, path, currentLocation, lastLocation, progression, timeDatas, questionnedWitnesses, showDestinationLinks]) =>
+	// Emet un nouvel objet de sauvegarde chaque fois que des données à sauvegarder sont modifiées
+	// Le driver de stockage local fonctionne sous la forme de clé-valeur c'est pourquoi on converti l'objet de sauvegarde en string à l'aide de JSON.stringify
+	// On utilise la clé 'save'
+	const save$ = xs.combine(props$, path$, currentLocation$, lastLocation$, progression$, timeManagerSinks.timeDatas$, questionnedWitnesses$, canTravel$)
+	.map(([props, path, currentLocation, lastLocation, progression, timeDatas, questionnedWitnesses, canTravel]) =>
 		({ 
 			key: 'save',
 			value: JSON.stringify(
 				Object.assign(
-					{},
-					props,
-					{
-						currentLocation: currentLocation.id,
-						progression,
-						elapsedTime: timeDatas.elapsedTime.raw,
-						questionnedWitnesses,
-						showDestinationLinks,
-						path,
+					{}, 													// Les données sauvegardées sont
+					props,													// Les props actuels (round, successesNumber...)
+					{														// Dont certaines propriétés sont écrasées telles que
+						currentLocation: currentLocation.id,				// Le lieu actuel
+						progression,										// La progression actuelle
+						elapsedTime: timeDatas.elapsedTime.raw,				// Le temps écoulé
+						questionnedWitnesses,								// Les témoins déjà interrogés
+						canTravel,											// Si le joueur peut se déplacer (au moins un témoin a déjà été interrogé)
+						path,												// Le scénario (chemin) de la partie en cours
 					},
-					lastLocation ? {lastLocation: lastLocation.id} : {},
+					lastLocation ? {lastLocation: lastLocation.id} : {},	// Le lieu précédent si il existe
 				)
 			)
 		})
 	);
 
+	// Redirections
 	const routerSink$ = xs.merge(
-		endGameRouter$,
-		menuRouter$,
+		endGameRouter$, // Lorsqu'une partie s'achève
+		menuRouter$,	// Lorsque le joueur veut se rendre au menu
 	);
 
-	// View
-	const witnessesVTree$ = witnesses$.compose(mixCombine('DOM'));
-	const timeManagerVTree$ = timeManagerSinks.DOM;
-	const mapVTree$ = mapSinks.DOM;
+	// Random requests
+	const randomRequests$ = xs.merge(
+		scenarioGeneratorRandomRequests$,
+		linksIndexesRandomRequest$,
+	);
 
-	const DOMSink$ = xs.combine(currentLocation$, witnessesVTree$, timeManagerVTree$, mapVTree$, props$, datas$, showDestinationLinks$).map(
-		([currentLocation, witnessesVTree, timeManagerVTree, mapVTree, props, datas, showDestinationLinks]) =>
-			<section className="main">
-				<section className="main-content" >
-					<section className="city" style={{backgroundImage: "url("+currentLocation.image+")"}} >
-						<section className="city-content">
-							<section className="col-main">
-								<header className="header">
-									<h1>{currentLocation.name + " - Round : " + (props.round + 1) + " - Successes : " + props.successesNumber}</h1>
-								</header>
-								<section className="place-list" >
-									{witnessesVTree}
-								</section>
+	// Storage savings
+	const storageSink$ = xs.merge(
+		save$,
+		resetSave$,
+	);
+
+	// Vues nécessaires à la génération du vdom
+	const witnessesVDom$ = witnesses$.compose(mixCombine('DOM'));
+	const timeManagerVDom$ = timeManagerSinks.DOM;
+	const mapVDom$ = mapSinks.DOM;
+
+	// VDom global
+	const DOMSink$ = xs.combine(currentLocation$, witnessesVDom$, timeManagerVDom$, mapVDom$, props$, datas$, canTravel$)
+	.map(([currentLocation, witnessesVDom, timeManagerVDom, mapVDom, props, datas, canTravel]) =>
+		<section className="main">
+			<section className="main-content" >
+				<section className="city" style={{backgroundImage: "url("+currentLocation.image+")"}} >
+					<section className="city-content">
+						<section className="col-main">
+							<header className="header">
+								<h1>{currentLocation.name + " - Round : " + (props.round + 1) + " - Successes : " + props.successesNumber}</h1>
+							</header>
+							<section className="place-list" >
+								{witnessesVDom}
 							</section>
-							<aside className="aside">
-								<div classNames="city-desc scrollable-panel panel">
-									{currentLocation.desc}
-								</div>
-								<div classNames="panel scrollable-panel">
-									{datas.texts.gameDescription}
-								</div>
-								<div classNames="game-time panel red-panel">
-									{timeManagerVTree}
-								</div>
-            					<button className="js-go-to-main-menu button-3d" type="button">Menu Principal</button>
-							</aside>
 						</section>
-						<footer>
-							<div className="travel-panel">
-								<div className="travel-panel-content">
-									{showDestinationLinks ? mapVTree : datas.texts.travelDescription}
-								</div>
+						<aside className="aside">
+							<div classNames="city-desc scrollable-panel panel">
+								{currentLocation.desc}
 							</div>
-						</footer>
+							<div classNames="panel scrollable-panel">
+								{datas.texts.gameDescription}
+							</div>
+							<div classNames="game-time panel red-panel">
+								{timeManagerVDom}
+							</div>
+							<button className="js-go-to-main-menu button-3d" type="button">Menu Principal</button>
+						</aside>
 					</section>
+					<footer>
+						<div className="travel-panel">
+							<div className="travel-panel-content">
+								{canTravel ? mapVDom : datas.texts.travelDescription}
+							</div>
+						</div>
+					</footer>
 				</section>
 			</section>
-		);
+		</section>
+	);
 
 	const sinks = {
 		DOM: DOMSink$,
 		router: routerSink$,
 		HTTP: scenarioGenDataJsonRequest$,
-		random: xs.merge(
-			scenarioGeneratorRandomRequests$,
-			otherLinksIndexesRandomRequest$,
-		),
-		storage: xs.merge(
-			save$,
-			resetSave$,
-		)
+		random: randomRequests$,
+		storage: storageSink$,
 	};
 	return sinks;
 }

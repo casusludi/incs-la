@@ -58,7 +58,7 @@ export function Witness(sources) {
     const sinks = {
         DOM: vdom$,
         questionned$: props$.map(props =>
-            action$.mapTo(props.key)
+            action$.mapTo(props)
         ).flatten(),
     };
 
