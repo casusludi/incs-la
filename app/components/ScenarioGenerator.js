@@ -77,29 +77,29 @@ export function ScenarioGenerator(sources) {
 
 					const selectedWitness1IndexRequest = nextLocation.clues.witnesses[selectedWitnessesIndexes[0]].lures && nextLocation.clues.witnesses[selectedWitnessesIndexes[0]].lures.length > 0 ? 
 						{
-							id: {locationId, type: "witness1Ploy"},
+							id: {locationId, type: "witness1Lure"},
 							range: nextLocation.clues.witnesses[selectedWitnessesIndexes[0]].lures.length - 1
 						} :
 						{
-							id: {locationId, type: "witness1Ploy", payload: "randomPloy"},
+							id: {locationId, type: "witness1Lure", payload: "randomLure"},
 							range: locationsTotalNumber - 1
 						};
 					const selectedWitness2IndexRequest = nextLocation.clues.witnesses[selectedWitnessesIndexes[1]].lures && nextLocation.clues.witnesses[selectedWitnessesIndexes[1]].lures.length > 0 ?
 						{
-							id: {locationId, type: "witness2Ploy"},
+							id: {locationId, type: "witness2Lure"},
 							range: nextLocation.clues.witnesses[selectedWitnessesIndexes[1]].lures.length - 1
 						} :
 						{
-							id: {locationId, type: "witness2Ploy", payload: "randomPloy"},
+							id: {locationId, type: "witness2Lure", payload: "randomLure"},
 							range: locationsTotalNumber - 1
 						};
 					const selectedDataIndexRequest = nextLocation.clues.data[selectedDataIndex].lures && nextLocation.clues.data[selectedDataIndex].lures.length > 0 ? 
 						{
-							id: {locationId, type: "dataPloy"},
+							id: {locationId, type: "dataLure"},
 							range: nextLocation.clues.data[selectedDataIndex].lures.length - 1
 						} : 
 						{
-							id: {locationId, type: "dataPloy", payload: "randomPloy"},
+							id: {locationId, type: "dataLure", payload: "randomLure"},
 							range: locationsTotalNumber - 1
 						};
 					
@@ -127,37 +127,37 @@ export function ScenarioGenerator(sources) {
 				xs.combine(
 					selectedLocationSelectedValues$.filter(selectedValue => selectedValue.id.type === "witnesses"),
 					selectedLocationSelectedValues$.filter(selectedValue => selectedValue.id.type === "data"),
-					selectedLocationSelectedValues$.filter(selectedValue => selectedValue.id.type === "witness1Ploy"),
-					selectedLocationSelectedValues$.filter(selectedValue => selectedValue.id.type === "witness2Ploy"),
-					selectedLocationSelectedValues$.filter(selectedValue => selectedValue.id.type === "dataPloy"),
-				).map(([selectedWitnesses, selectedData, selectedWitness1Ploy, selectedWitness2Ploy, selectedDataPloy]) => {
+					selectedLocationSelectedValues$.filter(selectedValue => selectedValue.id.type === "witness1Lure"),
+					selectedLocationSelectedValues$.filter(selectedValue => selectedValue.id.type === "witness2Lure"),
+					selectedLocationSelectedValues$.filter(selectedValue => selectedValue.id.type === "dataLure"),
+				).map(([selectedWitnesses, selectedData, selectedWitness1Lure, selectedWitness2Lure, selectedDataLure]) => {
 					const nextLocation = selectedLocations[index + 1];
 					
 					const selectedWitnessesIndexes = selectedWitnesses.val;
 					const selectedDataIndex = selectedData.val;
-					const selectedWitness1PloyIndex = selectedWitness1Ploy.val;
-					const selectedWitness2PloyIndex = selectedWitness2Ploy.val;
-					const selectedDataPloyIndex = selectedDataPloy.val;
+					const selectedWitness1LureIndex = selectedWitness1Lure.val;
+					const selectedWitness2LureIndex = selectedWitness2Lure.val;
+					const selectedDataLureIndex = selectedDataLure.val;
 
 					const availableLocations = jsonResponse.map(el => el.location);
 
 					const witness1 = nextLocation.clues.witnesses[selectedWitnessesIndexes[0]].text;
 					const witness2 = nextLocation.clues.witnesses[selectedWitnessesIndexes[1]].text;
 					const data = nextLocation.clues.data[selectedDataIndex].text;
-					const witness1Ploy = selectedWitness1Ploy.id.payload === "randomPloy" ?
-						availableLocations[selectedWitness1PloyIndex] :
-						nextLocation.clues.witnesses[selectedWitnessesIndexes[0]].lures[selectedWitness1PloyIndex];
-					const witness2Ploy = selectedWitness2Ploy.id.payload === "randomPloy" ?
-						availableLocations[selectedWitness2PloyIndex] :
-						nextLocation.clues.witnesses[selectedWitnessesIndexes[1]].lures[selectedWitness2PloyIndex];
-					const dataPloy = selectedDataPloy.id.payload === "randomPloy" ?
-						availableLocations[selectedDataPloyIndex] :
-						nextLocation.clues.data[selectedDataIndex].lures[selectedDataPloyIndex];
+					const witness1Lure = selectedWitness1Lure.id.payload === "randomLure" ?
+						availableLocations[selectedWitness1LureIndex] :
+						nextLocation.clues.witnesses[selectedWitnessesIndexes[0]].lures[selectedWitness1LureIndex];
+					const witness2Lure = selectedWitness2Lure.id.payload === "randomLure" ?
+						availableLocations[selectedWitness2LureIndex] :
+						nextLocation.clues.witnesses[selectedWitnessesIndexes[1]].lures[selectedWitness2LureIndex];
+					const dataLure = selectedDataLure.id.payload === "randomLure" ?
+						availableLocations[selectedDataLureIndex] :
+						nextLocation.clues.data[selectedDataIndex].lures[selectedDataLureIndex];
 
-					// console.log('selectedDataPloy.id.payload === "randomPloy"', selectedDataPloy.id.payload === "randomPloy");
-					// console.log("witness1Ploy", witness1Ploy);
-					// console.log("witness2Ploy", witness2Ploy);
-					// console.log("dataPloy", dataPloy);
+					// console.log('selectedDataLure.id.payload === "randomLure"', selectedDataLure.id.payload === "randomLure");
+					// console.log("witness1Lure", witness1Lure);
+					// console.log("witness2Lure", witness2Lure);
+					// console.log("dataLure", dataLure);
 					
 					return {
 						"location": locationId,
@@ -173,9 +173,9 @@ export function ScenarioGenerator(sources) {
 							}
 						},
 						"lures": [
-							witness1Ploy,
-							witness2Ploy,
-							dataPloy
+							witness1Lure,
+							witness2Lure,
+							dataLure
 						]
 					};
 				}) :
