@@ -1,7 +1,7 @@
 {
 	"settings":{
 		"scenarioStucture": [
-			{"type": "cutscene", "payload": {"cutsceneName": "intro"}},
+			{"type": "cutscene", "payload": {"cutsceneName": "test"}},
 			{"type": "investigation", "payload": {"pathLocationsNumber": 5, "numberOfSuccessesNeeded": 3}},
 			{"type": "cutscene", "payload": {"cutsceneName": "test"}}
 		],
