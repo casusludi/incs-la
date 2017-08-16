@@ -5,58 +5,63 @@ import { svg } from '@cycle/dom';
 
 import * as _ from 'lodash';
 
+// Convertit les chaînes de caractères formatées du .json en lien HTML
+// Ex: Il avait rendez-vous avec un [paludier](https://fr.wikipedia.org/wiki/Saunier)
+//     Il avait rendez-vous avec un <a href="https://fr.wikipedia.org/wiki/Saunier" target="_blank">paludier</a>
 const RE = /\[([^\]]*)\]\(([^)]*)\)/g;
-
 export function formatLinks(text){
     return text.replace(RE, '<a href="$2" target="_blank">$1</a>') 
 }
 
-// Takes a location id and makes an object up of this id attribute and the location object contained in the json file
+// Retourne l'objet de lieu complet contenu dans le .json à partir de l'id du lieu. Étant utilisé de nombreuses fois, il a été utile de factoriser ce morçeau de code en le rendant par la même occasion plus explicite.
 export function makeLocationObject(id, datas){
 	return Object.assign({}, datas.locations[id], {id});
 }
 
-// Drop null values from the input stream (more expressive than a simple filter)
-export function dropNull(input$){
-    return input$.filter(o => o);
-}
-
+// Les méthodes pour récupérer les dimensions de la balise diffère d'une balise HTML à une balise SVG. Cette méthode générique permet de factoriser le code.
+// La marge appliquée permet d'éviter des arrondis qui autrement, une fois le repositionnement effectué dans le composant Tooltip, emettent continuellement (ex: 74, 75, 74, 75...). Une marge de 1 permet de stopper cet effet. C'est plus une magouille qu'une véritable solution.
 function getElementDimensions(DOM, elementClass, margin, type){
     return DOM.select(elementClass).elements()
     .filter(tag => tag.length > 0)
     .map(tag => tag[0])
-    .map(tag => (type === "html" ?
-        {
-            width: tag.clientWidth, 
-            height: tag.clientHeight,
-        } /*type === "svg"*/ :
-        {
-            width: tag.getBoundingClientRect().width, 
-            height: tag.getBoundingClientRect().height,
-        }
-    )).compose(dropRepeats((a, b) => 
+    .map(tag => {
+        switch(type) {
+            case "html":
+                return {
+                    width: tag.clientWidth, 
+                    height: tag.clientHeight,
+                };
+            case "svg": 
+                return {
+                    width: tag.getBoundingClientRect().width, 
+                    height: tag.getBoundingClientRect().height,
+                };
+        };
+    }).compose(dropRepeats((a, b) => 
         Math.abs(a.width - b.width) <= margin && 
         Math.abs(a.height - b.height) <= margin)
     );
 }
 
+// Sorte de surcharges de la méthode vue ci-dessus
 export function getHtmlElementDimensions(DOM, elementClass, margin = 0){
     return getElementDimensions(DOM, elementClass, margin, "html");
 }
-
 export function getSvgElementDimensions(DOM, elementClass, margin = 0){
     return getElementDimensions(DOM, elementClass, margin, "svg");
 }
 
-export function mixMerge(att){
-    return inputs$ => inputs$.map(inputs => xs.merge(...inputs.map(input => input[att]))).flatten();
+// Méthodes utilisées à l'aide de 'compose' de xstream qui permet de récupérer un certain sink à partir d'un stream d'array. Le sink 'sinkName' de chaque élément de l'array est récupéré. Ils sont ensuite soit merge (avec mixMerge) ou combine (avec mixCombine).
+export function mixMerge(sinkName){
+    return inputs$ => inputs$.map(inputs => xs.merge(...inputs.map(input => input[sinkName]))).flatten();
+}
+export function mixCombine(sinkName){
+    return inputs$ => inputs$.map(inputs => xs.combine(...inputs.map(input => input[sinkName]))).flatten();
 }
 
-export function mixCombine(att){
-    return inputs$ => inputs$.map(inputs => xs.combine(...inputs.map(input => input[att]))).flatten();
-}
-
-// Not pure at all but works pretty well
+// Permet d'obtenir des lignes poitillées dégradées à partir d'un chemin 'path' et d'un nombre de nuances 'sectionsNb' (ce qui est impossible en SVG "classique")
+// Plus une expérience qu'une vértiable fonctionnalité
+// La bonne idée serait de découper les lignes entre chaque pointillés pour que l'effet soit invisible (ce qui n'est pas le cas actuellement certaines lignes transparentes se superposent avec un effet bizarre comme résultat)
 export function makeShadedLine(path, sectionsNb){
     if(path.length === 0)
         return [];

@@ -3,7 +3,6 @@ import xs from 'xstream';
 import { html } from 'snabbdom-jsx';
 
 import { getHtmlElementDimensions, getSvgElementDimensions } from '../utils';
-import { dropNull } from '../utils';
 import { mixMerge, mixCombine } from '../utils';
 
 function intent(DOM){
