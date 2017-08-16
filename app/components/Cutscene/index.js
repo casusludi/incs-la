@@ -17,7 +17,6 @@ function model(action$, props$, datas$){
 	const slideIndex$ = action$.filter(action => action.type === "nextSlide").fold((acc, x) => acc + 1, 0);
 	
 	const state$ = xs.combine(slideIndex$, props$, datas$).map(([slideIndex, props, datas]) => ({
-		// image: `${datas.settings.cutscenes[props.cutsceneName].path}/slide${slideIndex >= datas.settings.cutscenes[props.cutsceneName].length ? datas.settings.cutscenes[props.cutsceneName].length - 1 : slideIndex}.jpg`,
 		image: `${datas.settings.cutscenes[props.cutsceneName].path}/${_.padStart(slideIndex >= datas.settings.cutscenes[props.cutsceneName].length ? datas.settings.cutscenes[props.cutsceneName].length - 1 : slideIndex, 3, '0')}.jpg`,
 		ready: slideIndex >= datas.settings.cutscenes[props.cutsceneName].length - 1,
 	}));
