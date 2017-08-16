@@ -17,7 +17,6 @@ import * as _ from 'lodash';
 
 import {html} from 'snabbdom-jsx';
 
-import {ChangeLocationButton} from './ChangeLocationButton';
 import {Witness} from './Witness';
 import {TimeManager} from './TimeManager';
 import {Map} from './Map';

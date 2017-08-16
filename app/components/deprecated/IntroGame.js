@@ -2,6 +2,9 @@ import xs from 'xstream';
 
 import { html } from 'snabbdom-jsx';
 
+/* DEPRECATED
+Composant qui gérait l'intro avant la création du composant générique Cutscene.
+*/
 function intent(DOM){
     const click$ = xs.merge(
 		DOM.select('.startGame').events('click').mapTo({type: "startGame"}),

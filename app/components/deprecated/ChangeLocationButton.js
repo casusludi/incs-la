@@ -1,5 +1,9 @@
 import { html } from 'snabbdom-jsx';
 
+/* DEPRECATED
+Composant gérant un bouton permettant de se déplacer entre les lieux avant la mise en place de la map.
+*/
+
 function intent(DOM){
 	const click$ = DOM
 		.select('.js-change-location')
