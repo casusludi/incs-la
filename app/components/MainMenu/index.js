@@ -14,12 +14,12 @@ export function MainMenu(sources) {
 
 	const action$ = xs.merge(
 		DOM.select('.js-new-game').events('click').mapTo({type: "newGame"}),
-		DOM.select('.js-resume-game').events('click').mapTo({type: "loadGame"}),
+		DOM.select('.js-resume-game').events('click').mapTo({type: "resumeGame"}),
 	);
 
-	const routerSink$ = action$.map(action => "/redirect").compose(delay(1));
-
 	const resetSave$ = action$.filter(action => action.type === "newGame").mapTo({key: 'save', value: null});
+
+	const routerSink$ = action$.map(action => "/redirect").compose(delay(1));
 
 	const DOMSink$ = props$.map(props =>
 		<div className="menu-principal">

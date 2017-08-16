@@ -54,17 +54,16 @@ function main(sources) {
 	);
 
 	// Factorise l'expression permettant de récupérer les sinks des pages
-	const getPagesSink = (stream$, sinkName) => stream$.filter(s => s[sinkName]).map(s => s[sinkName]).flatten();
+	const getPageSink = (stream$, sinkName) => stream$.filter(s => s[sinkName]).map(s => s[sinkName]).flatten();
 
 	const sinks = {
-		DOM: getPagesSink(page$, 'DOM'),
-		router: getPagesSink(page$, 'router'),
-		random: getPagesSink(page$, 'random'),
-		storage: getPagesSink(page$, 'storage'),
-		router: page$.filter(c => c.router).map(c => c.router).flatten(),
+		DOM: getPageSink(page$, 'DOM'),
+		router: getPageSink(page$, 'router'),
+		random: getPageSink(page$, 'random'),
+		storage: getPageSink(page$, 'storage'),
 		HTTP: xs.merge(
 			dataJsonRequest$,
-			getPagesSink(page$, 'HTTP'),
+			getPageSink(page$, 'HTTP'),
 		),
 	};
 	

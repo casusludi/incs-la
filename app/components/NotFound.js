@@ -2,6 +2,11 @@ import xs from 'xstream';
 
 import { html } from 'snabbdom-jsx';
 
+/*
+La classique page 404
+Pas utilisée
+*/
+
 export function NotFound(sources) {
     const previousPageClick$ = sources.DOM.select(".previous").events("click");
     const goBack$ = previousPageClick$.mapTo({ type: "goBack" });
