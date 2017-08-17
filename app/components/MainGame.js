@@ -408,6 +408,7 @@ export function MainGame(sources) {
 					<section className="city-content">
 						<section className="col-main">
 							<header className="header">
+								{/* On affiche ici round + 1 car on commence au round n°0 et c'est plus explicite pour le joueur de commencer au round 1 */}
 								<h1>{currentLocation.name + " - Round : " + (props.round + 1) + " - Successes : " + props.successesNumber}</h1>
 							</header>
 							<section className="place-list" >
