@@ -4,6 +4,10 @@ import { formatLinks } from '../utils';
 
 import * as _ from 'lodash';
 
+/*
+Composant qui représente un témoin dans un lieu.
+*/
+
 function intent(DOM) {
 
     const click$ = DOM
@@ -15,16 +19,16 @@ function intent(DOM) {
 
 function model(props$, action$) {
     return props$
-        .map(props => action$
-            .map(action =>
-                Object.assign(
-                    props,
-                    { showResult: true, }
-                )
-            ).startWith(props)
-        )
-        .flatten()
-        .remember();
+    .map(props => action$
+        .map(action =>
+            Object.assign(
+                props,
+                { showResult: true, }
+            )
+        ).startWith(props)
+    )
+    .flatten()
+    .remember();
 }
 
 function view(value$) {

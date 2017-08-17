@@ -5,6 +5,10 @@ import { html } from 'snabbdom-jsx';
 import { getHtmlElementDimensions, getSvgElementDimensions } from '../utils';
 import { mixMerge, mixCombine } from '../utils';
 
+/*
+Ce composant représente la fenêtre qui s'affiche à côté d'un landmark quand celui-ci est sélectionné par le joueur. Il affiche des informations telles que le nom du lieu ainsi que sa description. Dans le cas d'un lieu accessible par le joueur il présente de plus un bouton permettant de s'y rendre.
+*/
+
 function intent(DOM){
     return xs.merge(
         xs.merge(
