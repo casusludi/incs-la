@@ -3,7 +3,7 @@
 		"location":"nantes",
 		"clues":{
 			"witnesses":[
-				{"text": "Indice 1 nantes", "lures": []},
+				{"text": "Indice 1 nantes", "lures": []},  
 				{"text": "Indice 2 nantes", "lures": []}
 			],
 			"data":[
