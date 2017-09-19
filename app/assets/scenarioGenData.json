@@ -3,7 +3,7 @@
 		"location":"nantes",
 		"clues":{
 			"witnesses":[
-				{"text": "Indice 1 nantes", "lures": []},  
+				{"text": "Indice 1 nantes", "lures": []},
 				{"text": "Indice 2 nantes", "lures": []}
 			],
 			"data":[
@@ -148,11 +148,11 @@
 		"location":"haute-goulaine",
 		"clues":{
 			"witnesses":[
-				{"text": "Indice 1 haute-goulaine", "lures": []},
-				{"text": "Indice 2 haute-goulaine", "lures": []}
+				{"text": "Il m'a interrogé au sujet de papillons exotiques.", "lures": []},
+				{"text": "Il cherchait un émetteur télevision haut de plus de 200m.", "lures": []}
 			],
 			"data":[
-				{"text": "Indice data 1 haute-goulaine", "lures": []},
+				{"text": "Buzzzz… blip... Suspect détecté... grzzzt…proche ville .. aire de [covoiturage](http://data.loire-atlantique.fr/donnees/detail/lila-covoiturage-en-loire-atlantique/?tx_icsoddatastore_pi1%5bpage%5d=1...bzz Tournebride).", "lures": []},
 				{"text": "Indice data 2 haute-goulaine", "lures": []}
 			]
 		}
@@ -161,12 +161,11 @@
 		"location":"la-montagne",
 		"clues":{
 			"witnesses":[
-				{"text": "Indice 1 la-montagne", "lures": []},
-				{"text": "Indice 2 la-montagne", "lures": []}
+				{"text": "Il parlait d'un château d'eau mal orthographié...", "lures": []},
+				{"text": "Il cherchait une villa en hauteur... ", "lures": []}
 			],
 			"data":[
-				{"text": "Indice data 1 la-montagne", "lures": []},
-				{"text": "Indice data 2 la-montagne", "lures": []}
+				{"text": "Blip ; blip ; blip … restoration données… suspect détecté … proche route D723.", "lures": []}
 			]
 		}
 	},
@@ -174,11 +173,11 @@
 		"location":"saint-sebastien",
 		"clues":{
 			"witnesses":[
-				{"text": "Indice 1 saint-sebastien", "lures": []},
-				{"text": "Indice 2 saint-sebastien", "lures": []}
+				{"text": "Il recherchait une ville qui n'a [ni château, ni musée](http://data.loire-atlantique.fr/donnees/detail/chateaux-et-monuments-musees-et-ecomusees-grandes-entreprises-et-artisanat-en-loire-atlantiq/?tx_icsoddatastore_pi1[page]=9)...", "lures": []},
+				{"text": "J'ai cru entendre quelque chose à propos d'une jumelle Allemande...", "lures": []}
 			],
 			"data":[
-				{"text": "Indice data 1 saint-sebastien", "lures": []},
+				{"text": "Grzzz...Prrrt...Clic... Suspect proche ville... grzzzt...élue amie des enfants en 2005 Bzzt .", "lures": []},
 				{"text": "Indice data 2 saint-sebastien", "lures": []}
 			]
 		}
@@ -187,11 +186,11 @@
 		"location":"nozay",
 		"clues":{
 			"witnesses":[
-				{"text": "Indice 1 nozay", "lures": []},
-				{"text": "Indice 2 nozay", "lures": []}
+				{"text": "Il parlait de la dernière lettre de l'alphabet.", "lures": []},
+				{"text": "Il souhaitait visiter une [carrière](http://data.loire-atlantique.fr/donnees/detail/chateaux-et-monuments-musees-et-ecomusees-grandes-entreprises-et-artisanat-en-loire-atlantiq/?tx_icsoddatastore_pi1[page]=9) .", "lures": []}
 			],
 			"data":[
-				{"text": "Indice data 1 nozay", "lures": []},
+				{"text": "Krrrpppt… Supekkt detek… brrrtfrrr…m composé… ERROR 4508…", "lures": []},
 				{"text": "Indice data 2 nozay", "lures": []}
 			]
 		}
@@ -200,11 +199,11 @@
 		"location":"port-saint-pere",
 		"clues":{
 			"witnesses":[
-				{"text": "Indice 1 port-saint-pere", "lures": []},
-				{"text": "Indice 2 port-saint-pere", "lures": []}
+				{"text": "Il a parlé de trouver des animaux africains.", "lures": []},
+				{"text": "J'ai entendu son GPS dire 'en direction de la D751'.", "lures": []}
 			],
 			"data":[
-				{"text": "Indice data 1 port-saint-pere", "lures": []},
+				{"text": "Grzzz...Prrrt...Clic... Suspect a suivi ... grzzzt... [car Lila nuuumero 3](http://www.casusludi.com/projects/Download/BD-Lila/frequentations_LILA_2012_2013.htm).", "lures": []},
 				{"text": "Indice data 2 port-saint-pere", "lures": []}
 			]
 		}
@@ -213,11 +212,11 @@
 		"location":"la-chapelle-sur-erdre",
 		"clues":{
 			"witnesses":[
-				{"text": "Indice 1 la-chapelle-sur-erdre", "lures": []},
-				{"text": "Indice 2 la-chapelle-sur-erdre", "lures": []}
+				{"text": "Il se dirigeait vers une commune dans la quelle s'entrainent des joueurs de foot.", "lures": []},
+				{"text": "Il a parlé d'une écurie dans d'un château.", "lures": []}
 			],
 			"data":[
-				{"text": "Indice data 1 la-chapelle-sur-erdre", "lures": []},
+				{"text": "Krr… blip bip…commune aveec  bzzt… 9 [défibrrrilateurs](http://data.loire-atlantique.fr/donnees/detail/defibrillateurs-en-loire-atlantique/?tx_icsoddatastore_pi1%5bpage%5d=1) .", "lures": []},
 				{"text": "Indice data 2 la-chapelle-sur-erdre", "lures": []}
 			]
 		}
@@ -226,11 +225,11 @@
 		"location":"gorges",
 		"clues":{
 			"witnesses":[
-				{"text": "Indice 1 gorges", "lures": []},
-				{"text": "Indice 2 gorges", "lures": []}
+				{"text": "Il se rendait au sud du département.", "lures": []},
+				{"text": "Il cherchait une ville qui n'a qu'un seul jumelage.", "lures": []}
 			],
 			"data":[
-				{"text": "Indice data 1 gorges", "lures": []},
+				{"text": "Krr… blip bip…commune aveec bzzt… 1 [aire de covoiturage](http://data.loire-atlantique.fr/donnees/detail/lila-covoiturage-en-loire-atlantique/?tx_icsoddatastore_pi1%5bpage%5d=1) .", "lures": []},
 				{"text": "Indice data 2 gorges", "lures": []}
 			]
 		}
@@ -239,11 +238,11 @@
 		"location":"indre",
 		"clues":{
 			"witnesses":[
-				{"text": "Indice 1 indre", "lures": []},
-				{"text": "Indice 2 indre", "lures": []}
+				{"text": "J'ai cru entendre qu'il cherchait '3 îles'.", "lures": []},
+				{"text": "Il parlait de pêcher un poisson spécifique ...", "lures": []}
 			],
 			"data":[
-				{"text": "Indice data 1 indre", "lures": []},
+				{"text": "Krrrpppt… Supekkt detek… brrrtfrrr…m composé… ERROR 4508…", "lures": []},
 				{"text": "Indice data 2 indre", "lures": []}
 			]
 		}
@@ -252,11 +251,11 @@
 		"location":"pornic",
 		"clues":{
 			"witnesses":[
-				{"text": "Indice 1 pornic", "lures": []},
-				{"text": "Indice 2 pornic", "lures": []}
+				{"text": "Il souhaitait en savoir plus sur la côte de Jade.", "lures": []},
+				{"text": "Il cherchait à visiter une construction mégalithique.", "lures": []}
 			],
 			"data":[
-				{"text": "Indice data 1 pornic", "lures": []},
+				{"text": "Supect détekkkk… commune où …1 … [club de golf](http://data.loire-atlantique.fr/donnees/detail/golf-en-loire-atlantique/?tx_icsoddatastore_pi1[page]=9)..Bzzbt", "lures": []},
 				{"text": "Indice data 2 pornic", "lures": []}
 			]
 		}
@@ -265,12 +264,12 @@
 		"location":"la-chapelle-des-marais",
 		"clues":{
 			"witnesses":[
-				{"text": "Indice 1 la-chapelle-des-marais", "lures": []},
-				{"text": "Indice 2 la-chapelle-des-marais", "lures": []}
+				{"text": "Il se dirigeait vers une zone marécageuse.", "lures": []},
+				{"text": "Il avait prevu de faire un tour sur un fleuve.", "lures": []}
 			],
 			"data":[
-				{"text": "Indice data 1 la-chapelle-des-marais", "lures": []},
-				{"text": "Indice data 2 la-chapelle-des-marais", "lures": []}
+				{"text": "Supect détekkkk… commune où …1 … [médiathèque..roux](http://data.loire-atlantique.fr/donnees/detail/bibliotheques-et-mediatheques-en-loire-atlantique/?visualization=2)...Bzzbt", "lures": []},
+				{"text": "Supect détekkkk… commune où …1 … médiathèque..roux...Bzzbt", "lures": []}
 			]
 		}
 	},
@@ -278,11 +277,11 @@
 		"location":"la-roche-blanche",
 		"clues":{
 			"witnesses":[
-				{"text": "Indice 1 la-roche-blanche", "lures": []},
-				{"text": "Indice 2 la-roche-blanche", "lures": []}
+				{"text": "Il cherchait une ville au nom géologique ...", "lures": []},
+				{"text": "Il etait en route vers l'est du département.", "lures": []}
 			],
 			"data":[
-				{"text": "Indice data 1 la-roche-blanche", "lures": []},
+				{"text": "Krrrpppt… Supekkt detek… brrrtfrrr…m … ERROR 4508…", "lures": []},
 				{"text": "Indice data 2 la-roche-blanche", "lures": []}
 			]
 		}
@@ -291,11 +290,11 @@
 		"location":"prefailles",
 		"clues":{
 			"witnesses":[
-				{"text": "Indice 1 prefailles", "lures": []},
-				{"text": "Indice 2 prefailles", "lures": []}
+				{"text": "Il était à la recherche d'un [espace protegé](http://data.loire-atlantique.fr/donnees/detail/carte-des-implantations-des-reserves-naturelles-regionales-en-pays-de-la-loire/?tx_icsoddatastore_pi1[page]=1&visualization=2).", "lures": []},
+				{"text": "J'ai cru comprendre qu'il parlait de 'Gildas'.", "lures": []}
 			],
 			"data":[
-				{"text": "Indice data 1 prefailles", "lures": []},
+				{"text": "Krr… blip bip…commune aveec bzzt… 1 centre de secours .", "lures": []},
 				{"text": "Indice data 2 prefailles", "lures": []}
 			]
 		}
@@ -304,11 +303,11 @@
 		"location":"la-chapelle-basse-mer",
 		"clues":{
 			"witnesses":[
-				{"text": "Indice 1 la-chapelle-basse-mer", "lures": []},
-				{"text": "Indice 2 la-chapelle-basse-mer", "lures": []}
+				{"text": "Il suivait la route touristique du Vignoble Nantais.", "lures": []},
+				{"text": "Il cherchait la Divatte.", "lures": []}
 			],
 			"data":[
-				{"text": "Indice data 1 la-chapelle-basse-mer", "lures": []},
+				{"text": "Krrrpppt… Supekkt detek… brrrtfrrr…m … ERROR 4508…", "lures": []},
 				{"text": "Indice data 2 la-chapelle-basse-mer", "lures": []}
 			]
 		}
@@ -317,11 +316,11 @@
 		"location":"saint-brevin",
 		"clues":{
 			"witnesses":[
-				{"text": "Indice 1 saint-brevin", "lures": []},
-				{"text": "Indice 2 saint-brevin", "lures": []}
+				{"text": "Il m'a dit avoir envie de miel...", "lures": []},
+				{"text": "Il voulait voir un serpent d'océan.", "lures": []}
 			],
 			"data":[
-				{"text": "Indice data 1 saint-brevin", "lures": []},
+				{"text": "Blip ; blip ; blip … restoration données… suspect détecté … proche ville avec 2 plages.", "lures": []},
 				{"text": "Indice data 2 saint-brevin", "lures": []}
 			]
 		}
