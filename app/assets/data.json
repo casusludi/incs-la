@@ -86,17 +86,17 @@
 			"places":{
 				"temoin-1":{
 					"name":"Interroger un touriste",
-					"image":"images/personnages/Fetard.png",
+					"image":"images/personnages/zoom/Fetard.png",
 					"dialogs":["Je ne sais pas de quoi vous parlez.","Vous avez vu cet éléphant ? Il est incroyable !"]
 				},
 				"temoin-2":{
 					"name":"Enquêter dans le centre-ville",
-					"image":"images/personnages/Business-man.png",
+					"image":"images/personnages/zoom/Business-man.png",
 					"dialogs":["Bonjour, pouvez-vous m'indiquer la place du Commerce ?"]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/data.png",
+					"image":"images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -112,17 +112,17 @@
 			"places":{
 				"temoin-1":{
 					"name":"Interroger un commerçant",
-					"image":"images/personnages/Commissaire.png",
+					"image":"images/personnages/zoom/Commissaire.png",
 					"dialogs":["Je ne sais pas de quoi vous parlez."]
 				},
 				"temoin-2":{
 					"name":"Enquêter auprès des habitants",
-					"image":"images/personnages/Mamie.png",
+					"image":"images/personnages/zoom/Mamie.png",
 					"dialogs":["Désolée, je n'ai pas vu de sentient au comportement étrange."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/data.png",
+					"image":"images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -138,17 +138,17 @@
 			"places":{
 				"temoin-1":{
 					"name":"Interroger un touriste",
-					"image":"images/personnages/Sportif.png",
+					"image":"images/personnages/zoom/Sportif.png",
 					"dialogs":["Je ne sais pas de quoi vous parlez."]
 				},
 				"temoin-2":{
 					"name":"Enquêter dans les marais salants",
-					"image":"images/personnages/Agriculteur.png",
+					"image":"images/personnages/zoom/Agriculteur.png",
 					"dialogs":["Je ne sais pas de quoi vous parlez."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/data.png",
+					"image":"images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -164,17 +164,17 @@
 			"places":{
 				"temoin-1":{
 					"name":"Enquêter auprès d'agriculteurs",
-					"image":"images/personnages/Agricultrice.png",
+					"image":"images/personnages/zoom/Agricultrice.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Chercher des indices en ville",
-					"image":"images/personnages/Nerd.png",
+					"image":"images/personnages/zoom/Nerd.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/data.png",
+					"image":"images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -190,17 +190,17 @@
 			"places":{
 				"temoin-1":{
 					"name":"Interroger un élu",
-					"image":"images/personnages/Elu.png",
+					"image":"images/personnages/zoom/Elu.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Enquêter auprès des habitants",
-					"image":"images/personnages/Hippie.png",
+					"image":"images/personnages/zoom/Hippie.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/data.png",
+					"image":"images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -216,17 +216,17 @@
 			"places":{
 				"temoin-1":{
 					"name":"Interroger un commerçant",
-					"image":"images/personnages/Liseuse.png",
+					"image":"images/personnages/zoom/Liseuse.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Parler à la police",
-					"image":"images/personnages/Policiere.png",
+					"image":"images/personnages/zoom/Policiere.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/data.png",
+					"image":"images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -242,17 +242,17 @@
 			"places":{
 				"temoin-1":{
 					"name":"Se renseigner au zoo",
-					"image":"images/personnages/Zoo.png",
+					"image":"images/personnages/zoom/Zoo.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Interroger les habitants",
-					"image":"images/personnages/Sportif.png",
+					"image":"images/personnages/zoom/Sportif.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/data.png",
+					"image":"images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -268,17 +268,17 @@
 			"places":{
 				"temoin-1":{
 					"name":"Enquêter aux chantiers navals",
-					"image":"images/personnages/Ouvrier.png",
+					"image":"images/personnages/zoom/Ouvrier.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Chercher des indices en ville",
-					"image":"images/personnages/Hippie.png",
+					"image":"images/personnages/zoom/Hippie.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/data.png",
+					"image":"images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -294,17 +294,17 @@
 			"places":{
 				"temoin-1":{
 					"name":"Interroger les habitants",
-					"image":"images/personnages/Mamie.png",
+					"image":"images/personnages/zoom/Mamie.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Enquêter auprès d'agriculteurs",
-					"image":"images/personnages/Agriculteur.png",
+					"image":"images/personnages/zoom/Agriculteur.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/data.png",
+					"image":"images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -320,17 +320,17 @@
 			"places":{
 				"temoin-1":{
 					"name":"Chercher dans le vignoble",
-					"image":"images/personnages/Agricultrice.png",
+					"image":"images/personnages/zoom/Agricultrice.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Interroger un commerçant",
-					"image":"images/personnages/Sportif.png",
+					"image":"images/personnages/zoom/Sportif.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/data.png",
+					"image":"images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -346,17 +346,17 @@
 			"places":{
 				"temoin-1":{
 					"name":"Enquêter auprès des habitants",
-					"image":"images/personnages/Commissaire.png",
+					"image":"images/personnages/zoom/Commissaire.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Interroger un touriste",
-					"image":"images/personnages/Liseuse.png",
+					"image":"images/personnages/zoom/Liseuse.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/data.png",
+					"image":"images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -372,17 +372,17 @@
 			"places":{
 				"temoin-1":{
 					"name":"Parler à la police",
-					"image":"images/personnages/Policiere.png",
+					"image":"images/personnages/zoom/Policiere.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Chercher des indices en ville",
-					"image":"images/personnages/Nerd.png",
+					"image":"images/personnages/zoom/Nerd.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/data.png",
+					"image":"images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -398,17 +398,17 @@
 			"places":{
 				"temoin-1":{
 					"name":"Interroger un touriste",
-					"image":"images/personnages/Fetard.png",
+					"image":"images/personnages/zoom/Fetard.png",
 					"dialogs":["Je n'ai rien vu, desolé !"]
 				},
 				"temoin-2":{
 					"name":"Enquêter auprès des habitants",
-					"image":"images/personnages/Business-man.png",
+					"image":"images/personnages/zoom/Business-man.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/data.png",
+					"image":"images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -424,17 +424,17 @@
 			"places":{
 				"temoin-1":{
 					"name":"Interroger un commerçant",
-					"image":"images/personnages/Commissaire.png",
+					"image":"images/personnages/zoom/Commissaire.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Enquêter auprès des habitants",
-					"image":"images/personnages/Mamie.png",
+					"image":"images/personnages/zoom/Mamie.png",
 					"dialogs":["Je cherche mon chat, l'avez-vous vu ? "]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/data.png",
+					"image":"images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -450,17 +450,17 @@
 			"places":{
 				"temoin-1":{
 					"name":"Interroger un touriste",
-					"image":"images/personnages/Liseuse.png",
+					"image":"images/personnages/zoom/Liseuse.png",
 					"dialogs":["J'étais plongée dans ma lecture, je n'ai rien vu."]
 				},
 				"temoin-2":{
 					"name":"Enquêter sur les bords de Loire",
-					"image":"images/personnages/Sportif.png",
+					"image":"images/personnages/zoom/Sportif.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/data.png",
+					"image":"images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -476,17 +476,17 @@
 			"places":{
 				"temoin-1":{
 					"name":"Enquêter auprès d'agriculteurs",
-					"image":"images/personnages/Agricultrice.png",
+					"image":"images/personnages/zoom/Agricultrice.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Chercher des indices en ville",
-					"image":"images/personnages/Nerd.png",
+					"image":"images/personnages/zoom/Nerd.png",
 					"dialogs":["Je me suis perdu"]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/data.png",
+					"image":"images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -502,17 +502,17 @@
 			"places":{
 				"temoin-1":{
 					"name":"Interroger un élu",
-					"image":"images/personnages/Business-man.png",
+					"image":"images/personnages/zoom/Business-man.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Enquêter auprès des habitants",
-					"image":"images/personnages/Hippie.png",
+					"image":"images/personnages/zoom/Hippie.png",
 					"dialogs":["Quelle est la route pour rejoindre le lac de Grand-Lieu ?"]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/data.png",
+					"image":"images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -528,17 +528,17 @@
 			"places":{
 				"temoin-1":{
 					"name":"Interroger un commerçant",
-					"image":"images/personnages/Liseuse.png",
+					"image":"images/personnages/zoom/Liseuse.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Parler à la police",
-					"image":"images/personnages/Policiere.png",
+					"image":"images/personnages/zoom/Policiere.png",
 					"dialogs":["Pouvez-vous m'indiquer le centre ville ?"]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/data.png",
+					"image":"images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -554,17 +554,17 @@
 			"places":{
 				"temoin-1":{
 					"name":"Chercher dans le vignoble",
-					"image":"images/personnages/Agricultrice.png",
+					"image":"images/personnages/zoom/Agricultrice.png",
 					"dialogs":["Je ne peux pas vous aider."]
 				},
 				"temoin-2":{
 					"name":"Interroger les habitants",
-					"image":"images/personnages/Sportif.png",
+					"image":"images/personnages/zoom/Sportif.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/data.png",
+					"image":"images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -580,17 +580,17 @@
 			"places":{
 				"temoin-1":{
 					"name":"Enquêter aux chantiers navals",
-					"image":"images/personnages/Ouvrier.png",
+					"image":"images/personnages/zoom/Ouvrier.png",
 					"dialogs":["Mes excuses, je n'ai vu personne t."]
 				},
 				"temoin-2":{
 					"name":"Chercher des indices en ville",
-					"image":"images/personnages/Hippie.png",
+					"image":"images/personnages/zoom/Hippie.png",
 					"dialogs":["Je n'ai croisé personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/data.png",
+					"image":"images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -606,17 +606,17 @@
 			"places":{
 				"temoin-1":{
 					"name":"Interroger les habitants",
-					"image":"images/personnages/Mamie.png",
+					"image":"images/personnages/zoom/Mamie.png",
 					"dialogs":["Pourriez-vous m'indiquer la direction du vieux port ?"]
 				},
 				"temoin-2":{
 					"name":"Enquêter auprès d'agriculteurs",
-					"image":"images/personnages/Agriculteur.png",
+					"image":"images/personnages/zoom/Agriculteur.png",
 					"dialogs":["Je ne suis au courant de rien"]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/data.png",
+					"image":"images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -632,17 +632,17 @@
 			"places":{
 				"temoin-1":{
 					"name":"Interroger les habitants",
-					"image":"images/personnages/Nerd.png",
+					"image":"images/personnages/zoom/Nerd.png",
 					"dialogs":["Je suis desolé, je n'ai pas fait attention."]
 				},
 				"temoin-2":{
 					"name":"Interroger un commerçant",
-					"image":"images/personnages/Sportif.png",
+					"image":"images/personnages/zoom/Sportif.png",
 					"dialogs":["Rien de spécial à signaler !"]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/data.png",
+					"image":"images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -658,17 +658,17 @@
 			"places":{
 				"temoin-1":{
 					"name":"Enquêter auprès des habitants",
-					"image":"images/personnages/Commissaire.png",
+					"image":"images/personnages/zoom/Commissaire.png",
 					"dialogs":["Je n'ai rien vu, mais j'ouvre l'oeil."]
 				},
 				"temoin-2":{
 					"name":"Interroger un touriste",
-					"image":"images/personnages/Liseuse.png",
+					"image":"images/personnages/zoom/Liseuse.png",
 					"dialogs":["Je n'ai rien vu de particulier."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/data.png",
+					"image":"images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -684,17 +684,17 @@
 			"places":{
 				"temoin-1":{
 					"name":"Interroger les habitants",
-					"image":"images/personnages/Mamie.png",
+					"image":"images/personnages/zoom/Mamie.png",
 					"dialogs":["Auriez- vous vu mon chien ?"]
 				},
 				"temoin-2":{
 					"name":"Interroger un touriste",
-					"image":"images/personnages/Fetard.png",
+					"image":"images/personnages/zoom/Fetard.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/data.png",
+					"image":"images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -710,17 +710,17 @@
 			"places":{
 				"temoin-1":{
 					"name":"Interroger les habitants",
-					"image":"images/personnages/Sportif.png",
+					"image":"images/personnages/zoom/Sportif.png",
 					"dialogs":["J'espère que vous aurez le temps de visiter notre belle ville !"]
 				},
 				"temoin-2":{
 					"name":"Enquêter auprès d'agriculteurs",
-					"image":"images/personnages/Agriculteur.png",
+					"image":"images/personnages/zoom/Agriculteur.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/data.png",
+					"image":"images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... ERROR."]
 				}
 			},
@@ -736,17 +736,17 @@
 			"places":{
 				"temoin-1":{
 					"name":"Interroger un commerçant",
-					"image":"images/personnages/Elu.png",
+					"image":"images/personnages/zoom/Elu.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Interroger un touriste",
-					"image":"images/personnages/Hippie.png",
+					"image":"images/personnages/zoom/Hippie.png",
 					"dialogs":["J'adore cet endroit, c'est vraiment reposant ."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/data.png",
+					"image":"images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},

@@ -218,8 +218,9 @@ function view(showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, 
     
     const vdom$ = xs.combine(landmarksVdom$, pathVdom$, datas$, showMap$, travelAnimationVdom$, tooltipInfosVdom$)
     .map(([landmarksVdom, pathVdom, datas, showMap, travelAnimationVdom, tooltipInfosVdom]) =>
-        <div>
-            <button className="js-show-map button-3d" type="button" >Afficher la carte</button>
+        <div className="travel-panel-content">
+            <button className="js-show-map button" type="button" >Choisir une destination</button>
+            <div className={"map-wrapper"+(showMap?" expanded":"")}>
             {showMap ?
                 // Imbrication un peu complexe de div.
                 <div className="map">
@@ -246,6 +247,7 @@ function view(showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, 
                 </div>
                 : ""
             }
+            </div>
         </div>
     );
 

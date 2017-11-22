@@ -34,22 +34,21 @@ function model(props$, action$) {
 function view(value$) {
     return value$
         .map(value =>
-            <section className="place-item">
+            <div className="witness">
+                <figure className="witness-avatar">
+                    <img src={value.image} />
+                </figure>
                 {value.showResult
                     ?
-                    <figure>
-                        <img src={value.image} />
-                        <figcaption>
-                            <span hook={{insert: vnode => vnode.elm.innerHTML = value.clue ? formatLinks(value.clue.text) : _.sample(value.dialogs)}}>
-                            </span>
-                        </figcaption>
-                    </figure>
+                    <div className="witness-cartdridge expanded"><span className=" witness-info" hook={{insert: vnode => vnode.elm.innerHTML = value.clue ? formatLinks(value.clue.text) : _.sample(value.dialogs)}}></span></div>
                     :
-                    <button classNames="js-question-witness button-3d" type="button" >
-                        {value.name}
-                    </button>
+                    <div className="witness-cartdridge">
+                        <button classNames="witness-action js-question-witness" type="button" >
+                            {value.name}
+                        </button>
+                    </div>
                 }
-            </section>
+            </div>
         );
 }
 

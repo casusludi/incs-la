@@ -15,23 +15,23 @@ import dropRepeats from 'xstream/extra/dropRepeats';
 
 import * as _ from 'lodash';
 
-import {html} from 'snabbdom-jsx';
+import { html } from 'snabbdom-jsx';
 
-import {Witness} from './Witness';
-import {TimeManager} from './TimeManager';
-import {Map} from './Map';
-import {JSONReader} from './JSONReader';
-import {ScenarioGenerator} from './ScenarioGenerator';
+import { Witness } from './Witness';
+import { TimeManager } from './TimeManager';
+import { Map } from './Map';
+import { JSONReader } from './JSONReader';
+import { ScenarioGenerator } from './ScenarioGenerator';
 
-import {makeLocationObject} from '../utils';
-import {mixMerge, mixCombine} from '../utils';
+import { makeLocationObject } from '../utils';
+import { mixMerge, mixCombine } from '../utils';
 
 export function MainGame(sources) {
 	// Récupération des sources
-	const {DOM, HTTP, datas$} = sources;
+	const { DOM, HTTP, datas$ } = sources;
 	const random$ = sources.random;
 	const windowResize$ = sources.windowResize;
-	
+
 	// Création des props
 	const props$ = sources.storage.local.getItem('save').take(1).map(save =>
 		Object.assign(
@@ -53,58 +53,58 @@ export function MainGame(sources) {
 	);
 
 	// Chargement du .json contenant les données permettant de générer le scénario random
-	const scenarioGenDataJsonSinks = JSONReader({HTTP, jsonPath$: xs.of("/scenarioGenData.json")});
+	const scenarioGenDataJsonSinks = JSONReader({ HTTP, jsonPath$: xs.of("/scenarioGenData.json") });
 	const scenarioGenDataJsonRequest$ = scenarioGenDataJsonSinks.request;
 	const scenarioGenDataJsonResponse$ = scenarioGenDataJsonSinks.JSON;
 
 	// Presets pour la génération d'un scénario fixe (utile pour le débugage)
 	const pathPresets$ = xs.merge(
-		xs.of({"id":"selectedLocationsIndexes","val":[24,15,3,13,12,7,18,16,17]}),
-		xs.of({"id":{"locationId":"nantes","type":"witnesses"},"val":[0,1]}),
-		xs.of({"id":{"locationId":"nantes","type":"data"},"val":0}),
-		xs.of({"id":{"locationId":"nantes","type":"witness1Ploy","payload":"randomPloy"},"val":19}),
-		xs.of({"id":{"locationId":"nantes","type":"witness2Ploy","payload":"randomPloy"},"val":13}),
-		xs.of({"id":{"locationId":"nantes","type":"dataPloy","payload":"randomPloy"},"val":12}),
-		xs.of({"id":{"locationId":"la-chapelle-basse-mer","type":"witnesses"},"val":[0,1]}),
-		xs.of({"id":{"locationId":"la-chapelle-basse-mer","type":"data"},"val":1}),
-		xs.of({"id":{"locationId":"la-chapelle-basse-mer","type":"witness1Ploy","payload":"randomPloy"},"val":14}),
-		xs.of({"id":{"locationId":"la-chapelle-basse-mer","type":"witness2Ploy","payload":"randomPloy"},"val":20}),
-		xs.of({"id":{"locationId":"la-chapelle-basse-mer","type":"dataPloy","payload":"randomPloy"},"val":25}),
-		xs.of({"id":{"locationId":"nozay","type":"witnesses"},"val":[0,1]}),
-		xs.of({"id":{"locationId":"nozay","type":"data"},"val":0}),
-		xs.of({"id":{"locationId":"nozay","type":"witness1Ploy","payload":"randomPloy"},"val":21}),
-		xs.of({"id":{"locationId":"nozay","type":"witness2Ploy","payload":"randomPloy"},"val":10}),
-		xs.of({"id":{"locationId":"nozay","type":"dataPloy","payload":"randomPloy"},"val":16}),
-		xs.of({"id":{"locationId":"guemene","type":"witnesses"},"val":[0,1]}),
-		xs.of({"id":{"locationId":"guemene","type":"data"},"val":0}),
-		xs.of({"id":{"locationId":"guemene","type":"witness1Ploy","payload":"randomPloy"},"val":16}),
-		xs.of({"id":{"locationId":"guemene","type":"witness2Ploy","payload":"randomPloy"},"val":11}),
-		xs.of({"id":{"locationId":"guemene","type":"dataPloy","payload":"randomPloy"},"val":22}),
-		xs.of({"id":{"locationId":"la-montagne","type":"witnesses"},"val":[0,1]}),
-		xs.of({"id":{"locationId":"la-montagne","type":"data"},"val":0}),
-		xs.of({"id":{"locationId":"la-montagne","type":"witness1Ploy","payload":"randomPloy"},"val":25}),
-		xs.of({"id":{"locationId":"la-montagne","type":"witness2Ploy","payload":"randomPloy"},"val":2}),
-		xs.of({"id":{"locationId":"la-montagne","type":"dataPloy","payload":"randomPloy"},"val":25}),
-		xs.of({"id":{"locationId":"haute-goulaine","type":"witnesses"},"val":[0,1]}),
-		xs.of({"id":{"locationId":"haute-goulaine","type":"data"},"val":0}),
-		xs.of({"id":{"locationId":"haute-goulaine","type":"witness1Ploy","payload":"randomPloy"},"val":19}),
-		xs.of({"id":{"locationId":"haute-goulaine","type":"witness2Ploy","payload":"randomPloy"},"val":23}),
-		xs.of({"id":{"locationId":"haute-goulaine","type":"dataPloy","payload":"randomPloy"},"val":3}),
-		xs.of({"id":{"locationId":"saint-nazaire","type":"witnesses"},"val":[1,0]}),
-		xs.of({"id":{"locationId":"saint-nazaire","type":"data"},"val":0}),
-		xs.of({"id":{"locationId":"saint-nazaire","type":"witness1Ploy","payload":"randomPloy"},"val":8}),
-		xs.of({"id":{"locationId":"saint-nazaire","type":"witness2Ploy","payload":"randomPloy"},"val":26}),
-		xs.of({"id":{"locationId":"saint-nazaire","type":"dataPloy","payload":"randomPloy"},"val":9}),
-		xs.of({"id":{"locationId":"gorges","type":"witnesses"},"val":[1,0]}),
-		xs.of({"id":{"locationId":"gorges","type":"data"},"val":0}),
-		xs.of({"id":{"locationId":"gorges","type":"witness1Ploy","payload":"randomPloy"},"val":10}),
-		xs.of({"id":{"locationId":"gorges","type":"witness2Ploy","payload":"randomPloy"},"val":1}),
-		xs.of({"id":{"locationId":"gorges","type":"dataPloy","payload":"randomPloy"},"val":10}),
-		xs.of({"id":{"locationId":"port-saint-pere","type":"witnesses"},"val":[1,0]}),
-		xs.of({"id":{"locationId":"port-saint-pere","type":"data"},"val":0}),
-		xs.of({"id":{"locationId":"port-saint-pere","type":"witness1Ploy","payload":"randomPloy"},"val":23}),
-		xs.of({"id":{"locationId":"port-saint-pere","type":"witness2Ploy","payload":"randomPloy"},"val":5}),
-		xs.of({"id":{"locationId":"port-saint-pere","type":"dataPloy","payload":"randomPloy"},"val":20}),
+		xs.of({ "id": "selectedLocationsIndexes", "val": [24, 15, 3, 13, 12, 7, 18, 16, 17] }),
+		xs.of({ "id": { "locationId": "nantes", "type": "witnesses" }, "val": [0, 1] }),
+		xs.of({ "id": { "locationId": "nantes", "type": "data" }, "val": 0 }),
+		xs.of({ "id": { "locationId": "nantes", "type": "witness1Ploy", "payload": "randomPloy" }, "val": 19 }),
+		xs.of({ "id": { "locationId": "nantes", "type": "witness2Ploy", "payload": "randomPloy" }, "val": 13 }),
+		xs.of({ "id": { "locationId": "nantes", "type": "dataPloy", "payload": "randomPloy" }, "val": 12 }),
+		xs.of({ "id": { "locationId": "la-chapelle-basse-mer", "type": "witnesses" }, "val": [0, 1] }),
+		xs.of({ "id": { "locationId": "la-chapelle-basse-mer", "type": "data" }, "val": 1 }),
+		xs.of({ "id": { "locationId": "la-chapelle-basse-mer", "type": "witness1Ploy", "payload": "randomPloy" }, "val": 14 }),
+		xs.of({ "id": { "locationId": "la-chapelle-basse-mer", "type": "witness2Ploy", "payload": "randomPloy" }, "val": 20 }),
+		xs.of({ "id": { "locationId": "la-chapelle-basse-mer", "type": "dataPloy", "payload": "randomPloy" }, "val": 25 }),
+		xs.of({ "id": { "locationId": "nozay", "type": "witnesses" }, "val": [0, 1] }),
+		xs.of({ "id": { "locationId": "nozay", "type": "data" }, "val": 0 }),
+		xs.of({ "id": { "locationId": "nozay", "type": "witness1Ploy", "payload": "randomPloy" }, "val": 21 }),
+		xs.of({ "id": { "locationId": "nozay", "type": "witness2Ploy", "payload": "randomPloy" }, "val": 10 }),
+		xs.of({ "id": { "locationId": "nozay", "type": "dataPloy", "payload": "randomPloy" }, "val": 16 }),
+		xs.of({ "id": { "locationId": "guemene", "type": "witnesses" }, "val": [0, 1] }),
+		xs.of({ "id": { "locationId": "guemene", "type": "data" }, "val": 0 }),
+		xs.of({ "id": { "locationId": "guemene", "type": "witness1Ploy", "payload": "randomPloy" }, "val": 16 }),
+		xs.of({ "id": { "locationId": "guemene", "type": "witness2Ploy", "payload": "randomPloy" }, "val": 11 }),
+		xs.of({ "id": { "locationId": "guemene", "type": "dataPloy", "payload": "randomPloy" }, "val": 22 }),
+		xs.of({ "id": { "locationId": "la-montagne", "type": "witnesses" }, "val": [0, 1] }),
+		xs.of({ "id": { "locationId": "la-montagne", "type": "data" }, "val": 0 }),
+		xs.of({ "id": { "locationId": "la-montagne", "type": "witness1Ploy", "payload": "randomPloy" }, "val": 25 }),
+		xs.of({ "id": { "locationId": "la-montagne", "type": "witness2Ploy", "payload": "randomPloy" }, "val": 2 }),
+		xs.of({ "id": { "locationId": "la-montagne", "type": "dataPloy", "payload": "randomPloy" }, "val": 25 }),
+		xs.of({ "id": { "locationId": "haute-goulaine", "type": "witnesses" }, "val": [0, 1] }),
+		xs.of({ "id": { "locationId": "haute-goulaine", "type": "data" }, "val": 0 }),
+		xs.of({ "id": { "locationId": "haute-goulaine", "type": "witness1Ploy", "payload": "randomPloy" }, "val": 19 }),
+		xs.of({ "id": { "locationId": "haute-goulaine", "type": "witness2Ploy", "payload": "randomPloy" }, "val": 23 }),
+		xs.of({ "id": { "locationId": "haute-goulaine", "type": "dataPloy", "payload": "randomPloy" }, "val": 3 }),
+		xs.of({ "id": { "locationId": "saint-nazaire", "type": "witnesses" }, "val": [1, 0] }),
+		xs.of({ "id": { "locationId": "saint-nazaire", "type": "data" }, "val": 0 }),
+		xs.of({ "id": { "locationId": "saint-nazaire", "type": "witness1Ploy", "payload": "randomPloy" }, "val": 8 }),
+		xs.of({ "id": { "locationId": "saint-nazaire", "type": "witness2Ploy", "payload": "randomPloy" }, "val": 26 }),
+		xs.of({ "id": { "locationId": "saint-nazaire", "type": "dataPloy", "payload": "randomPloy" }, "val": 9 }),
+		xs.of({ "id": { "locationId": "gorges", "type": "witnesses" }, "val": [1, 0] }),
+		xs.of({ "id": { "locationId": "gorges", "type": "data" }, "val": 0 }),
+		xs.of({ "id": { "locationId": "gorges", "type": "witness1Ploy", "payload": "randomPloy" }, "val": 10 }),
+		xs.of({ "id": { "locationId": "gorges", "type": "witness2Ploy", "payload": "randomPloy" }, "val": 1 }),
+		xs.of({ "id": { "locationId": "gorges", "type": "dataPloy", "payload": "randomPloy" }, "val": 10 }),
+		xs.of({ "id": { "locationId": "port-saint-pere", "type": "witnesses" }, "val": [1, 0] }),
+		xs.of({ "id": { "locationId": "port-saint-pere", "type": "data" }, "val": 0 }),
+		xs.of({ "id": { "locationId": "port-saint-pere", "type": "witness1Ploy", "payload": "randomPloy" }, "val": 23 }),
+		xs.of({ "id": { "locationId": "port-saint-pere", "type": "witness2Ploy", "payload": "randomPloy" }, "val": 5 }),
+		xs.of({ "id": { "locationId": "port-saint-pere", "type": "dataPloy", "payload": "randomPloy" }, "val": 20 }),
 	);
 
 	// Props pour la génération de scénario random
@@ -115,7 +115,7 @@ export function MainGame(sources) {
 
 	// Création d'un composant ScenarioGenerator dont le but est de transformé le .json contenant les infos en de génération de scénario en un objet représentant le scénario
 	// La source selectedValue$ emet les réponses aux requêtes random (elle peut être remplacée par des réponses fixes en remplaçant le la source random$ par pathPresets$)
-	const scenarioGeneratorSinks = ScenarioGenerator({props$: scenarioProps$, jsonResponse$: scenarioGenDataJsonResponse$, selectedValue$: /*pathPresets$*/ random$ })
+	const scenarioGeneratorSinks = ScenarioGenerator({ props$: scenarioProps$, jsonResponse$: scenarioGenDataJsonResponse$, selectedValue$: /*pathPresets$*/ random$ })
 	// Requêtes envoyées au driver random
 	const scenarioGeneratorRandomRequests$ = scenarioGeneratorSinks.randomRequests$;
 	// Scénario généré par le composant
@@ -130,7 +130,7 @@ export function MainGame(sources) {
 	// Création des proxys pour certains flux (causé par l'interdépendance des streams - a = f(b) et b = f(a))
 	const changeLocationProxy$ = xs.create();
 	const correctNextChoosenLocationProxy$ = xs.create();
-	
+
 	// Ce flux emet un entier correspondant au nombre de villes correctes parcourues par le joueur
 	// La valeur de base est fournie par les props (0 ou autre si il existe une sauvegarde)
 	const progression$ = props$.map(props =>
@@ -148,7 +148,7 @@ export function MainGame(sources) {
 		currentLocationInit$,
 		changeLocationProxy$,
 	).remember();
-	
+
 	// Emet le lieu précédent (null si le joueur est dans le premier lieu)
 	// L'opérateur pairwise mémorise les 2 valeurs émisent par un flux, il suffit de récupérer la plus ancienne des 2
 	const lastLocation$ = xs.combine(props$, datas$).map(([props, datas]) =>
@@ -158,8 +158,8 @@ export function MainGame(sources) {
 	// Emet le lieu suivant correct vers lequel le joueur doit aller pour progresser (null si le joueur se trouve dans le dernier lieu du scénario)
 	// Il emet lorsque le joueur arrive dans un nouveau lieu correct, le lien correct suivant est alors émis
 	const nextCorrectLocation$ = xs.combine(progression$, path$, datas$).map(([progression, path, datas]) =>
-		progression + 1 < path.length ? 
-			makeLocationObject(path[progression + 1].location, datas) : 
+		progression + 1 < path.length ?
+			makeLocationObject(path[progression + 1].location, datas) :
 			null
 	).remember();
 
@@ -180,21 +180,21 @@ export function MainGame(sources) {
 
 		const lastLocationIndex = lastLocation ? locations.indexOf(lastLocation.id) : -1;
 		const currentLocationIndex = currentLocation ? locations.indexOf(currentLocation.id) : -1;
-		
+
 		// On veut 3 nombres uniques parmis la liste des index des lieux
 		// On exclue le lieu d'où arrive le joueur car il est automatiquement ajouté plus loin
 		// On exclue bien sûr aussi le lieu où il se trouve
 		const linksIndexesRandomRequest = {
-			id: "linksIndexes", 
+			id: "linksIndexes",
 			range: {
-				min: 0, 
+				min: 0,
 				max: locationsNumber - 1
 			},
 			exclude: [currentLocationIndex, lastLocationIndex],
-			number: 3, 
+			number: 3,
 			unique: true
 		};
-		
+
 		return linksIndexesRandomRequest;
 	});
 
@@ -209,26 +209,26 @@ export function MainGame(sources) {
 	// Tableau contenant les ids des lieux vers lesquels le joueur peut se diriger (liens)
 	// Si le joueur se trouve dans la bonne ville alors les villes suggérées sont la prochaine ville correcte ainsi que les leurres contenus dans le scenario
 	// Si le joueur ne se trouve pas dans le bonne ville alors les villes suggérées sont celles d'où il vient ainsi que 3 villes tirées au hasard
-	const currentLocationLinksIds$ = xs.combine(currentLocation$, lastLocation$, nextCorrectLocation$, currentCorrectLocation$, isCurrentLocationCorrect$, linksIds$) 
-	.map(([currentLocation, lastLocation, nextCorrectLocation, currentCorrectLocation, isCurrentLocationCorrect, linksIds]) =>
-		_.chain([])
-		.concat(lastLocation ? [lastLocation.id] : [])
-		.concat(isCurrentLocationCorrect ? currentCorrectLocation.lures : linksIds)
-		.concat(nextCorrectLocation && isCurrentLocationCorrect ? [nextCorrectLocation.id] : [])
-		.uniq()
-		.filter((o) => o !== currentLocation.id)
-		.value()
-	);
-	
+	const currentLocationLinksIds$ = xs.combine(currentLocation$, lastLocation$, nextCorrectLocation$, currentCorrectLocation$, isCurrentLocationCorrect$, linksIds$)
+		.map(([currentLocation, lastLocation, nextCorrectLocation, currentCorrectLocation, isCurrentLocationCorrect, linksIds]) =>
+			_.chain([])
+				.concat(lastLocation ? [lastLocation.id] : [])
+				.concat(isCurrentLocationCorrect ? currentCorrectLocation.lures : linksIds)
+				.concat(nextCorrectLocation && isCurrentLocationCorrect ? [nextCorrectLocation.id] : [])
+				.uniq()
+				.filter((o) => o !== currentLocation.id)
+				.value()
+		);
+
 	// Map les ids des liens récupérés ci-dessus avec les objets de lieu complet contenus dans le .json de données
-	const currentLocationLinks$ = xs.combine(currentLocationLinksIds$, datas$).map(([currentLocationLinksIds, datas]) => 
+	const currentLocationLinks$ = xs.combine(currentLocationLinksIds$, datas$).map(([currentLocationLinksIds, datas]) =>
 		currentLocationLinksIds.map(currentLocationLinkId =>
 			makeLocationObject(currentLocationLinkId, datas)
 		)
 	);
-	
+
 	// Créer le composant représentant la carte
-	const mapSinks = Map({DOM, windowResize$, currentLocation$, currentLocationLinksIds$, progression$, path$, datas$});
+	const mapSinks = Map({ DOM, windowResize$, currentLocation$, currentLocationLinksIds$, progression$, path$, datas$ });
 
 	// Flux émettant l'id du nouveau lieu à chaque changement
 	const changeLocation$ = mapSinks.changeLocation$;
@@ -238,13 +238,13 @@ export function MainGame(sources) {
 
 	// Emet true si le lieu choisi par le joueur est correct (le suivant dans le scénario)
 	const correctNextChoosenLocation$ = xs.combine(changeLocation$, nextCorrectLocation$)
-	.filter(([changeLocation, nextCorrectLocation]) =>
-		nextCorrectLocation && changeLocation.id === nextCorrectLocation.id
-	).mapTo(true);
+		.filter(([changeLocation, nextCorrectLocation]) =>
+			nextCorrectLocation && changeLocation.id === nextCorrectLocation.id
+		).mapTo(true);
 
 	// Défini la valeur du proxy défini initialement
 	correctNextChoosenLocationProxy$.imitate(correctNextChoosenLocation$);
-	
+
 	// Props pour les témoins
 	// Contient initialement la valeur de départ des témoins (déjà interrogé ou non) si une sauvegarde était fournie
 	// Une fois le premier changement de lieu effectué (changeLocation$) alors emet n'emet plus les props (null à la place)
@@ -255,28 +255,28 @@ export function MainGame(sources) {
 
 	// Créer les composants représentant les témoins
 	const witnesses$ = xs.combine(currentLocation$, progression$, path$, isCurrentLocationCorrect$, witnessesProps$)
-	.map(([currentLocation, progression, path, isCurrentLocationCorrect, witnessesProps]) => 
-		Object.keys(currentLocation.places).map((key, value) =>
-			isolate(Witness, key)({
-				DOM: sources.DOM,
-				props$: xs.of(Object.assign(
-					{},
-					{key}, // type de témoins (temoin-1, temoin-2 ou data)
-					currentLocation.places[key], // données concernant le témoin actuel
-					isCurrentLocationCorrect ? // On ajoute les indices donnés par les témoins si le joueur se trouve dans le bon lieu
-						{clue: path[progression].clues[key]} : 
+		.map(([currentLocation, progression, path, isCurrentLocationCorrect, witnessesProps]) =>
+			Object.keys(currentLocation.places).map((key, value) =>
+				isolate(Witness, key)({
+					DOM: sources.DOM,
+					props$: xs.of(Object.assign(
 						{},
-					{showResult: witnessesProps ? witnessesProps.questionnedWitnesses[key] : false}, // Défini si le témoin est déjà interrogé ou pas dans la sauvegarde (si elle est fournie)
-				)),
-			})
-		)
-	).remember();
+						{ key }, // type de témoins (temoin-1, temoin-2 ou data)
+						currentLocation.places[key], // données concernant le témoin actuel
+						isCurrentLocationCorrect ? // On ajoute les indices donnés par les témoins si le joueur se trouve dans le bon lieu
+							{ clue: path[progression].clues[key] } :
+							{},
+						{ showResult: witnessesProps ? witnessesProps.questionnedWitnesses[key] : false }, // Défini si le témoin est déjà interrogé ou pas dans la sauvegarde (si elle est fournie)
+					)),
+				})
+			)
+		).remember();
 
 	// Emet les props d'un témoin quand qu'il est interrogé
 	const questionnedWitness$ = witnesses$.map(witnesses =>
 		xs.merge(...witnesses.map(witness => witness.questionned$))
 	).flatten();
-	
+
 	// Un objet contenant chaque clé de témoin (temoin-1, temoin-2 ou data) déjà interrogé associer à true. Exemple :
 	// {'temoin-1': true, 'data': true}
 	// Il est remis à zero lors d'un changement de lieu
@@ -286,9 +286,9 @@ export function MainGame(sources) {
 		xs.merge(
 			questionnedWitness$.map(questionnedWitness => questionnedWitness.key),
 			changeLocation$.mapTo('reset')
-		).fold((acc, item) => item === 'reset' ? {} : Object.assign(acc, {[item]: true}), props.questionnedWitnesses)
+		).fold((acc, item) => item === 'reset' ? {} : Object.assign(acc, { [item]: true }), props.questionnedWitnesses)
 	).flatten().remember();
-	
+
 	// Un booléen représentant si le peut se déplacer ou non
 	// Il peut se déplacer à partir du moment où il a interrogé au moins un des témoins du lieu où il se trouve
 	const canTravel$ = props$.map(props =>
@@ -308,45 +308,45 @@ export function MainGame(sources) {
 	*/
 
 	// Instancie le composant qui va gérer le temps ingame
-	const timeManagerProps$ = props$.map(props => props ? {elapsedTime: props.elapsedTime} : {});
-	const timeManagerSinks = TimeManager({DOM, props$: timeManagerProps$, datas$, changeLocation$, questionnedWitness$});
+	const timeManagerProps$ = props$.map(props => props ? { elapsedTime: props.elapsedTime } : {});
+	const timeManagerSinks = TimeManager({ DOM, props$: timeManagerProps$, datas$, changeLocation$, questionnedWitness$ });
 
 	// Emet lorsque le joueur atteint le dernier lieu du chemin
 	const lastLocationReached$ = xs.combine(path$, progression$)
-	.filter(([path, progression]) =>
-		progression === (path.length - 1)
-	).mapTo({type: "lastLocationReached"});
+		.filter(([path, progression]) =>
+			progression === (path.length - 1)
+		).mapTo({ type: "lastLocationReached" });
 
 	// Emet lorsque le joueur a épuisé le temps qui lui était imparti
 	const noTimeRemaining$ = timeManagerSinks.timeDatas$.filter(timeDatas =>
 		timeDatas.remainingTime.raw <= 0
-	).mapTo({type: "noTimeRemaining"});
+	).mapTo({ type: "noTimeRemaining" });
 
 	// Merge des 2 façons de finir une partie (dernier lieu atteint ou temps épuisé)
 	const endGame$ = xs.merge(lastLocationReached$, noTimeRemaining$);
-	
+
 	// Détruit la sauvegarde présente dans la mémoire locale car la partie est terminée
-	const resetSave$ = endGame$.mapTo({key: 'save', value: null});
+	const resetSave$ = endGame$.mapTo({ key: 'save', value: null });
 
 	// Redirige à la fin de la partie
 	const endGameRouter$ = xs.combine(resetSave$ /*combine resetSave$ car la sauvegarde doit être détruite avant d'effectuer la redirection. C'est pas très propre j'ai pas su faire autrement.*/, timeManagerSinks.timeDatas$, endGame$, props$, datas$)
-	.map(([resetSave, timeDatas, endGame, props, datas]) => {
-		// Nombre de victoires à obtenir pour terminer le round
-		const numberOfSuccessesNeeded = datas.settings.scenarioStucture[props.round].payload.numberOfSuccessesNeeded;
-		
-		if(endGame.type === "lastLocationReached"){
-			if(props.successesNumber + 1 >= numberOfSuccessesNeeded)
-				// Si le joueur a atteint le dernier lieu et qu'il a obtenu suffisamment de victoires
-				// Alors il est envoyé vers la page de redirection (en incrémentant le compteur de round) qui le redirigera vers le prochain round
-				return { pathname: "/redirect", type: 'push', state: { props: { round: props.round + 1 }}}
-			else
-				// Sinon il on relance une partie en incrémentant le compteur de victoires
-				return { pathname: "/game", type: 'push', state: { props: { round: props.round, successesNumber: props.successesNumber + 1 }}}
-		}
-		else if(endGame.type === "noTimeRemaining")
-			// S'il a juste épuisé son temps alors on relance simplement une partie
-			return { pathname: "/game", type: 'push', state: { props: { round: props.round, successesNumber: props.successesNumber }}}
-	});
+		.map(([resetSave, timeDatas, endGame, props, datas]) => {
+			// Nombre de victoires à obtenir pour terminer le round
+			const numberOfSuccessesNeeded = datas.settings.scenarioStucture[props.round].payload.numberOfSuccessesNeeded;
+
+			if (endGame.type === "lastLocationReached") {
+				if (props.successesNumber + 1 >= numberOfSuccessesNeeded)
+					// Si le joueur a atteint le dernier lieu et qu'il a obtenu suffisamment de victoires
+					// Alors il est envoyé vers la page de redirection (en incrémentant le compteur de round) qui le redirigera vers le prochain round
+					return { pathname: "/redirect", type: 'push', state: { props: { round: props.round + 1 } } }
+				else
+					// Sinon il on relance une partie en incrémentant le compteur de victoires
+					return { pathname: "/game", type: 'push', state: { props: { round: props.round, successesNumber: props.successesNumber + 1 } } }
+			}
+			else if (endGame.type === "noTimeRemaining")
+				// S'il a juste épuisé son temps alors on relance simplement une partie
+				return { pathname: "/game", type: 'push', state: { props: { round: props.round, successesNumber: props.successesNumber } } }
+		});
 
 	// Redirection vers le menu principal quand le joueur clique sur le bouton menu
 	const menuRouter$ = DOM.select('.js-go-to-main-menu').events('click').map(goToMainMenu => "/");
@@ -355,26 +355,26 @@ export function MainGame(sources) {
 	// Le driver de stockage local fonctionne sous la forme de clé-valeur c'est pourquoi on converti l'objet de sauvegarde en string à l'aide de JSON.stringify
 	// On utilise la clé 'save'
 	const save$ = xs.combine(props$, path$, currentLocation$, lastLocation$, progression$, timeManagerSinks.timeDatas$, questionnedWitnesses$, canTravel$)
-	.map(([props, path, currentLocation, lastLocation, progression, timeDatas, questionnedWitnesses, canTravel]) =>
-		({ 
-			key: 'save',
-			value: JSON.stringify(
-				Object.assign(
-					{}, 													// Les données sauvegardées sont
-					props,													// Les props actuels (round, successesNumber...)
-					{														// Dont certaines propriétés sont écrasées telles que
-						currentLocation: currentLocation.id,				// Le lieu actuel
-						progression,										// La progression actuelle
-						elapsedTime: timeDatas.elapsedTime.raw,				// Le temps écoulé
-						questionnedWitnesses,								// Les témoins déjà interrogés
-						canTravel,											// Si le joueur peut se déplacer (au moins un témoin a déjà été interrogé)
-						path,												// Le scénario (chemin) de la partie en cours
-					},
-					lastLocation ? {lastLocation: lastLocation.id} : {},	// Le lieu précédent si il existe
+		.map(([props, path, currentLocation, lastLocation, progression, timeDatas, questionnedWitnesses, canTravel]) =>
+			({
+				key: 'save',
+				value: JSON.stringify(
+					Object.assign(
+						{}, 													// Les données sauvegardées sont
+						props,													// Les props actuels (round, successesNumber...)
+						{														// Dont certaines propriétés sont écrasées telles que
+							currentLocation: currentLocation.id,				// Le lieu actuel
+							progression,										// La progression actuelle
+							elapsedTime: timeDatas.elapsedTime.raw,				// Le temps écoulé
+							questionnedWitnesses,								// Les témoins déjà interrogés
+							canTravel,											// Si le joueur peut se déplacer (au moins un témoin a déjà été interrogé)
+							path,												// Le scénario (chemin) de la partie en cours
+						},
+						lastLocation ? { lastLocation: lastLocation.id } : {},	// Le lieu précédent si il existe
+					)
 				)
-			)
-		})
-	);
+			})
+		);
 
 	// Redirections
 	const routerSink$ = xs.merge(
@@ -401,21 +401,26 @@ export function MainGame(sources) {
 
 	// VDom global
 	const DOMSink$ = xs.combine(currentLocation$, witnessesVDom$, timeManagerVDom$, mapVDom$, props$, datas$, canTravel$)
-	.map(([currentLocation, witnessesVDom, timeManagerVDom, mapVDom, props, datas, canTravel]) =>
-		<section className="main">
-			<section className="main-content" >
-				<section className="city" style={{backgroundImage: "url("+currentLocation.image+")"}} >
-					<section className="city-content">
-						<section className="col-main">
-							<header className="header">
-								{/* On affiche ici round + 1 car on commence au round n°0 et c'est plus explicite pour le joueur de commencer au round 1 */}
-								<h1>{currentLocation.name + " - Round : " + (props.round + 1) + " - Successes : " + props.successesNumber}</h1>
-							</header>
-							<section className="place-list" >
-								{witnessesVDom}
+		.map(([currentLocation, witnessesVDom, timeManagerVDom, mapVDom, props, datas, canTravel]) =>
+			<section className="main">
+				<section className="main-content" >
+					<section className="city" style={{ backgroundImage: "url(" + currentLocation.image + ")" }} >
+						<section className="city-content">
+							<section className="col-main">
+								<header className="header">
+									{/* On affiche ici round + 1 car on commence au round n°0 et c'est plus explicite pour le joueur de commencer au round 1 */}
+									<h1>{currentLocation.name + " - Round : " + (props.round + 1) + " - Successes : " + props.successesNumber}</h1>
+								</header>
+								<section className="col-main-body">
+									<div className="witness-list" >
+										{witnessesVDom}
+									</div>
+									<div className="travel-panel">
+										{canTravel ? mapVDom : datas.texts.travelDescription}
+									</div>
+								</section>
 							</section>
-						</section>
-						<aside className="aside">
+							{/*<aside className="aside">
 							<div classNames="city-desc scrollable-panel panel">
 								{currentLocation.desc}
 							</div>
@@ -426,19 +431,12 @@ export function MainGame(sources) {
 								{timeManagerVDom}
 							</div>
 							<button className="js-go-to-main-menu button-3d" type="button">Menu Principal</button>
-						</aside>
+						</aside>*/}
+						</section>
 					</section>
-					<footer>
-						<div className="travel-panel">
-							<div className="travel-panel-content">
-								{canTravel ? mapVDom : datas.texts.travelDescription}
-							</div>
-						</div>
-					</footer>
 				</section>
 			</section>
-		</section>
-	);
+		);
 
 	const sinks = {
 		DOM: DOMSink$,
