@@ -36,6 +36,7 @@ function view(props$, datas$){
                             datas.settings.images.reachableLandmark : 
                             datas.settings.images.unreachableLandmark),
                 class: "js-show-info",
+                width: datas.settings.landmarksImageWidth + "px",
                 height: datas.settings.landmarksImageHeight + "px",
                 y: - datas.settings.landmarksImageHeight + "px",
             }}),

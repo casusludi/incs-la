@@ -10,6 +10,7 @@
 			"investigate": 0.25
 		},
 		"totalTime": 24,
+		"landmarksImageWidth": 40,
 		"landmarksImageHeight": 40,
 		"mapImageDimension": {
 			"width": 792,
