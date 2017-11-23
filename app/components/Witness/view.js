@@ -1,37 +1,8 @@
 import { html } from 'snabbdom-jsx';
-
-import { formatLinks } from '../utils';
-
+import { formatLinks } from '../../utils';
 import * as _ from 'lodash';
 
-/*
-Composant qui représente un témoin dans un lieu.
-*/
-
-function intent(DOM) {
-
-    const click$ = DOM
-        .select('.js-question-witness')
-        .events('click');
-
-    return click$;
-}
-
-function model(props$, action$) {
-    return props$
-    .map(props => action$
-        .map(action =>
-            Object.assign(
-                props,
-                { showResult: true, }
-            )
-        ).startWith(props)
-    )
-    .flatten()
-    .remember();
-}
-
-function view(value$) {
+export function view(value$) {
     return value$
         .map(value =>
             <div className="witness">
@@ -50,20 +21,4 @@ function view(value$) {
                 }
             </div>
         );
-}
-
-export function Witness(sources) {
-    const { props$, DOM } = sources;
-    const action$ = intent(DOM);
-    const value$ = model(props$, action$);
-    const vdom$ = view(value$);
-
-    const sinks = {
-        DOM: vdom$,
-        questionned$: props$.map(props =>
-            action$.mapTo(props)
-        ).flatten(),
-    };
-
-    return sinks;
 }

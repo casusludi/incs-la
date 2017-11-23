@@ -89,6 +89,7 @@
     "postcss-url": "^7.0.0",
     "stylelint": "^7.11.1",
     "stylelint-config-standard": "^16.0.0",
+    "svg-brunch": "^1.6.1",
     "uglify-js-brunch": "^2.10.0"
   }
 }

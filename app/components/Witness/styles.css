@@ -1,0 +1,68 @@
+@import 'app/styles/_variables';
+
+
+.witness-list{
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    width: 50%;
+    max-width: 400px;
+}
+
+.witness {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+
+}
+
+.witness-avatar {
+    margin: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    width: 7rem;
+    height: 7rem;
+    background-color: var(--yellow);
+    box-shadow: 1px 1px 2px 0px var(--black);
+    z-index: 10;
+    flex: 0 0 auto;
+    & img {
+        width: auto;
+        height: 100%;
+    }
+    
+}
+
+.witness-cartdridge {
+    background-color: var(--white);
+    border-radius: 0 1rem 1rem 0;
+    margin-left: -3.5rem;
+    box-shadow: 1px 1px 2px 0px var(--black);
+    min-height: 2rem;
+    display: flex;
+    align-items: center;
+    height: 7rem;
+    overflow: hidden;
+    width: 100%;
+    /*transition:  max-width 0.3s ease-in;
+    max-width: 50%;
+    &.expanded {
+        max-width: 100%;
+    }*/
+}
+
+.witness-info {
+    padding: 0 1rem 0 4.5rem;
+}
+
+.witness-action {
+    padding: 0 1rem 0 4.5rem;
+    border: none;
+    background-color: var(--orange-light);
+    cursor: pointer;
+    height: 100%;
+    width: 100%;
+    &:hover {
+        background-color: var(--white); 
+    }
+}

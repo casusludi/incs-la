@@ -410,14 +410,13 @@ export function MainGame(sources) {
 								<header className="header">
 									{/* On affiche ici round + 1 car on commence au round n°0 et c'est plus explicite pour le joueur de commencer au round 1 */}
 									<h1>{currentLocation.name + " - Round : " + (props.round + 1) + " - Successes : " + props.successesNumber}</h1>
+									<button className="js-go-to-main-menu button-3d" type="button">Menu Principal</button>
 								</header>
 								<section className="col-main-body">
 									<div className="witness-list" >
 										{witnessesVDom}
 									</div>
-									<div className="travel-panel">
-										{canTravel ? mapVDom : datas.texts.travelDescription}
-									</div>
+									{canTravel ? mapVDom : datas.texts.travelDescription}
 								</section>
 							</section>
 							{/*<aside className="aside">
