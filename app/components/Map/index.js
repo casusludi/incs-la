@@ -209,7 +209,7 @@ export function Map(sources) {
 
     const action$ = intent(DOM);
     const { showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, changeLocationDelayed$ } = model(DOM, action$, currentLocation$, currentLocationLinksIds$, progression$, path$, windowResize$, datas$);
-    const vdom$ = view(showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, datas$);
+    const vdom$ = view(DOM,showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, datas$);
 
     const sinks = {
         DOM: vdom$,

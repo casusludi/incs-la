@@ -2,8 +2,10 @@ import xs from 'xstream';
 import { svg } from '@cycle/dom';
 import { mixMerge, mixCombine } from '../../utils';
 import { html } from 'snabbdom-jsx';
+import {MapViewer} from '../MapViewer';
+import isolate from '@cycle/isolate';
 
-export function view(showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, datas$) {
+export function view(DOM,showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, datas$) {
     // On récupère les VDom des différents composants
     const landmarksVdom$ = landmarks$.compose(mixCombine('DOM'));
     const tooltipInfosVdom$ = landmarkTooltipSink.DOM;
@@ -18,10 +20,11 @@ export function view(showMap$, landmarks$, landmarkTooltipSink, travelAnimationS
         })
     }).startWith("");
 
-    const vdom$ = xs.combine(landmarksVdom$, pathVdom$, datas$, showMap$, travelAnimationVdom$, tooltipInfosVdom$)
-        .map(([landmarksVdom, pathVdom, datas, showMap, travelAnimationVdom, tooltipInfosVdom]) =>
-            <div className={"travel-panel" + (showMap ? " expanded" : "")}>
-                <button className="travel-panel-button js-show-map" type="button" ><i className="svg-icon icon-map" /></button>
+    const mapViewer = isolate(MapViewer,'map')({
+        DOM,
+        content$: xs.combine(landmarksVdom$, pathVdom$, datas$, travelAnimationVdom$, tooltipInfosVdom$)
+        .map(([landmarksVdom, pathVdom, datas, travelAnimationVdom, tooltipInfosVdom]) =>
+
                 <div className="travel-map">
                         {
                             svg(".svgMapTag", {
@@ -41,8 +44,22 @@ export function view(showMap$, landmarks$, landmarkTooltipSink, travelAnimationS
                                 ])
                         }
                         {tooltipInfosVdom}
-
                 </div>
+        )
+    });
+
+    const vdom$ = xs.combine(
+        mapViewer.DOM, 
+        showMap$,
+        landmarksVdom$, pathVdom$, datas$, travelAnimationVdom$, tooltipInfosVdom$
+    )
+        .map(([
+            mapViewerDOM, 
+            showMap
+        ]) =>
+            <div className={"travel-panel" + (showMap ? " expanded" : "")}>
+                <button className="travel-panel-button js-show-map" type="button" ><i className="svg-icon icon-map" /></button>
+                {mapViewerDOM}
             </div>
         );
 

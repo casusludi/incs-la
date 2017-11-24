@@ -43,7 +43,7 @@ function model(action$, DOM, landmarks$, showMap$, datas$){
 	// balise svg
 	const svgTagDimension$ = getHtmlElementDimensions(DOM, ".svgMapTag").startWith(null);
 	// balise image (carte) qui se redimensionne en largeur et hauteur dans la balise svg pour prendre soit toute la largeur ou toute la hauteur. Elle se retrouve donc avec des marges latérales ou en haut et en bas en fonction de la taille de la fenêtre du navigateur.
-	const mapImageDimension$ = getSvgElementDimensions(DOM, ".mapImageTag").startWith(null);
+	const mapImageDimension$ = getSvgElementDimensions(DOM, ".mapImageTag").startWith(null).debug('lol');
 	// div contenant le tooltip
 	const toolTipContainerDimension$ = getHtmlElementDimensions(DOM, ".locationInfo", 1).startWith(null);
 
