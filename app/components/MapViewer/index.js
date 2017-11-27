@@ -20,74 +20,109 @@ function modeToClasses(mode) {
 }
 
 function getTargetTouch(targetTouches, e) {
+    if(e instanceof MouseEvent){
+        return e;
+    }
     const result = _.find(e.changedTouches, (o) => _.some(targetTouches, a => a.identifier == o.identifier));
     return result ? result : false;
 }
 
-function isSameTouchAction(targetTouches, e) {
-    return _.some(e.changedTouches, (o) => _.some(targetTouches, a => a.identifier == o.identifier));
-}
+function intent(DOM,windowResize$) {
 
-function intent(DOM) {
-    const wrapper$ = DOM.select('.map-viewer').elements();
+    
+    const resize$ = windowResize$;
+
     const content = DOM.select('.map-viewer-content');
+    const content$ = DOM.select('.map-viewer-content').elements();
     const root = DOM.select('body');
-    const touchStart$ = content.events('touchstart');
-    const touchEnd$ = root.events('touchend');
-    const touchCancel$ = root.events('touchcancel');
-    const touchMove$ = root.events('touchmove');
+    const actionStart$ = xs.merge(
+                            content.events('mousedown'),
+                            content.events('touchstart')
+                        );
+    const actionEnd$ = xs.merge(
+                            root.events('mouseup'),
+                            root.events('touchend'),
+                            root.events('touchcancel')
+                    )
 
-    return  touchStart$
-        .map(touchStartEvent => {
+    const actionMove$ = xs.merge(
+                        root.events('mousemove'),
+                        root.events('touchmove')
+                    );
+
+    const fingerAction$ = actionStart$
+        .map(actionStartEvent => {
             
-            const wrapperBounds = touchStartEvent.currentTarget.parentNode.getBoundingClientRect();
-            const { top, left, width, height } = touchStartEvent.currentTarget.getBoundingClientRect();
-            const targetTouches = touchStartEvent.targetTouches;
-            const startTouch = getTargetTouch(targetTouches, touchStartEvent);
-            const endAction$ = xs.merge(touchEnd$, touchCancel$)
+            const wrapperBounds = actionStartEvent.currentTarget.parentNode.getBoundingClientRect();
+            const contentBounds = actionStartEvent.currentTarget.getBoundingClientRect();
+            const targetTouches = actionStartEvent.targetTouches;
+            const startAction = getTargetTouch(targetTouches, actionStartEvent);
+            const endAction$ = actionEnd$
                 .map(e => getTargetTouch(targetTouches, e))
-                .filter(touch => touch);
-            const moveAction$ = touchMove$
+                .filter(action => action);
+            const moveAction$ = actionMove$
                 .map(e => getTargetTouch(targetTouches, e))
-                .filter(touch => touch)
-                .map(touch => {
+                .filter(action => action)
+                .map(currentAction => {
                     return {
-                        type: 'brut',
-                        x: left+touch.clientX-startTouch.clientX - wrapperBounds.left,
-                        y: top+touch.clientY-startTouch.clientY - wrapperBounds.top ,
-                        deltaX: touch.clientX - startTouch.clientX,
-                        delatY: touch.clientY - startTouch.clientY,
-                        top, left, width, height
+                        contentBounds,
+                        wrapperBounds,
+                        currentAction,
+                        startAction
                     }
                 })
                 .endWhen(endAction$);
 
             return moveAction$;
+        }).flatten();
 
-           /* const repositionneAction$ = endAction$.take(1).map((touch) => {
-                return {
-                    type: 'smooth',
-                    x: touch.clientX,
-                    y: touch.clientY,
-                    top, left, width, height
-                }
-            })
+    const fitContent$ = content$
+        .filter(content => content.length>0)
+        .map(content => {
+        const wrapperBounds = content[0].parentNode.getBoundingClientRect();
+        const contentBounds = content[0].getBoundingClientRect();
+        return {
+            contentBounds,
+            wrapperBounds,
+            currentAction:null,
+            startAction:null
+        }
+    }).take(1);
 
-            return xs.merge(
-                moveAction$,
-                repositionneAction$
-            );*/
-        })
-        .flatten()
-   
+    return xs.merge(
+        fingerAction$,
+        fitContent$,
+        resize$.mapTo(fitContent$).flatten()
+    )
 }
 
 function model(action$, props$) {
     return props$
         .map((props) => action$
             .map((data) => {
-                const { x, y, top, left, height, width } = data;
-                return { ...props, top:y, left:x  };
+                const { 
+                    contentBounds,
+                    wrapperBounds,
+                    currentAction,
+                    startAction 
+                } = data;
+
+                const left = contentBounds.left - wrapperBounds.left + (currentAction && startAction?currentAction.clientX-startAction.clientX:0);
+                const top = contentBounds.top - wrapperBounds.top + (currentAction && startAction?currentAction.clientY-startAction.clientY:0);
+                
+                const deltaH = wrapperBounds.width - contentBounds.width;
+                const deltaV = wrapperBounds.height - contentBounds.height;
+                const minLeft =  deltaH<0?deltaH:deltaH*0.5;
+                const maxLeft = deltaH<0?0:deltaH*0.5;
+
+                const minTop =  deltaV<0?deltaV:deltaV*0.5;
+                const maxTop = deltaV<0?0:deltaV*0.5;
+
+                return {
+                    ...props,
+                    top:capValue(top,minTop,maxTop),
+                    left:capValue(left,minLeft,maxLeft)
+                }
             })
             .startWith({ ...props })
         )
@@ -107,10 +142,10 @@ function view(state$, content$) {
     ).flatten();
 }
 
-export function MapViewer({ DOM, content$, props$ = xs.of({}) }) {
+export function MapViewer({ DOM, content$, windowResize$, props$ = xs.of({}) }) {
     const defaultProps$ = xs.of({ });
     const newProps$ = xs.combine(defaultProps$, props$).map(([a, b]) => ({ ...a, ...b }));
-    const action$ = intent(DOM);
+    const action$ = intent(DOM,windowResize$);
     const state$ = model(action$, newProps$);
     const vdom$ = view(state$, content$);
 

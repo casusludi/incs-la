@@ -39,6 +39,8 @@ function view(props$, datas$){
                 width: datas.settings.landmarksImageWidth + "px",
                 height: datas.settings.landmarksImageHeight + "px",
                 y: - datas.settings.landmarksImageHeight + "px",
+                x: - (datas.settings.landmarksImageWidth * 0.5) + "px",
+                style: `opacity: ${props.isCurrentLocation || props.isReachableLandmark?1:0.5};`
             }}),
         ])
     });

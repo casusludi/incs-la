@@ -63,9 +63,9 @@
 			"endWin": "images/Nantes-tour.jpg",
 			"map": "images/carte/carte.png",
 			"closeMapIcon": "images/carte/closeIcon.svg",
-			"currentLocationLandmark": "images/carte/currentLocationLandmark.png",
-			"reachableLandmark": "images/carte/reachableLandmark.png",
-			"unreachableLandmark": "images/carte/unreachableLandmark.png"
+			"currentLocationLandmark": "images/carte/current-location-landmark.svg",
+			"reachableLandmark": "images/carte/reachable-landmark.svg",
+			"unreachableLandmark": "images/carte/unreachable-landmark.svg"
 		},
 		"travelAnimationDuration": 1
 	},

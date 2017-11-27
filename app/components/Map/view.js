@@ -5,7 +5,7 @@ import { html } from 'snabbdom-jsx';
 import {MapViewer} from '../MapViewer';
 import isolate from '@cycle/isolate';
 
-export function view(DOM,showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, datas$) {
+export function view(DOM,windowResize$,showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, datas$) {
     // On récupère les VDom des différents composants
     const landmarksVdom$ = landmarks$.compose(mixCombine('DOM'));
     const tooltipInfosVdom$ = landmarkTooltipSink.DOM;
@@ -22,6 +22,7 @@ export function view(DOM,showMap$, landmarks$, landmarkTooltipSink, travelAnimat
 
     const mapViewer = MapViewer({
         DOM,
+        windowResize$,
         content$: xs.combine(landmarksVdom$, pathVdom$, datas$, travelAnimationVdom$, tooltipInfosVdom$)
         .map(([landmarksVdom, pathVdom, datas, travelAnimationVdom, tooltipInfosVdom]) =>
 
@@ -39,8 +40,7 @@ export function view(DOM,showMap$, landmarks$, landmarkTooltipSink, travelAnimat
                                     // Le path n'est pas affiché à voir si vous conservez cette fonctionnalité. Elle n'est pas sauvegardée dans le stockage local, quand la page est rechargée il n'apparait donc pas.
                                     // pathVdom,
                                     travelAnimationVdom,
-                                    ...landmarksVdom,
-                                    svg.image(".js-show-map", { attrs: { width: "20px", height: "20px", x: "10px", y: "10px", 'xlink:href': datas.settings.images.closeMapIcon } }),
+                                    ...landmarksVdom
                                 ])
                         }
                         {tooltipInfosVdom}

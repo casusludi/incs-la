@@ -29,8 +29,8 @@ function intent(DOM) {
     return xs.merge(
         xs.merge(
             DOM.select('.js-show-map').events('click'),
-            DOM.select('.map').events('click').filter(e => e.target.className === "map"),
-            DOM.select('.svgMapTag').events('click').filter(e => e.target.className.baseVal === "svgMapTag")
+            DOM.select('.map').events('click').filter(e => e.target.className === "map")/*,
+            DOM.select('.svgMapTag').events('click').filter(e => e.target.className.baseVal === "svgMapTag")*/
         ).map(value => ({ type: "showMap" })),
         DOM.select('.js-hide-infos').events('click').map(value => ({ type: "hideInfos" })),
         DOM.select('.js-travel-to').events('click').map(value => ({ type: "travelTo" })),
@@ -72,20 +72,25 @@ function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progres
     });
 
     // Pour chaque lieu on va créer un repère sur la carte (ou "landmark"). Les props de chaque landmark sont : ses coordonnées pixels, si ce landmark représente le lieu où le joueur se trouve ('isCurrentLocation') ou un lieu accessible par le joueur ('isReachableLandmark'). Ces 2 derniers booléens permettent de déterminer l'assets à afficher pour le landmark (un landmark gris, vert ou rouge). De plus on va trier les landmarks selon leur latitude (y) ce qui permettra un affichage sur la carte de haut en bas. Ainsi les landmarks bas se retrouveront par dessus les landmarks hauts.
-    const landmarksProps$ = xs.combine(currentLocation$, currentLocationLinksIds$, pixelCoordinates$)
-        .map(([currentLocation, currentLocationLinksIds, pixelCoordinates]) =>
-            _.sortBy(pixelCoordinates, 'pixelCoordinates.y').map(currentPixelCoordinates => {
-                const isCurrentLocation = currentPixelCoordinates.location.id === currentLocation.id;
-                const isReachableLandmark = _.includes(currentLocationLinksIds, currentPixelCoordinates.location.id);
+    const landmarksProps$ = xs.combine(currentLocation$, currentLocationLinksIds$.debug(), pixelCoordinates$)
+        .map(([currentLocation, currentLocationLinksIds, pixelCoordinates]) => {
 
-                return Object.assign({},
-                    currentPixelCoordinates,
-                    {
-                        isCurrentLocation: isCurrentLocation,
-                        isReachableLandmark: isReachableLandmark,
-                    }
-                );
-            })
+
+                const landmarks = 
+                    _.chain(pixelCoordinates)
+                    
+                    .map(curr => ({
+                        ...curr,
+                        isCurrentLocation:curr.location.id === currentLocation.id,
+                        isReachableLandmark: _.includes(currentLocationLinksIds, curr.location.id)
+                    }))
+                    .sortBy(['isCurrentLocation','isReachableLandmark','pixelCoordinates.y'])
+                 
+                    .value();
+
+                return landmarks;
+
+            }
         ).remember();
 
     // On créer ensuite ces landmark en fournissant à chacun ses props
@@ -209,7 +214,7 @@ export function Map(sources) {
 
     const action$ = intent(DOM);
     const { showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, changeLocationDelayed$ } = model(DOM, action$, currentLocation$, currentLocationLinksIds$, progression$, path$, windowResize$, datas$);
-    const vdom$ = view(DOM,showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, datas$);
+    const vdom$ = view(DOM,windowResize$,showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, datas$);
 
     const sinks = {
         DOM: vdom$,
