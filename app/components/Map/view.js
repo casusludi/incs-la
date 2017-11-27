@@ -20,7 +20,7 @@ export function view(DOM,showMap$, landmarks$, landmarkTooltipSink, travelAnimat
         })
     }).startWith("");
 
-    const mapViewer = isolate(MapViewer,'map')({
+    const mapViewer = MapViewer({
         DOM,
         content$: xs.combine(landmarksVdom$, pathVdom$, datas$, travelAnimationVdom$, tooltipInfosVdom$)
         .map(([landmarksVdom, pathVdom, datas, travelAnimationVdom, tooltipInfosVdom]) =>
@@ -30,8 +30,8 @@ export function view(DOM,showMap$, landmarks$, landmarkTooltipSink, travelAnimat
                             svg(".svgMapTag", {
                                 attrs: {
                                     viewBox: "0 0 " + datas.settings.mapImageDimension.width + " " + datas.settings.mapImageDimension.height,
-                                    width: "100%",
-                                    height: "100%",
+                                    width: datas.settings.mapImageDimension.width+"px",
+                                    height: datas.settings.mapImageDimension.height+"px",
                                     'background-color': "green"
                                 }
                             }, [

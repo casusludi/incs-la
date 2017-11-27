@@ -2,6 +2,8 @@ import xs from 'xstream';
 import tween from 'xstream/extra/tween';
 import { html } from 'snabbdom-jsx';
 import _ from 'lodash';
+import { div } from '@cycle/dom';
+import flattenConcurrently from 'xstream/extra/flattenConcurrently'
 
 function capValue(val, min, max) {
     if (val < min) return min;
@@ -27,17 +29,21 @@ function isSameTouchAction(targetTouches, e) {
 }
 
 function intent(DOM) {
-    const stick = DOM.select('.stick-base');
+    const wrapper$ = DOM.select('.map-viewer').elements();
+    const content = DOM.select('.map-viewer-content');
     const root = DOM.select('body');
-    const touchStart$ = stick.events('touchstart');
+    const touchStart$ = content.events('touchstart');
     const touchEnd$ = root.events('touchend');
     const touchCancel$ = root.events('touchcancel');
     const touchMove$ = root.events('touchmove');
 
-    return touchStart$
+    return  touchStart$
         .map(touchStartEvent => {
+            
+            const wrapperBounds = touchStartEvent.currentTarget.parentNode.getBoundingClientRect();
             const { top, left, width, height } = touchStartEvent.currentTarget.getBoundingClientRect();
             const targetTouches = touchStartEvent.targetTouches;
+            const startTouch = getTargetTouch(targetTouches, touchStartEvent);
             const endAction$ = xs.merge(touchEnd$, touchCancel$)
                 .map(e => getTargetTouch(targetTouches, e))
                 .filter(touch => touch);
@@ -47,14 +53,18 @@ function intent(DOM) {
                 .map(touch => {
                     return {
                         type: 'brut',
-                        x: touch.clientX,
-                        y: touch.clientY,
+                        x: left+touch.clientX-startTouch.clientX - wrapperBounds.left,
+                        y: top+touch.clientY-startTouch.clientY - wrapperBounds.top ,
+                        deltaX: touch.clientX - startTouch.clientX,
+                        delatY: touch.clientY - startTouch.clientY,
                         top, left, width, height
                     }
                 })
                 .endWhen(endAction$);
 
-            const repositionneAction$ = endAction$.take(1).map((touch) => {
+            return moveAction$;
+
+           /* const repositionneAction$ = endAction$.take(1).map((touch) => {
                 return {
                     type: 'smooth',
                     x: touch.clientX,
@@ -66,9 +76,10 @@ function intent(DOM) {
             return xs.merge(
                 moveAction$,
                 repositionneAction$
-            );
+            );*/
         })
-        .flatten();
+        .flatten()
+   
 }
 
 function model(action$, props$) {
@@ -76,11 +87,9 @@ function model(action$, props$) {
         .map((props) => action$
             .map((data) => {
                 const { x, y, top, left, height, width } = data;
-                const fromX = capValue(x, left, left + width);
-                const fromY = capValue(y, top, top + height);
-                return { ...props };
-            }).flatten()
-            .startWith({ ...props, rateX: 0, rateY: 0 })
+                return { ...props, top:y, left:x  };
+            })
+            .startWith({ ...props })
         )
         .flatten()
         .remember();
@@ -88,9 +97,11 @@ function model(action$, props$) {
 
 function view(state$, content$) {
     return content$.map(content =>
-        state$.map(({ rateX, rateY, mode, padding }) =>
+        state$.map(({ top,left }) =>
             <div className="map-viewer">
-                {content}
+                <div className="map-viewer-content" style={{top:`${top}px`,left:`${left}px`}}>
+                    {content}
+                </div>
             </div>
         )
     ).flatten();
