@@ -43,7 +43,7 @@ export function view(DOM,windowResize$,showMap$, landmarks$, landmarkTooltipSink
                                     ...landmarksVdom
                                 ])
                         }
-                        {tooltipInfosVdom}
+                        
                 </div>
         )
     });
@@ -51,15 +51,19 @@ export function view(DOM,windowResize$,showMap$, landmarks$, landmarkTooltipSink
     const vdom$ = xs.combine(
         mapViewer.DOM, 
         showMap$,
-        landmarksVdom$, pathVdom$, datas$, travelAnimationVdom$, tooltipInfosVdom$
+        tooltipInfosVdom$
     )
         .map(([
             mapViewerDOM, 
-            showMap
+            showMap,
+            tooltipInfosVdom
         ]) =>
             <div className={"travel-panel" + (showMap ? " expanded" : "")}>
                 <button className="travel-panel-button js-show-map" type="button" ><i className="svg-icon icon-map" /></button>
+                <div className="travel-panel-content">
                 {mapViewerDOM}
+                {tooltipInfosVdom}
+                </div>
             </div>
         );
 

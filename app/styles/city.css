@@ -34,17 +34,7 @@
     display: flex;
     overflow: hidden;
     flex: 1 1 auto;
-    & > *{
-        &:first-child{
-            order: 0;
-            flex: 1 1 auto;
-        }
-        &:last-child{
-
-            order: 1;
-            flex: 0 0 200px;
-        }
-    }
+    
 }
 
 .col-main-body {
@@ -82,6 +72,7 @@
 .col-main{
     display: flex;
     flex-direction: column;
+    width: 100%;
 }
 
 .scrollable-panel{
@@ -113,4 +104,21 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+
+@media (max-width: 800px) {
+    .col-main-body {
+        position: relative;
+        flex-direction: column;
+
+
+    }
+
+    .witness-list {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 4rem;
+    }
 }

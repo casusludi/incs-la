@@ -1,0 +1,78 @@
+.landmark-panel {
+    margin: 2rem;
+    z-index: 6;
+}
+
+.landmark-panel .button{
+    width: 100%;
+    font-size: 1.5rem;
+}
+
+.landmark-panel .close-button {
+
+}
+
+.landmark-panel-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+
+    & h3 {
+        margin: 0;
+        font-size: 1.5rem;
+    }
+}
+
+.landmark-panel-wrapper {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 99;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+   
+    &.show {
+        animation: fade-in 0.3s ease-in-out;
+    }
+
+    &.hide {
+        animation: fade-out 0.2s ease-in-out;
+        transform: translateX(-10000px);
+    }
+}
+
+.landmark-panel-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background-color: rgba(0,0,0,0.3);
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+
+  }
+  100% {
+    opacity: 1;
+
+  }
+}
+@keyframes fade-out {
+  0% {
+    opacity: 1;
+
+  }
+  99% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-10000px);
+  }
+}

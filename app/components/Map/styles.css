@@ -16,15 +16,11 @@
     }
 }
 
-
-.travel-panel {
-    flex: 1;
-}
-
 .travel-panel{
     display: flex;
     flex-direction: row;
     flex: 1;
+    z-index: 9999;
     align-items: center;
     justify-content: flex-end;
     height: 100%;
@@ -36,6 +32,19 @@
     }
 }
 
+.travel-panel-content {
+    flex:1;
+    width: 100%;
+    height: 100%;
+    position: relative;
+
+}
+
+.travel-panel-content .map-viewer{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
 
 .travel-map {
     display: flex;
@@ -54,12 +63,22 @@
     left: 0px;
 }
 
-.locationInfo{
-    position: absolute;
+.js-travel-to{
+    font-size: 1rem;
 }
 
 
+@media (max-width: 800px) {
+    .travel-panel{
+        flex-direction: column;
+        transform: translateY(calc(100% - 4rem));
+        &.expanded {
+            transform: translateY(0);
+        }
+    }
 
-.js-travel-to{
-    font-size: 1rem;
+    .travel-panel-button {
+        border-radius: 50% 50% 0 0;
+        box-shadow: 1px 1px 2px 0px var(--black);
+    }
 }
