@@ -17,3 +17,7 @@
 .icon-map:after {
     background-image: url(images/ui/icons/icon-map.svg);
 }
+
+.icon-close:after {
+    background-image: url(images/ui/icons/icon-close.svg);
+}
