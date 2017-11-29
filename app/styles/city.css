@@ -1,5 +1,7 @@
 @import '_variables';
 
+html, body {overflow:hidden; }
+
 .city{
     width: 100vw;
     height: 100vh;

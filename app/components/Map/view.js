@@ -59,9 +59,9 @@ export function view(DOM,windowResize$,showMap$, landmarks$, landmarkTooltipSink
             tooltipInfosVdom
         ]) =>
             <div className={"travel-panel" + (showMap ? " expanded" : "")}>
-                <button className="travel-panel-button-open js-show-map" type="button" ><i className="svg-icon icon-map" /></button>
+                <button className="travel-panel-button-open glue-button glue-button-right js-show-map" type="button" ><i className="svg-icon icon-map" /></button>
                 <div className="travel-panel-content">
-                <button className="travel-panel-button-close js-show-map" type="button" ><i className="svg-icon icon-close" /></button>
+                <button className="travel-panel-button-close glue-button glue-button-left js-show-map" type="button" ><i className="svg-icon icon-close" /></button>
                 {mapViewerDOM}
                 {tooltipInfosVdom}
                 </div>

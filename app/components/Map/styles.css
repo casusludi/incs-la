@@ -1,20 +1,10 @@
 @import 'app/styles/_variables';
 
 .travel-panel-button-open {
-    border: none;
-    background: var(--orange-light);
-    width: 4rem;
-    height: 4rem;
-    border-radius: 50% 0 0 50%;
-    outline:none;
     position: absolute;
-    box-shadow: 1px 1px 2px 0px var(--black);
     transition: transform 0.3s ease-in;
     left: 0;
     top: calc( 50% - 2rem);
-    line-height: 0;
-    
-
     & .icon-map{
         width: 2rem;
         height: 2rem;
@@ -22,21 +12,12 @@
 }
 
 .travel-panel-button-close {
-    border: none;
-    background: var(--orange-light);
-    width: 4rem;
-    height: 4rem;
-    border-radius: 0 50% 50% 0;
-    outline:none;
-    box-shadow: 1px 1px 2px 0px var(--black);
     transition: transform 0.3s ease-in;
     transform: translateX(-100%);
-
     position: absolute;
     z-index: 77;
     left: 0;
     top: calc( 50% - 2rem);
-    line-height: 0;
 
     & .icon-close{
         width: 1.5rem;

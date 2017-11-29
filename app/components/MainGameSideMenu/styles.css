@@ -1,0 +1,79 @@
+@import 'app/styles/_variables';
+
+.game-side-menu  {
+    position: absolute;
+    z-index: 9999;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: 400px;
+    transition: transform 0.2s ease-in;
+
+    &.hide {
+        transform: translateX(100%);
+        & .game-side-menu-overlay {
+            animation: fade-out 0.3s ease-in forwards;
+        }
+    }
+
+    &.show {
+        transform: translateX(0);
+        & .game-side-menu-button-open {
+            transform: translateX(0);
+        }
+
+        & .game-side-menu-button-close {
+            transform: translateX(0);
+        }
+
+        & .game-side-menu-overlay {
+            animation: fade-in 0.3s ease-in forwards;
+        }
+    }
+}
+
+.game-side-menu-overlay {
+    position: absolute;
+    top: 0;
+    left: -400%;
+    width: 400vw;
+    height: 100vh;
+    background-color: rgba(0,0,0,0.6);
+}
+
+.game-side-menu-button-open {
+    position: absolute;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease-in;
+}
+
+.game-side-menu-button-close {
+    transition: transform 0.2s ease-in;
+    transform: translateX(-100%);
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+
+
+.game-side-menu-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    background-color: var(--orange-dark);
+    transition: transform 0.2s ease-in;
+    box-shadow: inset 2px 0px 2px 0px rgba(0,0,0,0.8);
+    padding: 5rem 1rem 1rem 1rem;
+}
+
+@media (max-width: 800px) {
+
+    .game-side-menu  {
+
+    }
+}

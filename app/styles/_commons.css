@@ -63,6 +63,30 @@
     box-shadow: 0px 5px 0px 0px rgba(0, 0, 0, 0.2);
 }
 
+.glue-button {
+    border: none;
+    background: var(--orange-light);
+    width: 4rem;
+    height: 4rem;
+    
+    outline:none;
+    box-shadow: 1px 1px 2px 0px var(--black);
+    line-height: 0;
+    
+    & .svg-icon{
+        width: 2rem;
+        height: 2rem;
+    }
+}
+
+.glue-button-right {
+    border-radius: 50% 0 0 50%;
+}
+
+.glue-button-left {
+    border-radius: 0 50% 50% 0;
+}
+
 .panel{
     background-color: var(--orange-dark);
     padding: 15px;

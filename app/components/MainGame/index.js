@@ -19,6 +19,7 @@ import * as _ from 'lodash';
 
 import { Witness } from '../Witness';
 import { TimeManager } from '../TimeManager';
+import MainGameSideMenu from '../MainGameSideMenu';
 import { Map } from '../Map';
 import { JSONReader } from '../JSONReader';
 import { ScenarioGenerator } from '../ScenarioGenerator';
@@ -347,6 +348,8 @@ export function MainGame(sources) {
 		resetSave$,
 	);
 
+	const sideMenu = isolate(MainGameSideMenu,'main-game')(sources);
+
 	// Vues nécessaires à la génération du vdom
 	const witnessesVDom$ = witnesses$.compose(mixCombine('DOM'));
 	const timeManagerVDom$ = timeManagerSinks.DOM;
@@ -359,7 +362,8 @@ export function MainGame(sources) {
 		mapVDom$,
 		props$,
 		datas$,
-		canTravel$
+		canTravel$,
+		sideMenuVDom$:sideMenu.DOM
 	});
 
 	const sinks = {

@@ -18,6 +18,10 @@
     background-image: url(images/ui/icons/icon-map.svg);
 }
 
+.icon-info:after {
+    background-image: url(images/ui/icons/icon-info.svg);
+}
+
 .icon-close:after {
     background-image: url(images/ui/icons/icon-close.svg);
 }

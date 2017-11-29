@@ -10,8 +10,11 @@ export default function view(sources){
         mapVDom$, 
         props$, 
         datas$, 
-        canTravel$
+        canTravel$,
+        sideMenuVDom$
     } = sources;
+
+    console.log(sideMenuVDom$);
 
     // VDom global
 	return xs.combine(
@@ -21,7 +24,8 @@ export default function view(sources){
         mapVDom$, 
         props$, 
         datas$, 
-        canTravel$
+        canTravel$,
+        sideMenuVDom$
     )
     .map(([
         currentLocation,
@@ -30,7 +34,8 @@ export default function view(sources){
         mapVDom, 
         props, 
         datas, 
-        canTravel
+        canTravel,
+        sideMenuVDom
     ]) =>
         <section className="main">
             <section className="main-content" >
@@ -48,6 +53,7 @@ export default function view(sources){
                                 </div>
                                 {canTravel ? mapVDom : datas.texts.travelDescription}
                             </section>
+                            {sideMenuVDom}
                         </section>
                         {/*<aside className="aside">
                         <div classNames="city-desc scrollable-panel panel">
