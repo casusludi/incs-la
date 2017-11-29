@@ -1,0 +1,69 @@
+import { html } from 'snabbdom-jsx';
+import xs from 'xstream';
+
+export default function view(sources){
+
+    const {
+        currentLocation$, 
+        witnessesVDom$, 
+        timeManagerVDom$, 
+        mapVDom$, 
+        props$, 
+        datas$, 
+        canTravel$
+    } = sources;
+
+    // VDom global
+	return xs.combine(
+        currentLocation$, 
+        witnessesVDom$, 
+        timeManagerVDom$, 
+        mapVDom$, 
+        props$, 
+        datas$, 
+        canTravel$
+    )
+    .map(([
+        currentLocation,
+        witnessesVDom,
+        timeManagerVDom, 
+        mapVDom, 
+        props, 
+        datas, 
+        canTravel
+    ]) =>
+        <section className="main">
+            <section className="main-content" >
+                <section className="city" style={{ backgroundImage: "url(" + currentLocation.image + ")" }} >
+                    <section className="city-content">
+                        <section className="col-main">
+                            <header className="header">
+                                {/* On affiche ici round + 1 car on commence au round n°0 et c'est plus explicite pour le joueur de commencer au round 1 */}
+                                <h1>{currentLocation.name + " - Round : " + (props.round + 1) + " - Successes : " + props.successesNumber}</h1>
+                                <button className="js-go-to-main-menu button-3d" type="button">Menu Principal</button>
+                            </header>
+                            <section className="col-main-body">
+                                <div className="witness-list" >
+                                    {witnessesVDom}
+                                </div>
+                                {canTravel ? mapVDom : datas.texts.travelDescription}
+                            </section>
+                        </section>
+                        {/*<aside className="aside">
+                        <div classNames="city-desc scrollable-panel panel">
+                            {currentLocation.desc}
+                        </div>
+                        <div classNames="panel scrollable-panel">
+                            {datas.texts.gameDescription}
+                        </div>
+                        <div classNames="game-time panel red-panel">
+                            {timeManagerVDom}
+                        </div>
+                        <button className="js-go-to-main-menu button-3d" type="button">Menu Principal</button>
+                    </aside>*/}
+                    </section>
+                </section>
+            </section>
+        </section>
+    );
+}

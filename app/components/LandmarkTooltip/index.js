@@ -68,11 +68,13 @@ function view(
 
 		<div className={`landmark-panel-wrapper ${tooltipInfos?'show':'hide'}`}>
 			<div className="landmark-panel-overlay js-hide-infos"></div>
-			{tooltipInfos?
+			
 			
 			<div className="landmark-panel js-landmark-panel panel" style={{
 
 			}}>
+				{tooltipInfos?
+				<div className="landmark-panel-content">
 				<div className="landmark-panel-header">  
 					<h3>{tooltipInfos.location.name}</h3>
 					<img className="js-hide-infos close-button"
@@ -81,13 +83,14 @@ function view(
 						width: "20px", 
 						padding: "3px",
 					}} />
-					
 				</div>
 				
 				<p className="scrollable-panel">{tooltipInfos.location.desc}</p>
 				{tooltipInfos.isReachableLandmark ? <button className="js-travel-to button" type="button">S'y rendre</button> : ""}
-			</div> 
-			:""}
+				</div>
+				:""}
+				</div> 
+			
 			</div>
 	).startWith("");
 

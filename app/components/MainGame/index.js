@@ -15,16 +15,19 @@ import dropRepeats from 'xstream/extra/dropRepeats';
 
 import * as _ from 'lodash';
 
-import { html } from 'snabbdom-jsx';
 
-import { Witness } from './Witness';
-import { TimeManager } from './TimeManager';
-import { Map } from './Map';
-import { JSONReader } from './JSONReader';
-import { ScenarioGenerator } from './ScenarioGenerator';
 
-import { makeLocationObject } from '../utils';
-import { mixMerge, mixCombine } from '../utils';
+import { Witness } from '../Witness';
+import { TimeManager } from '../TimeManager';
+import { Map } from '../Map';
+import { JSONReader } from '../JSONReader';
+import { ScenarioGenerator } from '../ScenarioGenerator';
+
+import { makeLocationObject } from '../../utils';
+import { mixMerge, mixCombine } from '../../utils';
+
+import { pathPresets$ } from './presets';
+import view from './view';
 
 export function MainGame(sources) {
 	// Récupération des sources
@@ -56,56 +59,6 @@ export function MainGame(sources) {
 	const scenarioGenDataJsonSinks = JSONReader({ HTTP, jsonPath$: xs.of("/scenarioGenData.json") });
 	const scenarioGenDataJsonRequest$ = scenarioGenDataJsonSinks.request;
 	const scenarioGenDataJsonResponse$ = scenarioGenDataJsonSinks.JSON;
-
-	// Presets pour la génération d'un scénario fixe (utile pour le débugage)
-	const pathPresets$ = xs.merge(
-		xs.of({ "id": "selectedLocationsIndexes", "val": [24, 15, 3, 13, 12, 7, 18, 16, 17] }),
-		xs.of({ "id": { "locationId": "nantes", "type": "witnesses" }, "val": [0, 1] }),
-		xs.of({ "id": { "locationId": "nantes", "type": "data" }, "val": 0 }),
-		xs.of({ "id": { "locationId": "nantes", "type": "witness1Ploy", "payload": "randomPloy" }, "val": 19 }),
-		xs.of({ "id": { "locationId": "nantes", "type": "witness2Ploy", "payload": "randomPloy" }, "val": 13 }),
-		xs.of({ "id": { "locationId": "nantes", "type": "dataPloy", "payload": "randomPloy" }, "val": 12 }),
-		xs.of({ "id": { "locationId": "la-chapelle-basse-mer", "type": "witnesses" }, "val": [0, 1] }),
-		xs.of({ "id": { "locationId": "la-chapelle-basse-mer", "type": "data" }, "val": 1 }),
-		xs.of({ "id": { "locationId": "la-chapelle-basse-mer", "type": "witness1Ploy", "payload": "randomPloy" }, "val": 14 }),
-		xs.of({ "id": { "locationId": "la-chapelle-basse-mer", "type": "witness2Ploy", "payload": "randomPloy" }, "val": 20 }),
-		xs.of({ "id": { "locationId": "la-chapelle-basse-mer", "type": "dataPloy", "payload": "randomPloy" }, "val": 25 }),
-		xs.of({ "id": { "locationId": "nozay", "type": "witnesses" }, "val": [0, 1] }),
-		xs.of({ "id": { "locationId": "nozay", "type": "data" }, "val": 0 }),
-		xs.of({ "id": { "locationId": "nozay", "type": "witness1Ploy", "payload": "randomPloy" }, "val": 21 }),
-		xs.of({ "id": { "locationId": "nozay", "type": "witness2Ploy", "payload": "randomPloy" }, "val": 10 }),
-		xs.of({ "id": { "locationId": "nozay", "type": "dataPloy", "payload": "randomPloy" }, "val": 16 }),
-		xs.of({ "id": { "locationId": "guemene", "type": "witnesses" }, "val": [0, 1] }),
-		xs.of({ "id": { "locationId": "guemene", "type": "data" }, "val": 0 }),
-		xs.of({ "id": { "locationId": "guemene", "type": "witness1Ploy", "payload": "randomPloy" }, "val": 16 }),
-		xs.of({ "id": { "locationId": "guemene", "type": "witness2Ploy", "payload": "randomPloy" }, "val": 11 }),
-		xs.of({ "id": { "locationId": "guemene", "type": "dataPloy", "payload": "randomPloy" }, "val": 22 }),
-		xs.of({ "id": { "locationId": "la-montagne", "type": "witnesses" }, "val": [0, 1] }),
-		xs.of({ "id": { "locationId": "la-montagne", "type": "data" }, "val": 0 }),
-		xs.of({ "id": { "locationId": "la-montagne", "type": "witness1Ploy", "payload": "randomPloy" }, "val": 25 }),
-		xs.of({ "id": { "locationId": "la-montagne", "type": "witness2Ploy", "payload": "randomPloy" }, "val": 2 }),
-		xs.of({ "id": { "locationId": "la-montagne", "type": "dataPloy", "payload": "randomPloy" }, "val": 25 }),
-		xs.of({ "id": { "locationId": "haute-goulaine", "type": "witnesses" }, "val": [0, 1] }),
-		xs.of({ "id": { "locationId": "haute-goulaine", "type": "data" }, "val": 0 }),
-		xs.of({ "id": { "locationId": "haute-goulaine", "type": "witness1Ploy", "payload": "randomPloy" }, "val": 19 }),
-		xs.of({ "id": { "locationId": "haute-goulaine", "type": "witness2Ploy", "payload": "randomPloy" }, "val": 23 }),
-		xs.of({ "id": { "locationId": "haute-goulaine", "type": "dataPloy", "payload": "randomPloy" }, "val": 3 }),
-		xs.of({ "id": { "locationId": "saint-nazaire", "type": "witnesses" }, "val": [1, 0] }),
-		xs.of({ "id": { "locationId": "saint-nazaire", "type": "data" }, "val": 0 }),
-		xs.of({ "id": { "locationId": "saint-nazaire", "type": "witness1Ploy", "payload": "randomPloy" }, "val": 8 }),
-		xs.of({ "id": { "locationId": "saint-nazaire", "type": "witness2Ploy", "payload": "randomPloy" }, "val": 26 }),
-		xs.of({ "id": { "locationId": "saint-nazaire", "type": "dataPloy", "payload": "randomPloy" }, "val": 9 }),
-		xs.of({ "id": { "locationId": "gorges", "type": "witnesses" }, "val": [1, 0] }),
-		xs.of({ "id": { "locationId": "gorges", "type": "data" }, "val": 0 }),
-		xs.of({ "id": { "locationId": "gorges", "type": "witness1Ploy", "payload": "randomPloy" }, "val": 10 }),
-		xs.of({ "id": { "locationId": "gorges", "type": "witness2Ploy", "payload": "randomPloy" }, "val": 1 }),
-		xs.of({ "id": { "locationId": "gorges", "type": "dataPloy", "payload": "randomPloy" }, "val": 10 }),
-		xs.of({ "id": { "locationId": "port-saint-pere", "type": "witnesses" }, "val": [1, 0] }),
-		xs.of({ "id": { "locationId": "port-saint-pere", "type": "data" }, "val": 0 }),
-		xs.of({ "id": { "locationId": "port-saint-pere", "type": "witness1Ploy", "payload": "randomPloy" }, "val": 23 }),
-		xs.of({ "id": { "locationId": "port-saint-pere", "type": "witness2Ploy", "payload": "randomPloy" }, "val": 5 }),
-		xs.of({ "id": { "locationId": "port-saint-pere", "type": "dataPloy", "payload": "randomPloy" }, "val": 20 }),
-	);
 
 	// Props pour la génération de scénario random
 	// pathLocationsNumber - nombre de lieux contenus dans le "chemin" généré / longueur du scénario
@@ -399,43 +352,15 @@ export function MainGame(sources) {
 	const timeManagerVDom$ = timeManagerSinks.DOM;
 	const mapVDom$ = mapSinks.DOM;
 
-	// VDom global
-	const DOMSink$ = xs.combine(currentLocation$, witnessesVDom$, timeManagerVDom$, mapVDom$, props$, datas$, canTravel$)
-		.map(([currentLocation, witnessesVDom, timeManagerVDom, mapVDom, props, datas, canTravel]) =>
-			<section className="main">
-				<section className="main-content" >
-					<section className="city" style={{ backgroundImage: "url(" + currentLocation.image + ")" }} >
-						<section className="city-content">
-							<section className="col-main">
-								<header className="header">
-									{/* On affiche ici round + 1 car on commence au round n°0 et c'est plus explicite pour le joueur de commencer au round 1 */}
-									<h1>{currentLocation.name + " - Round : " + (props.round + 1) + " - Successes : " + props.successesNumber}</h1>
-									<button className="js-go-to-main-menu button-3d" type="button">Menu Principal</button>
-								</header>
-								<section className="col-main-body">
-									<div className="witness-list" >
-										{witnessesVDom}
-									</div>
-									{canTravel ? mapVDom : datas.texts.travelDescription}
-								</section>
-							</section>
-							{/*<aside className="aside">
-							<div classNames="city-desc scrollable-panel panel">
-								{currentLocation.desc}
-							</div>
-							<div classNames="panel scrollable-panel">
-								{datas.texts.gameDescription}
-							</div>
-							<div classNames="game-time panel red-panel">
-								{timeManagerVDom}
-							</div>
-							<button className="js-go-to-main-menu button-3d" type="button">Menu Principal</button>
-						</aside>*/}
-						</section>
-					</section>
-				</section>
-			</section>
-		);
+	const DOMSink$ = view({
+		currentLocation$,
+		witnessesVDom$,
+		timeManagerVDom$,
+		mapVDom$,
+		props$,
+		datas$,
+		canTravel$
+	});
 
 	const sinks = {
 		DOM: DOMSink$,

@@ -1,6 +1,8 @@
 .landmark-panel {
     margin: 2rem;
     z-index: 6;
+    transition: transform 0.3s ease-in;
+    transform: translateY(2rem);
 }
 
 .landmark-panel .button{
@@ -34,12 +36,22 @@
     align-items: center;
    
     &.show {
-        animation: fade-in 0.3s ease-in-out;
+        animation: fade-in 0.3s ease-in;
+
+        & .landmark-panel{
+            transform: translateY(0);
+        }
     }
 
     &.hide {
-        animation: fade-out 0.2s ease-in-out;
+        animation: fade-out 0.2s ease-in;
+
         transform: translateX(-10000px);
+        & .landmark-panel{
+            opacity: 0;
+            transform: translateY(2rem);
+            
+        }
     }
 }
 
@@ -65,6 +77,7 @@
 @keyframes fade-out {
   0% {
     opacity: 1;
+    transform: translateX(0);
 
   }
   99% {
