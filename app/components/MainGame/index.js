@@ -302,9 +302,6 @@ export function MainGame(sources) {
 				return { pathname: "/game", type: 'push', state: { props: { round: props.round, successesNumber: props.successesNumber } } }
 		});
 
-	// Redirection vers le menu principal quand le joueur clique sur le bouton menu
-	const menuRouter$ = DOM.select('.js-go-to-main-menu').events('click').map(goToMainMenu => "/");
-
 	// Emet un nouvel objet de sauvegarde chaque fois que des données à sauvegarder sont modifiées
 	// Le driver de stockage local fonctionne sous la forme de clé-valeur c'est pourquoi on converti l'objet de sauvegarde en string à l'aide de JSON.stringify
 	// On utilise la clé 'save'
@@ -330,10 +327,18 @@ export function MainGame(sources) {
 			})
 		);
 
+	// Side menu
+	const sideMenu = isolate(MainGameSideMenu,'main-game')({
+		DOM,
+		props$: xs.of({
+			location$: currentLocation$
+		})
+	});
+
 	// Redirections
 	const routerSink$ = xs.merge(
 		endGameRouter$, // Lorsqu'une partie s'achève
-		menuRouter$,	// Lorsque le joueur veut se rendre au menu
+		sideMenu.router,	// Lorsque le joueur veut se rendre au menu
 	);
 
 	// Random requests
@@ -348,7 +353,7 @@ export function MainGame(sources) {
 		resetSave$,
 	);
 
-	const sideMenu = isolate(MainGameSideMenu,'main-game')(sources);
+	
 
 	// Vues nécessaires à la génération du vdom
 	const witnessesVDom$ = witnesses$.compose(mixCombine('DOM'));

@@ -2,13 +2,31 @@ import xs from 'xstream';
 
 export default function model(props$,action$){
 
-    return props$.map( props => 
-        action$.map(
-            action => ({
-                ...props,
-                open: action.value
+    const openMenuAction$ = action$.filter(o => o.type === "open-menu");
+    const gotoAction$ = action$.filter(o => o.type === "goto");
+
+
+    return {
+        router$: gotoAction$.map(o => o.value),
+        state$: props$.map( props => 
+
+            xs.combine(
+                openMenuAction$,
+                props.location$
+            ).map(([menu,location]) => 
+                ({
+                    open:menu.value,
+                    location
+                })
+            ) 
+            .startWith({
+                open:false,
+                location:{},
+                ...props
             })
-        ).startWith(props)
-    ).flatten()
-    .remember();
+        ).flatten()
+        .remember()
+    }
+
+  
 }

@@ -6,17 +6,17 @@ import view from './view';
 
 export default function MainGameSideMenu(sources){
 
-    const {DOM} = sources;
-    const props$ = xs.of({open:false});
+    const {DOM,props$=xs.of({location$:xs.empty()})} = sources;
 
     const actions$ = intent(DOM);
-    const state$ = model(props$,actions$);
+    const {state$, router$} = model(xs.merge(props$),actions$);
 
     const vdom$ = view(state$);
 
 
     const sinks = {
-        DOM: vdom$
+        DOM: vdom$,
+        router: router$
     }
 
     return sinks;

@@ -7,10 +7,12 @@ export default function view(state$){
     return state$.map(state => 
         <div className={`game-side-menu ${state.open?'show':'hide'}`}>
             <div className="game-side-menu-overlay"></div>
-            <button className="game-side-menu-button-open glue-button glue-button-right js-button-open" type="button" ><i className="svg-icon icon-info" /></button>
+            <button className="game-side-menu-button-open glue-button glue-button-right js-action-open-menu" type="button" ><i className="svg-icon icon-info" /></button>
             <div className="game-side-menu-content">
-                <button className="game-side-menu-button-close glue-button glue-button-left js-button-close" type="button" ><i className="svg-icon icon-close" /></button>
-                Pouet {state.open}
+                <button className="game-side-menu-button-close glue-button glue-button-left js-action-close-menu" type="button" ><i className="svg-icon icon-close" /></button>
+                <button className="js-action-go-main-menu button" type="button">Menu Principal</button>
+                
+                <p>{state.location.desc}</p>
             </div>
         </div>        
     )
