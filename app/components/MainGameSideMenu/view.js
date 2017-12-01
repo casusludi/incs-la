@@ -12,7 +12,7 @@ export default function view(state$){
                 <button className="game-side-menu-button-close glue-button glue-button-left js-action-close-menu" type="button" ><i className="svg-icon icon-close" /></button>
                 <button className="js-action-go-main-menu button" type="button">Menu Principal</button>
                 
-                <p>{state.location.desc}</p>
+                <p className="side-menu-panel">{state.location.desc}</p>
             </div>
         </div>        
     )

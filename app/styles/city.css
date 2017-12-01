@@ -14,15 +14,6 @@ html, body {overflow:hidden; }
     background-size: cover;
     background-position: center;
 
-    & header{
-       & h1{ 
-           display: inline-block;
-           margin: 20px 15px;
-           color: #333333;
-           border-bottom: 4px solid #333333;
-       } 
-    }
-
     & footer{
         flex: 0 1 auto;
         display: flex;
