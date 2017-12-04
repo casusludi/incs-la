@@ -48,7 +48,7 @@ export default function view(sources){
                             </header>
                             <section className="col-main-body">
                                 <div className="witness-list" >
-                                    <div className={`investigate-info ${canTravel?'hide':''}`}> 
+                                    <div className={`investigate-info ${canTravel?'':''}`}> 
                                     <div className="panel">{datas.texts.travelDescription}</div>
                                     </div>
                                     {witnessesVDom}

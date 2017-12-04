@@ -25,7 +25,7 @@ function model(sources) {
   ).flatten();
 
   return xs.combine(elapsedTime$, datas$).map(([elapsedTime, datas]) => {
-    console.log(elapsedTime);
+
     const elapsedHours = parseInt(elapsedTime.curr);
     const elapsedMinutes = (elapsedTime.curr - elapsedHours) * 60;
 

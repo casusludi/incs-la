@@ -9,6 +9,10 @@
         width: 2rem;
         height: 2rem;
     }
+
+     &.buzz {
+            background-color: red;
+    }
 }
 
 .travel-panel-button-close {

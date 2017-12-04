@@ -41,7 +41,7 @@ function intent(DOM) {
 }
 
 // Beaucoup d'entrées et de sorties dans ce modèle là. Je vais essayer d'expliquer ça au mieux.
-function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progression$, path$, windowResize$, datas$,canTravel$) {
+function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progression$, path$, windowResize$, datas$, canTravel$) {
     // Emet un array d'objet contenant les coordonnées associées à chaque lieu en pixel. Le calcul est effectué à partir des coordonnées latitude-longitude de chaque lieu fournies dans le .json ainsi que des coordonnées en pixels de 2 lieux "témoins".
     const pixelCoordinates$ = datas$.map(datas => {
         // Ids des 2 lieux témoins
@@ -208,16 +208,26 @@ function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progres
         return { x1, y1, x2, y2 };
     });
 
+    // le buzz s'active la premiere fois que le voyage est possible
+    // et se desactive quand on joue avec l'ouverture de la carte
+    // Et celà jusqu'a la prochaine ville.
+    const buzz$ = canTravel$
+        .map( canTravel => 
+            showMap$.mapTo(false).drop(1).startWith(true)
+        )
+        .flatten()
+        .remember();
+
     // On retourne pas mal de choses mais c'est utile pour après t'inquiète. Après je reconnais que c'est pas super élégant.
-    return { showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, changeLocationDelayed$ };
+    return { showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, changeLocationDelayed$, buzz$ };
 }
 
 export function Map(sources) {
     const { DOM, canTravel$, windowResize$, currentLocation$, currentLocationLinksIds$, progression$, path$, datas$ } = sources;
 
     const action$ = intent(DOM);
-    const { showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, changeLocationDelayed$ } = model(DOM, action$, currentLocation$, currentLocationLinksIds$, progression$, path$, windowResize$, datas$,canTravel$);
-    const vdom$ = view(DOM,windowResize$,showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, datas$,canTravel$);
+    const { showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, changeLocationDelayed$, buzz$ } = model(DOM, action$, currentLocation$, currentLocationLinksIds$, progression$, path$, windowResize$, datas$,canTravel$);
+    const vdom$ = view({DOM,windowResize$,showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, datas$,canTravel$,buzz$});
 
     const sinks = {
         DOM: vdom$,
