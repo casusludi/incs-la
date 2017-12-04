@@ -62,7 +62,6 @@
 			"endLose": "images/Nantes-sanstour.jpg",
 			"endWin": "images/Nantes-tour.jpg",
 			"map": "images/carte/carte.png",
-			"closeMapIcon": "images/carte/closeIcon.svg",
 			"currentLocationLandmark": "images/carte/current-location-landmark.svg",
 			"reachableLandmark": "images/carte/reachable-landmark.svg",
 			"unreachableLandmark": "images/carte/unreachable-landmark.svg"

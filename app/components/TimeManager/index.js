@@ -45,14 +45,15 @@ function model(sources) {
     */
 
     return tween({
-      from: elapsedTime.last,
-      to: elapsedTime.curr,
+      from: 0,
+      to: 1,
       ease: tween.exponential.easeIn,
       duration: 300,
-    }).map( t => ({
+    }).debug().map( t => ({
       totalTime: datas.settings.totalTime,
+      buzz: t < 1,
       elapsedTime: {
-        raw: t,
+        raw: elapsedTime.last+t*(elapsedTime.curr-elapsedTime.last), 
         hours: elapsedHours,
         minutes: elapsedMinutes,
         formatted: _.padStart(elapsedHours, 2, '0') + "h" + _.padStart(elapsedMinutes, 2, '0'),
@@ -69,8 +70,8 @@ function model(sources) {
 
 function view(state$) {
 
-  return state$.map(state =>
-    <div className="time-viewer">
+  return state$.debug().map(state =>
+    <div className={`time-viewer ${state.buzz?'buzz':''}`}>
       {
         svg({
           attrs: {
@@ -81,7 +82,15 @@ function view(state$) {
           }
         },
         [
-          
+          svg.circle({
+            attrs: {
+              cx: 50,
+              cy: 50,
+              r: 48,
+              fill: "#F7941D",
+              stroke: "none"
+            }
+          }),
           svg.path({
             attrs: {
               d: describeArc(50, 50, 50, 0, 360 * state.elapsedTime.raw / state.totalTime),
@@ -101,6 +110,7 @@ function view(state$) {
           })
         ])
       }
+      <div className="time-viewer-label">{state.remainingTime.formatted}</div>
     </div>
   );
 }

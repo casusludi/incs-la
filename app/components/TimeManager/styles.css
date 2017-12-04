@@ -1,5 +1,37 @@
+@import 'app/styles/_variables';
+
 .time-viewer {
     width: 4rem;
     height: 4rem;
     margin: 0.5rem;
+    position: relative;
+}
+
+.time-viewer.buzz {
+    animation: buzz 0.4s ease-in;
+}
+
+.time-viewer-label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    color: var(--white);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+@keyframes buzz {
+  0% {
+    transform: scale(1);
+
+  }
+  25% {
+    transform: scale(1.4);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
