@@ -13,6 +13,7 @@ export default function view(state$){
                 <button className="js-action-go-main-menu button" type="button">Menu Principal</button>
                 
                 <p className="side-menu-panel">{state.location.desc}</p>
+                <p className="side-menu-panel">{state.datas.texts.gameDescription}</p>
             </div>
         </div>        
     )

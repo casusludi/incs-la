@@ -12,16 +12,19 @@ export default function model(props$,action$){
 
             xs.combine(
                 openMenuAction$,
-                props.location$
-            ).map(([menu,location]) => 
+                props.location$,
+                props.datas$
+            ).map(([menu,location,datas]) => 
                 ({
                     open:menu.value,
-                    location
+                    location,
+                    datas
                 })
             ) 
             .startWith({
                 open:false,
                 location:{},
+                datas:{texts:{}},
                 ...props
             })
         ).flatten()

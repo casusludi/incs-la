@@ -83,6 +83,7 @@ export function MainGame(sources) {
 
 	// Création des proxys pour certains flux (causé par l'interdépendance des streams - a = f(b) et b = f(a))
 	const changeLocationProxy$ = xs.create();
+	const canTravelProxy$ = xs.create();
 	const correctNextChoosenLocationProxy$ = xs.create();
 
 	// Ce flux emet un entier correspondant au nombre de villes correctes parcourues par le joueur
@@ -100,7 +101,7 @@ export function MainGame(sources) {
 	// Il est composé de la position de départ du joueur 'currentLocationInit$' ainsi que des éventuels changement de lieu émits par 'changeLocationProxy$'
 	const currentLocation$ = xs.merge(
 		currentLocationInit$,
-		changeLocationProxy$,
+		changeLocationProxy$
 	).remember();
 
 	// Emet le lieu précédent (null si le joueur est dans le premier lieu)
@@ -182,7 +183,7 @@ export function MainGame(sources) {
 	);
 
 	// Créer le composant représentant la carte
-	const mapSinks = Map({ DOM, windowResize$, currentLocation$, currentLocationLinksIds$, progression$, path$, datas$ });
+	const mapSinks = Map({ DOM, canTravel$: canTravelProxy$, windowResize$, currentLocation$, currentLocationLinksIds$, progression$, path$, datas$ });
 
 	// Flux émettant l'id du nouveau lieu à chaque changement
 	const changeLocation$ = mapSinks.changeLocation$;
@@ -251,6 +252,7 @@ export function MainGame(sources) {
 			changeLocation$.mapTo(false),
 		).startWith(props.canTravel).compose(dropRepeats())
 	).flatten().remember();
+	canTravelProxy$.imitate(canTravel$);
 
 	/* DEPRECATED
 	const showDestinationLinks$ = props$.map(props =>
@@ -328,10 +330,11 @@ export function MainGame(sources) {
 		);
 
 	// Side menu
-	const sideMenu = isolate(MainGameSideMenu,'main-game')({
+	const sideMenu = isolate(MainGameSideMenu, 'main-game')({
 		DOM,
 		props$: xs.of({
-			location$: currentLocation$
+			location$: currentLocation$,
+			datas$
 		})
 	});
 
@@ -353,7 +356,7 @@ export function MainGame(sources) {
 		resetSave$,
 	);
 
-	
+
 
 	// Vues nécessaires à la génération du vdom
 	const witnessesVDom$ = witnesses$.compose(mixCombine('DOM'));
@@ -368,7 +371,7 @@ export function MainGame(sources) {
 		props$,
 		datas$,
 		canTravel$,
-		sideMenuVDom$:sideMenu.DOM
+		sideMenuVDom$: sideMenu.DOM
 	});
 
 	const sinks = {

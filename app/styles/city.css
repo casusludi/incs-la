@@ -33,6 +33,7 @@ html, body {overflow:hidden; }
 .col-main-body {
     display: flex;
     flex: 1;
+    position: relative;
 }
 
 .aside{
@@ -107,11 +108,7 @@ html, body {overflow:hidden; }
 
     }
 
-    .witness-list {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 4rem;
+    .city-more {
+        display: none;
     }
 }

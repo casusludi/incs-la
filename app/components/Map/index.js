@@ -33,12 +33,15 @@ function intent(DOM) {
             DOM.select('.svgMapTag').events('click').filter(e => e.target.className.baseVal === "svgMapTag")*/
         ).map(value => ({ type: "showMap" })),
         DOM.select('.js-hide-infos').events('click').map(value => ({ type: "hideInfos" })),
-        DOM.select('.js-travel-to').events('click').map(value => ({ type: "travelTo" })),
+        /*DOM.select('.js-travel-to')
+            .events('click')
+            .map(value => canTravel$.map( canTravel => canTravel?{ type: "travelTo" }:{type:"none"}))
+            .flatten().debug('lool')*/
     );
 }
 
 // Beaucoup d'entrées et de sorties dans ce modèle là. Je vais essayer d'expliquer ça au mieux.
-function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progression$, path$, windowResize$, datas$) {
+function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progression$, path$, windowResize$, datas$,canTravel$) {
     // Emet un array d'objet contenant les coordonnées associées à chaque lieu en pixel. Le calcul est effectué à partir des coordonnées latitude-longitude de chaque lieu fournies dans le .json ainsi que des coordonnées en pixels de 2 lieux "témoins".
     const pixelCoordinates$ = datas$.map(datas => {
         // Ids des 2 lieux témoins
@@ -146,7 +149,7 @@ function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progres
     */
 
     // On créer l'élément affichant les informations d'un lieu lors du clique sur le landmark selectionné (tooltip)
-    const landmarkTooltipSink = LandmarkTooltip({ DOM, windowResize$, landmarks$, datas$, showMap$ });
+    const landmarkTooltipSink = LandmarkTooltip({ DOM, landmarks$, datas$, canTravel$ });
 
     // Le flux émettant à chaque changement de lieu (le joueur change de lieu en cliquant sur le bouton de déplacement sur le tooltip, on récupère donc le sink correspondant du composant tooltip)
     const changeLocation$ = landmarkTooltipSink.changeLocation$;
@@ -210,11 +213,11 @@ function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progres
 }
 
 export function Map(sources) {
-    const { DOM, windowResize$, currentLocation$, currentLocationLinksIds$, progression$, path$, datas$ } = sources;
+    const { DOM, canTravel$, windowResize$, currentLocation$, currentLocationLinksIds$, progression$, path$, datas$ } = sources;
 
     const action$ = intent(DOM);
-    const { showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, changeLocationDelayed$ } = model(DOM, action$, currentLocation$, currentLocationLinksIds$, progression$, path$, windowResize$, datas$);
-    const vdom$ = view(DOM,windowResize$,showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, datas$);
+    const { showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, changeLocationDelayed$ } = model(DOM, action$, currentLocation$, currentLocationLinksIds$, progression$, path$, windowResize$, datas$,canTravel$);
+    const vdom$ = view(DOM,windowResize$,showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, datas$,canTravel$);
 
     const sinks = {
         DOM: vdom$,

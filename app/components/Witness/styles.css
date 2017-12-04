@@ -5,6 +5,7 @@
     display: flex;
     flex-direction: column;
     max-width: 400px;
+    min-width: 400px;
 }
 
 .witness {
@@ -38,7 +39,7 @@
     box-shadow: 1px 1px 2px 0px var(--black);
     min-height: 2rem;
     display: flex;
-    align-items: center;
+    align-items: stretch;
     height: 7rem;
     overflow: hidden;
     width: 100%;
@@ -51,6 +52,8 @@
 
 .witness-info {
     padding: 0 1rem 0 4.5rem;
+    display: flex;
+    align-items: center;
 }
 
 .witness-action {
@@ -58,9 +61,36 @@
     border: none;
     background-color: var(--orange-light);
     cursor: pointer;
-    height: 100%;
     width: 100%;
     &:hover {
         background-color: var(--white); 
+    }
+}
+
+@media (max-width: 800px) {
+
+    .witness-list {
+       /* position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 4rem;*/
+        min-width: 100%;
+        min-height: 60%;
+    }
+
+    .witness-avatar {
+        width: 4rem;
+        height: 4rem;
+    }
+
+    .witness-cartdridge {
+        height: auto;
+        min-height: 4rem;
+        border-radius: 2rem 1rem 1rem 2rem;
+    }
+
+    .witness {
+        padding: 0.3rem;
     }
 }

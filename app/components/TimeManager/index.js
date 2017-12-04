@@ -49,7 +49,7 @@ function model(sources) {
       to: 1,
       ease: tween.exponential.easeIn,
       duration: 300,
-    }).debug().map( t => ({
+    }).map( t => ({
       totalTime: datas.settings.totalTime,
       buzz: t < 1,
       elapsedTime: {
@@ -70,7 +70,7 @@ function model(sources) {
 
 function view(state$) {
 
-  return state$.debug().map(state =>
+  return state$.map(state =>
     <div className={`time-viewer ${state.buzz?'buzz':''}`}>
       {
         svg({

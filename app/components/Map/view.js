@@ -52,8 +52,7 @@ export function view(DOM,windowResize$,showMap$, landmarks$, landmarkTooltipSink
         mapViewer.DOM, 
         showMap$,
         tooltipInfosVdom$
-    )
-        .map(([
+    ).map(([
             mapViewerDOM, 
             showMap,
             tooltipInfosVdom

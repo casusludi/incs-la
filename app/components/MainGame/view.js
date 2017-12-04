@@ -48,9 +48,18 @@ export default function view(sources){
                             </header>
                             <section className="col-main-body">
                                 <div className="witness-list" >
+                                    <div className={`investigate-info ${canTravel?'hide':''}`}> 
+                                    <div className="panel">{datas.texts.travelDescription}</div>
+                                    </div>
                                     {witnessesVDom}
                                 </div>
-                                {canTravel ? mapVDom : datas.texts.travelDescription}
+                                
+                                    
+                                <div className="city-more">
+                                    <div className="city-desc panel">{currentLocation.desc}</div>
+                                   
+                                </div>
+                                {mapVDom}
                             </section>
                             {sideMenuVDom}
                         </section>

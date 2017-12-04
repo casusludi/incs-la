@@ -14,17 +14,20 @@ import {
 Ce composant représente la fenêtre qui s'affiche à côté d'un landmark quand celui-ci est sélectionné par le joueur. Il affiche des informations telles que le nom du lieu ainsi que sa description. Dans le cas d'un lieu accessible par le joueur il présente de plus un bouton permettant de s'y rendre.
 */
 
-function intent(DOM){
+function intent(DOM,canTravel$){
 	return xs.merge(
 		xs.merge(
 			DOM.select('.js-hide-infos').events('click'), // Clique sur la croix pour fermer le tooltip
 			DOM.select('.map').events('click').filter(e => e.target.className.baseVal === "mapImageTag") // Clique en dehors du tooltip sur la carte (magouille avec la propagation d'évenements - voir composant Map)
 		).map(value => ({type: "hideInfos"})),
-		DOM.select('.js-travel-to').events('click').map(value => ({type: "travelTo"})), // Clique sur le bouton de voyage
+		
+		canTravel$.map( canTravel => canTravel?
+			DOM.select('.js-travel-to').events('click').mapTo({ type: "travelTo" })
+			:xs.empty()).flatten() // Clique sur le bouton de voyage
 	);
 }
 
-function model(action$, DOM, landmarks$, showMap$, datas$){
+function model(action$, DOM, landmarks$, datas$){
 	// Flux emettant les données d'un lieu chaque fois que son landmark correspondant est sélectionné
 	const landmarksTooltipInfos$ = landmarks$.compose(mixMerge('tooltipInfos$'));
 
@@ -39,8 +42,7 @@ function model(action$, DOM, landmarks$, showMap$, datas$){
 		landmarksTooltipInfos$, // Données du lieu sélectionné émisent
 		xs.merge( // Différentes raisons pour lesquelles le tooltip est amené à être fermé :
 			action$.filter(action => action.type === "hideInfos"),	// Clique sur la croix de fermeture du tooltip
-			changeLocation$,										// Lorsque le joueur clique sur le bouton de déplacement (le tooltip se ferme pour laisser place à l'animation de voyage)
-			showMap$.filter(showMap => showMap === false),			// Lorsque la carte est fermée
+			changeLocation$										// Lorsque le joueur clique sur le bouton de déplacement (le tooltip se ferme pour laisser place à l'animation de voyage)
 		).mapTo(null),
 	);
 	
@@ -50,20 +52,20 @@ function model(action$, DOM, landmarks$, showMap$, datas$){
 
 function view(
 		DOM, 
-		windowResize$, 
 		tooltipInfos$, 
-		datas$
+		datas$,
+		canTravel$
 	){
-	// On utilise windowResize$ du driver windowResize pour recalcule le VDom lorsque la fenêtre du navigateur est redimensionnée
+
 	const vdom$ = xs.combine(
-		windowResize$, 
 		tooltipInfos$, 
-		datas$
+		datas$,
+		canTravel$
 	)
 	.map(([
-		windowResize, 
 		tooltipInfos, 
-		datas
+		datas,
+		canTravel
 	]) =>
 
 		<div className={`landmark-panel-wrapper ${tooltipInfos?'show':'hide'}`}>
@@ -81,7 +83,9 @@ function view(
 				</div>
 				
 				<p className="scrollable-panel">{tooltipInfos.location.desc}</p>
-				{tooltipInfos.isReachableLandmark ? <button className="js-travel-to button" type="button">S'y rendre</button> : ""}
+				{tooltipInfos.isReachableLandmark ? 
+						<button className={`js-travel-to button ${canTravel?"":" button-disabled"}`} type="button">{canTravel?`S'y rendre `:`Vous devez enquêter !`}</button> 
+					: ""}
 				</div>
 				:""}
 				</div> 
@@ -93,11 +97,11 @@ function view(
 }
 
 export function LandmarkTooltip(sources) {
-	const {DOM, windowResize$, landmarks$, datas$, showMap$} = sources;
+	const {DOM,  landmarks$, datas$, canTravel$} = sources;
 
-	const action$ = intent(DOM);
-	const {changeLocation$, tooltipInfos$} = model(action$, DOM, landmarks$, showMap$, datas$);
-	const vdom$ = view(DOM, windowResize$, tooltipInfos$, datas$);
+	const action$ = intent(DOM,canTravel$);
+	const {changeLocation$, tooltipInfos$} = model(action$, DOM, landmarks$, datas$);
+	const vdom$ = view(DOM, tooltipInfos$, datas$,canTravel$);
 
 	const sinks = {
 		DOM: vdom$,
