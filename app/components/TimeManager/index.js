@@ -43,10 +43,16 @@ function model(sources) {
       formatted: 02h30
     Dans les faits peu de ces données sont réellement utilisées. (mais on sait jamais)
     */
-    return {
+
+    return tween({
+      from: elapsedTime.last,
+      to: elapsedTime.curr,
+      ease: tween.exponential.easeIn,
+      duration: 300,
+    }).map( t => ({
       totalTime: datas.settings.totalTime,
       elapsedTime: {
-        raw: elapsedTime.curr,
+        raw: t,
         hours: elapsedHours,
         minutes: elapsedMinutes,
         formatted: _.padStart(elapsedHours, 2, '0') + "h" + _.padStart(elapsedMinutes, 2, '0'),
@@ -57,8 +63,8 @@ function model(sources) {
         minutes: remainingMinutes,
         formatted: _.padStart(remainingHours, 2, '0') + "h" + _.padStart(remainingMinutes, 2, '0'),
       }
-    }
-  }).remember();
+    }))
+  }).flatten().remember();
 }
 
 function view(state$) {

@@ -10,15 +10,16 @@
     font-size: 1.5rem;
 }
 
-.landmark-panel .close-button {
-
+.landmark-panel .icon-close {
+    width: 1.5rem;
+    height: 1.5rem;
 }
 
 .landmark-panel-header {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
 
     & h3 {
         margin: 0;

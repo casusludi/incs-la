@@ -77,12 +77,7 @@ function view(
 				<div className="landmark-panel-content">
 				<div className="landmark-panel-header">  
 					<h3>{tooltipInfos.location.name}</h3>
-					<img className="js-hide-infos close-button"
-					src={datas.settings.images.closeMapIcon} 
-					style={{
-						width: "20px", 
-						padding: "3px",
-					}} />
+					<i className="js-hide-infos svg-icon icon-close" />
 				</div>
 				
 				<p className="scrollable-panel">{tooltipInfos.location.desc}</p>
