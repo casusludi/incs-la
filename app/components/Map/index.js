@@ -19,6 +19,7 @@ import { makeLocationObject } from '../../utils';
 import * as _ from 'lodash';
 
 import {view} from './view';
+import { fail } from 'assert';
 
 /*
 Composant permettant l'affichage d'une carte autorisant le joueur à voyager vers certaines destinations de façon visuelle.
@@ -216,6 +217,8 @@ function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progres
             showMap$.mapTo(false).drop(1).startWith(true)
         )
         .flatten()
+        .drop(1)
+        .startWith(false)
         .remember();
 
     // On retourne pas mal de choses mais c'est utile pour après t'inquiète. Après je reconnais que c'est pas super élégant.
