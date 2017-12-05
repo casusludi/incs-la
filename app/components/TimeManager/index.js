@@ -10,7 +10,18 @@ import tween from 'xstream/extra/tween'
 Composant dont le but est de gérer le temps ingame, d'en faire le décompte en fonction des actions effectuées par le joueur.
 */
 
-function model(sources) {
+
+function intent({DOM}){
+
+  const timeViewer = DOM.select('.time-viewer');
+  return xs.merge(
+      timeViewer.events('animationend'),
+      timeViewer.events('animationcancel')
+    )
+    .mapTo({type:'buzz', value:false});
+}
+
+function model(sources,action$) {
   const { DOM, props$, datas$, changeLocation$, questionnedWitness$ } = sources;
 
   // Représente le temps écoulé compté de façon croissante. Une heure étant égale à 1. (ex: 2h30 = 2.5)
@@ -44,14 +55,21 @@ function model(sources) {
     Dans les faits peu de ces données sont réellement utilisées. (mais on sait jamais)
     */
 
-    return tween({
+    const buzzState$ = action$
+      .filter( o => o.type === "buzz")
+      .mapTo(false)
+      .startWith(true);
+
+    const t$ = tween({
       from: 0,
       to: 1,
       ease: tween.exponential.easeIn,
       duration: 300,
-    }).map( t => ({
+    })
+    
+    return xs.combine(t$,buzzState$).map(([t,buzzState]) => ({
       totalTime: datas.settings.totalTime,
-      buzz: t < 1,
+      buzz: buzzState,
       elapsedTime: {
         raw: elapsedTime.last+t*(elapsedTime.curr-elapsedTime.last), 
         hours: elapsedHours,
@@ -65,6 +83,10 @@ function model(sources) {
         formatted: _.padStart(remainingHours, 2, '0') + "h" + _.padStart(remainingMinutes, 2, '0'),
       }
     }))
+
+
+
+
   }).flatten().remember();
 }
 
@@ -142,7 +164,8 @@ function describeArc(x, y, radius, startAngle, endAngle) {
 }
 
 export function TimeManager(sources) {
-  const state$ = model(sources);
+  const action$ = intent(sources);
+  const state$ = model(sources,action$);
   const vdom$ = view(state$);
 
   const sinks = {

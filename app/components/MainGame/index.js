@@ -173,7 +173,7 @@ export function MainGame(sources) {
 				.uniq()
 				.filter((o) => o !== currentLocation.id)
 				.value()
-		);
+		).compose(dropRepeats());
 
 	// Map les ids des liens récupérés ci-dessus avec les objets de lieu complet contenus dans le .json de données
 	const currentLocationLinks$ = xs.combine(currentLocationLinksIds$, datas$).map(([currentLocationLinksIds, datas]) =>
@@ -183,7 +183,7 @@ export function MainGame(sources) {
 	);
 
 	// Créer le composant représentant la carte
-	const mapSinks = Map({ DOM, canTravel$: canTravelProxy$, windowResize$, currentLocation$, currentLocationLinksIds$, progression$, path$, datas$ });
+	const mapSinks = Map({ DOM, canTravel$: canTravelProxy$.startWith(false), windowResize$, currentLocation$, currentLocationLinksIds$, progression$, path$, datas$ });
 
 	// Flux émettant l'id du nouveau lieu à chaque changement
 	const changeLocation$ = mapSinks.changeLocation$;
@@ -251,7 +251,7 @@ export function MainGame(sources) {
 			questionnedWitness$.mapTo(true),
 			changeLocation$.mapTo(false),
 		).startWith(props.canTravel).compose(dropRepeats())
-	).flatten().remember();
+	).flatten();
 	canTravelProxy$.imitate(canTravel$);
 
 	/* DEPRECATED

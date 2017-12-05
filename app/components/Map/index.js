@@ -76,7 +76,7 @@ function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progres
     });
 
     // Pour chaque lieu on va créer un repère sur la carte (ou "landmark"). Les props de chaque landmark sont : ses coordonnées pixels, si ce landmark représente le lieu où le joueur se trouve ('isCurrentLocation') ou un lieu accessible par le joueur ('isReachableLandmark'). Ces 2 derniers booléens permettent de déterminer l'assets à afficher pour le landmark (un landmark gris, vert ou rouge). De plus on va trier les landmarks selon leur latitude (y) ce qui permettra un affichage sur la carte de haut en bas. Ainsi les landmarks bas se retrouveront par dessus les landmarks hauts.
-    const landmarksProps$ = xs.combine(currentLocation$, currentLocationLinksIds$.debug(), pixelCoordinates$)
+    const landmarksProps$ = xs.combine(currentLocation$, currentLocationLinksIds$, pixelCoordinates$)
         .map(([currentLocation, currentLocationLinksIds, pixelCoordinates]) => {
 
 

@@ -186,7 +186,7 @@
 		"clues":{
 			"witnesses":[
 				{"text": "Il parlait de la dernière lettre de l'alphabet.", "lures": ["saint-nazaire"]},
-				{"text": "Il souhaitait visiter une [carrière](http://data.loire-atlantique.fr/donnees/detail/chateaux-et-monuments-musees-et-ecomusees-grandes-entreprises-et-artisanat-en-loire-atlantiq/?tx_icsoddatastore_pi1[page]=9) .", "lures": []}
+				{"text": "Il souhaitait visiter une [carrière](http://data.loire-atlantique.fr/donnees/detail/chateaux-et-monuments-musees-et-ecomusees-grandes-entreprises-et-artisanat-en-loire-atlantiq/?tx_icsoddatastore_pi1[page]=9).", "lures": []}
 			],
 			"data":[
 				{"text": "Krrrpppt… Supekkt detek… brrrtfrrr…zzz… ERROR 4508…", "lures": []}

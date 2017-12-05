@@ -22,7 +22,7 @@ export default function view(sources){
         mapVDom$, 
         props$, 
         datas$, 
-        canTravel$,
+        canTravel$.startWith(false),
         sideMenuVDom$
     )
     .map(([
