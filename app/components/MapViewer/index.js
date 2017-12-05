@@ -108,7 +108,6 @@ function intent(comp, windowResize$) {
 function moveTo({ x, y, contentBounds, wrapperBounds }) {
     const left = contentBounds.left - wrapperBounds.left + x;
     const top = contentBounds.top - wrapperBounds.top + y;
-    console.log(left, top);
 
     const deltaH = wrapperBounds.width - contentBounds.width;
     const deltaV = wrapperBounds.height - contentBounds.height;
@@ -122,21 +121,23 @@ function moveTo({ x, y, contentBounds, wrapperBounds }) {
     const maxTop = deltaV < paddingV ? paddingV : deltaV * 0.5;
 
     return {
-        top: capValue(top, minTop, maxTop),
-        left: capValue(left, minLeft, maxLeft)
+        top,left
+        //top: capValue(top, minTop, maxTop),
+        //left: capValue(left, minLeft, maxLeft)
     }
 }
 
 function model(action$, center$, comp) {
    
+        // action de deplacement à la souris/touché
         const innerAction$ = action$
             .map((data) => {
                 const {
-                contentBounds,
+                    contentBounds,
                     wrapperBounds,
                     currentAction,
                     startAction
-            } = data;
+                } = data;
 
                 return moveTo({
                     smooth: false,
@@ -148,26 +149,28 @@ function model(action$, center$, comp) {
 
             });
 
+        // action via le stream center : permet de faire des translations gérés par des composants externes
         const externalAction$ = comp.bounds$.map(
             ({contentBounds,wrapperBounds}) => 
                 center$.map( 
-                    center => xs.of(
+                    center => 
                         moveTo({
                             smooth: !!center.smooth,
-                            x:center.x,
-                            y:center.y,
+                            x:wrapperBounds.width*0.5-center.x,
+                            y:wrapperBounds.height*0.5-center.y,
                             contentBounds,
                             wrapperBounds
                         })
-                    )
+                    
                 )
         ).flatten()
 
         return xs.merge(
                 innerAction$,
                 externalAction$
-            ).compose(pairwise)
-            .map(([curr,last])=> {
+            )
+            .compose(pairwise)
+            .map(([last,curr])=> {
                 if(curr.smooth){
                     return tween({
                         from: 0,
@@ -175,10 +178,8 @@ function model(action$, center$, comp) {
                         ease: tween.exponential.easeIn,
                         duration: 300,
                     }).map( t => moveTo({
-                        x:center.x,
-                        y:center.y,
-                        contentBounds,
-                        wrapperBounds
+                        top: last.top + (curr.top-last.top)*t,
+                        left: last.left + (curr.left-last.left)*t
                     }))
                 }
                 return xs.of(curr)

@@ -13,8 +13,7 @@ import { Landmark } from '../Landmark';
 import { LandmarkTooltip } from '../LandmarkTooltip';
 import { Path } from '../Path';
 
-import { makeLocationObject } from '../../utils';
-
+import { makeLocationObject, mixMerge, mixCombine  } from '../../utils';
 
 import * as _ from 'lodash';
 
@@ -221,16 +220,71 @@ function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progres
         .startWith(false)
         .remember();
 
+    
+    const center$ = xs.merge(
+            // centrage de la carte sur la ville courant
+            landmarks$.compose(mixMerge('props$'))
+            .filter( p => p.isCurrentLocation)
+            .map( o => ({
+                x: o.pixelCoordinates.x,
+                y: o.pixelCoordinates.y,
+                smooth: false
+            })),
+            // centrage sur le trajectoire
+            travelAnimationState$.map(({ x1, y1, x2, y2 })=> ({
+                x: (x1+x2)*0.5, 
+                y: (y1+y2)*0.5,
+                smooth: true 
+            }))
+        );
+
     // On retourne pas mal de choses mais c'est utile pour après t'inquiète. Après je reconnais que c'est pas super élégant.
-    return { showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, changeLocationDelayed$, buzz$ };
+    return { 
+        showMap$,
+        center$, 
+        landmarks$, 
+        landmarkTooltipSink, 
+        travelAnimationState$, 
+        pathSink, 
+        changeLocationDelayed$, 
+        buzz$ 
+    };
 }
 
 export function Map(sources) {
-    const { DOM, canTravel$, windowResize$, currentLocation$, currentLocationLinksIds$, progression$, path$, datas$ } = sources;
+    const { DOM, 
+        canTravel$, 
+        windowResize$, 
+        currentLocation$, 
+        currentLocationLinksIds$, 
+        progression$, 
+        path$, 
+        datas$ 
+    } = sources;
 
     const action$ = intent(DOM);
-    const { showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, changeLocationDelayed$, buzz$ } = model(DOM, action$, currentLocation$, currentLocationLinksIds$, progression$, path$, windowResize$, datas$,canTravel$);
-    const vdom$ = view({DOM,windowResize$,showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, datas$,canTravel$,buzz$});
+    const { showMap$,
+        center$, 
+        landmarks$, 
+        landmarkTooltipSink, 
+        travelAnimationState$, 
+        pathSink, 
+        changeLocationDelayed$, 
+        buzz$ 
+    } = model(DOM, action$, currentLocation$, currentLocationLinksIds$, progression$, path$, windowResize$, datas$,canTravel$);
+    
+    const vdom$ = view({
+        DOM,
+        center$,
+        windowResize$,
+        showMap$, 
+        landmarks$, 
+        landmarkTooltipSink, 
+        travelAnimationState$, 
+        pathSink, 
+        datas$,
+        canTravel$,
+        buzz$});
 
     const sinks = {
         DOM: vdom$,

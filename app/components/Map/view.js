@@ -5,7 +5,7 @@ import { html } from 'snabbdom-jsx';
 import {MapViewer} from '../MapViewer';
 import isolate from '@cycle/isolate';
 
-export function view({DOM,windowResize$,showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, datas$, buzz$}) {
+export function view({DOM,windowResize$,center$,showMap$, landmarks$, landmarkTooltipSink, travelAnimationState$, pathSink, datas$, buzz$}) {
     // On récupère les VDom des différents composants
     const landmarksVdom$ = landmarks$.compose(mixCombine('DOM'));
     const tooltipInfosVdom$ = landmarkTooltipSink.DOM;
@@ -22,6 +22,7 @@ export function view({DOM,windowResize$,showMap$, landmarks$, landmarkTooltipSin
 
     const mapViewer = MapViewer({
         DOM,
+        center$,
         windowResize$,
         content$: xs.combine(landmarksVdom$, pathVdom$, datas$, travelAnimationVdom$, tooltipInfosVdom$)
         .map(([landmarksVdom, pathVdom, datas, travelAnimationVdom, tooltipInfosVdom]) =>
