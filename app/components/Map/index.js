@@ -232,8 +232,8 @@ function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progres
             })),
             // centrage sur le trajectoire
             travelAnimationState$.map(({ x1, y1, x2, y2 })=> ({
-                x: (x1+x2)*0.5, 
-                y: (y1+y2)*0.5,
+                x: x2,
+                y: y2,
                 smooth: true 
             }))
         );

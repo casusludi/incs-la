@@ -121,9 +121,9 @@ function moveTo({ x, y, contentBounds, wrapperBounds }) {
     const maxTop = deltaV < paddingV ? paddingV : deltaV * 0.5;
 
     return {
-        top,left
-        //top: capValue(top, minTop, maxTop),
-        //left: capValue(left, minLeft, maxLeft)
+        //top,left
+        top: capValue(top, minTop, maxTop),
+        left: capValue(left, minLeft, maxLeft)
     }
 }
 
