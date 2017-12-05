@@ -112,11 +112,14 @@ function model(action$, props$) {
                 
                 const deltaH = wrapperBounds.width - contentBounds.width;
                 const deltaV = wrapperBounds.height - contentBounds.height;
-                const minLeft =  deltaH<0?deltaH:deltaH*0.5;
-                const maxLeft = deltaH<0?0:deltaH*0.5;
+                const paddingH = wrapperBounds.width*0.25;
+                const paddingV = wrapperBounds.height*0.25;
 
-                const minTop =  deltaV<0?deltaV:deltaV*0.5;
-                const maxTop = deltaV<0?0:deltaV*0.5;
+                const minLeft =  deltaH<paddingH?deltaH-paddingH:deltaH*0.5;
+                const maxLeft = deltaH<paddingH?paddingH:deltaH*0.5;
+
+                const minTop =  deltaV<paddingV?deltaV-paddingV:deltaV*0.5;
+                const maxTop = deltaV<paddingV?paddingV:deltaV*0.5;
 
                 return {
                     ...props,
