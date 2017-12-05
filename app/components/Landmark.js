@@ -8,12 +8,26 @@ import { html } from 'snabbdom-jsx';
 Icône "repère" affiché sur la carte pour chaque lieu. Le joueur peut cliquer dessus pour afficher des informations complémentaires sur le lieu (voir composant LandmarkTooltip)
 */
 
-function intent(DOM){
-    const action$ = xs.merge(
-        DOM.select('.js-show-info').events('click').mapTo({type: "showInfos"}),
-    );
+function dist(aX,aY,bX,bY){
+    const x = bX-aX;
+    const y = bY-aY;
+    return Math.sqrt(x*x+y*y);
+}
 
-    return action$;
+function intent(DOM){
+    const landmark = DOM.select('.js-show-info');
+    const mousedown = landmark.events('mousedown');
+    const mouseup= landmark.events('mouseup');
+
+    return mousedown.map(mouseDownEvent => 
+        mouseup.filter(mouseUpEvent => 
+            dist(
+                mouseDownEvent.clientX,mouseDownEvent.clientY,
+                mouseUpEvent.clientX,mouseUpEvent.clientY
+            ) < 10
+        )
+        .mapTo({type: "showInfos"})
+    ).flatten()
 }
 
 function model(props$, action$){
