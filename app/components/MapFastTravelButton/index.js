@@ -15,7 +15,7 @@ function model(props$,action$){
 
 function view(state$){
     return state$.map( state => 
-        <button type="button" className="js-fast-travel">{state.location.name}</button>
+        <button type="button" className="js-fast-travel button">{state.location.name}</button>
     );
 }
 

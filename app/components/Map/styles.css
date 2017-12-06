@@ -79,7 +79,6 @@
     overflow: hidden;
     transition: transform 0.3s ease-in;
     transform: translateX(4rem);
-
 }
 
 .travel-panel-content .map-viewer{
@@ -107,6 +106,27 @@
 
 .js-travel-to{
     font-size: 1rem;
+}
+
+.travel-panel-fast {
+    position: absolute;
+    bottom: 0;
+    max-width: 100%;
+    left: 0;
+    right: 0;
+    z-index: 99;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0.5rem;
+    background-color: var(--white);
+    border-radius: 8px 8px 0 0;
+
+    & > * {
+        margin: 0.2rem;
+        flex: 1 1 auto;
+    }
 }
 
 

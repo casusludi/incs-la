@@ -46,7 +46,7 @@ function view(props$, datas$){
                     // Trois types de landmarks différents en fonction de si : le lieu est accessible pour le joueur, le lieu est celui où se trouve le joueur, le reste des lieux (inaccesssibles)
                     props.isCurrentLocation ? 
                         datas.settings.images.currentLocationLandmark : 
-                        (props.isReachableLandmark ? 
+                        (props.isReachable ? 
                             datas.settings.images.reachableLandmark : 
                             datas.settings.images.unreachableLandmark),
                 class: "js-show-info",
@@ -54,7 +54,7 @@ function view(props$, datas$){
                 height: datas.settings.landmarksImageHeight + "px",
                 y: - datas.settings.landmarksImageHeight + "px",
                 x: - (datas.settings.landmarksImageWidth * 0.5) + "px",
-                style: `opacity: ${props.isCurrentLocation || props.isReachableLandmark?1:0.5};`
+                style: `opacity: ${props.isCurrentLocation || props.isReachable?1:0.5};`
             }}),
         ])
     });

@@ -65,17 +65,16 @@ function model(
         });
     });
 
-    // Pour chaque lieu on va créer un repère sur la carte (ou "landmark"). Les props de chaque landmark sont : ses coordonnées pixels, si ce landmark représente le lieu où le joueur se trouve ('isCurrentLocation') ou un lieu accessible par le joueur ('isReachableLandmark'). Ces 2 derniers booléens permettent de déterminer l'assets à afficher pour le landmark (un landmark gris, vert ou rouge). De plus on va trier les landmarks selon leur latitude (y) ce qui permettra un affichage sur la carte de haut en bas. Ainsi les landmarks bas se retrouveront par dessus les landmarks hauts.
+    // Pour chaque lieu on va créer un repère sur la carte (ou "landmark"). Les props de chaque landmark sont : ses coordonnées pixels, si ce landmark représente le lieu où le joueur se trouve ('isCurrentLocation') ou un lieu accessible par le joueur ('isReachable'). Ces 2 derniers booléens permettent de déterminer l'assets à afficher pour le landmark (un landmark gris, vert ou rouge). De plus on va trier les landmarks selon leur latitude (y) ce qui permettra un affichage sur la carte de haut en bas. Ainsi les landmarks bas se retrouveront par dessus les landmarks hauts.
     const landmarksProps$ = xs.combine(currentLocation$, currentLocationLinksIds$, locations$)
         .map(([currentLocation, currentLocationLinksIds, locations]) =>
             _.chain(locations)
                 .map(curr => ({
                     ...curr,
                     isCurrentLocation: curr.details.id === currentLocation.id,
-                    isReachableLandmark: _.includes(currentLocationLinksIds, curr.details.id)
+                    isReachable: _.includes(currentLocationLinksIds, curr.details.id)
                 }))
-                .sortBy(['isCurrentLocation', 'isReachableLandmark', 'pixelCoordinates.y'])
-
+                .sortBy(['isCurrentLocation', 'isReachable', 'pixelCoordinates.y'])
                 .value()
         ).remember();
 
@@ -88,7 +87,7 @@ function model(
 
     const fastTravelButtons$ = landmarksProps$
     .map( landmarksProps =>
-        landmarksProps.filter( o => o.isReachableLandmark).map((landmarkProps, key) =>
+        landmarksProps.filter( o => o.isReachable).map((landmarkProps, key) =>
             isolate(MapFastTravelButton,key)({DOM,props$:xs.of({location:landmarkProps.details})})
         )
     ).startWith([]);
@@ -97,16 +96,26 @@ function model(
     ///// A VOIR SI CETTE FONCTIONNALITÉ EST INTÉRESSANTE OU NON /////
     const pathSink = Path({ locations$, progression$, path$, currentLocation$ });
 
+
+    const landmarksTooltipInfos$ = landmarks$.compose(mixMerge('tooltipInfos$'));
+
+    const landmarkTooltipProps$ = xs.combine(landmarksTooltipInfos$, canTravel$)
+        .debug('landmarkTooltipProps')
+        .map(([location,canTravel]) => ({
+            location,
+            canTravel
+        }))
+        .startWith({location:null,canTravel:false});
     // On créer l'élément affichant les informations d'un lieu lors du clique sur le landmark selectionné (tooltip)
-    const landmarkTooltipSink = LandmarkTooltip({ DOM, landmarks$, datas$, canTravel$ });
+    const landmarkTooltipSink = LandmarkTooltip({ DOM, props$:landmarkTooltipProps$});
 
     // Le flux émettant à chaque changement de lieu (le joueur change de lieu en cliquant sur le bouton de déplacement sur le tooltip, on récupère donc le sink correspondant du composant tooltip)
-    const changeLocation$ = landmarkTooltipSink.changeLocation$;
+    const changeLocation$ = landmarkTooltipSink.travel;
 
     // On diffère ce flux pour laisser le temps à l'animation de s'afficher
     const changeLocationDelayed$ = datas$.map(datas => 
         changeLocation$
-        .compose(delay(1000 + datas.settings.travelAnimationDuration * 1000)))
+        .compose(delay(datas.settings.travelAnimationDuration * 1000)))
         .flatten();
 
      // Ce flux emet un booléen qui détermine si la carte doit être affichée ou non
@@ -140,7 +149,7 @@ function model(
 
     // On récupère les landmarks correspondant au lieu actuel et au lieu de destination grâce à la fonction ci-dessus
     const currentLocationLandmark$ = getLandmarkById(currentLocation$);
-    const newLocationLandmark$ = getLandmarkById(changeLocation$);
+    const newLocationLandmark$ = getLandmarkById(changeLocation$.debug('newLocationLandmark'));
 
     // Données relatives à l'animation du voyage du joueur. On y trouve : les coordonnées du lieu de départ, les coordonnées du lieu de destination, l'avancement de l'animation (un chiffre compris entre 0 et 1). Pour avoir une animation fluide on utilise tween de xstream qui permet d'obtenir plusieurs types d'interpolations entre les nombres de notre choix (ici 0 et 1).
     const travelAnimationDatas$ = datas$.map(datas =>
