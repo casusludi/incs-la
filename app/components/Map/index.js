@@ -99,15 +99,14 @@ function model(
 
     const landmarksTooltipInfos$ = landmarks$.compose(mixMerge('tooltipInfos$'));
 
-    const landmarkTooltipProps$ = xs.combine(landmarksTooltipInfos$, canTravel$)
-        .debug('landmarkTooltipProps')
-        .map(([location,canTravel]) => ({
-            location,
-            canTravel
-        }))
-        .startWith({location:null,canTravel:false});
     // On créer l'élément affichant les informations d'un lieu lors du clique sur le landmark selectionné (tooltip)
-    const landmarkTooltipSink = LandmarkTooltip({ DOM, props$:landmarkTooltipProps$});
+    const landmarkTooltipSink = LandmarkTooltip({ 
+        DOM, 
+        props$:xs.of({
+            canTravel$,
+            location$:landmarksTooltipInfos$.startWith(null)
+        })
+    });
 
     // Le flux émettant à chaque changement de lieu (le joueur change de lieu en cliquant sur le bouton de déplacement sur le tooltip, on récupère donc le sink correspondant du composant tooltip)
     const changeLocation$ = landmarkTooltipSink.travel;
@@ -149,7 +148,7 @@ function model(
 
     // On récupère les landmarks correspondant au lieu actuel et au lieu de destination grâce à la fonction ci-dessus
     const currentLocationLandmark$ = getLandmarkById(currentLocation$);
-    const newLocationLandmark$ = getLandmarkById(changeLocation$.debug('newLocationLandmark'));
+    const newLocationLandmark$ = getLandmarkById(changeLocation$);
 
     // Données relatives à l'animation du voyage du joueur. On y trouve : les coordonnées du lieu de départ, les coordonnées du lieu de destination, l'avancement de l'animation (un chiffre compris entre 0 et 1). Pour avoir une animation fluide on utilise tween de xstream qui permet d'obtenir plusieurs types d'interpolations entre les nombres de notre choix (ici 0 et 1).
     const travelAnimationDatas$ = datas$.map(datas =>
@@ -249,9 +248,9 @@ export function Map(sources) {
     } = model(
         DOM, 
         action$, 
-        currentLocation$.debug('curr'), 
-        currentLocationLinksIds$.debug('links'), 
-        progression$.debug('progress'), 
+        currentLocation$, 
+        currentLocationLinksIds$, 
+        progression$, 
         path$, 
         windowResize$, 
         datas$, 

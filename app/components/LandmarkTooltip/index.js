@@ -23,34 +23,47 @@ function intent(DOM) {
 
 function model(props$, action$) {
 
-	const model$ = props$.map( props => {
-		const travel$ = action$.filter(a => a.type == "travelTo")
-				.filter(a => props.canTravel && props.location)
-				.map(a => props.location.details)
+	const model$ = props$.debug("props").map(props =>
+		props.location$.debug("location").map(location => {
 
-		const state$ = xs.merge(
-				action$.filter(a => a.type == "hideInfos"),
+			const travel$ = props.canTravel$.map(canTravel =>
+				action$.filter(a => a.type == "travelTo")
+					.filter(a => canTravel && location)
+					.map(a => location.details)
+			).flatten();
+
+			const data$ = 
+				xs.merge(
+					action$.filter(a => a.type == "hideInfos"),
+					travel$
+				)
+				.mapTo({ location, visible: false })
+				.startWith({ visible: !!location, location})
+
+			const state$ = xs.combine(data$,props.canTravel$)
+				.map(([data,canTravel]) => ({
+					...data,
+					canTravel
+				}))
+
+			return {
+				state$,
 				travel$
-			)
-			.mapTo({ ...props, visible: false })
-			.startWith({  visible: !!props.location, ...props })
+			}
 
-		return {
-			state$,
-			travel$ 
-		}
-
-	})
-	.remember()
+		})
+	)
+		.flatten()
+		.remember()
 
 	return {
-		state$: model$.map( state => state.state$).flatten().remember(),
-		travel$: model$.map( state => state.travel$).flatten()
+		state$: model$.map(state => state.state$).flatten().remember(),
+		travel$: model$.map(state => state.travel$).flatten()
 	}
 }
 
 function view(state$) {
-	return state$.debug().map(state =>
+	return state$.map(state =>
 		<div className={`landmark-panel-wrapper ${state.visible ? 'show' : 'hide'}`}>
 			<div className="landmark-panel-overlay js-hide-infos"></div>
 			<div className="landmark-panel js-landmark-panel panel" style={{
@@ -73,15 +86,15 @@ function view(state$) {
 }
 
 export function LandmarkTooltip(sources) {
-	const { DOM, props$ = xs.of({ canTravel: false, location: {} }) } = sources;
+	const { DOM, props$ = xs.of({ canTravel$: xs.of(false), location$: xs.of({}) }) } = sources;
 
 	const action$ = intent(DOM);
-	const {state$,travel$} = model(props$, action$);
+	const { state$, travel$ } = model(props$, action$);
 	const vdom$ = view(state$);
 
 	const sinks = {
 		DOM: vdom$,
-		travel:travel$
+		travel: travel$
 	};
 
 	return sinks;
