@@ -70,9 +70,9 @@ export function Landmark(sources) {
     const sinks = {
         DOM: vdom$,
         tooltipInfos$: state$, // Les données utiles pour l'affichage du tooltip (les props du landmark contenant les données sur le lieu qu'il représente)
-        pixelCoordinates$: remProps$.map(props => props.pixelCoordinates), // Les coordonnées du landmark (utiles pour l'animation du voyage du joueur dans le composant Map)
+        locations$: remProps$.map(props => props.pixelCoordinates), // Les coordonnées du landmark (utiles pour l'animation du voyage du joueur dans le composant Map)
         props$:remProps$, // Les coordonnées du landmark (utiles pour l'animation du voyage du joueur dans le composant Map)
-        id$: remProps$.map(props => props.location.id), // L'id du lieu qu'il représente (pour pouvoir récupérer un landmark correspondant à un id spécifique pour l'animation du voyage du joueur dans le composant Map)
+        id$: remProps$.map(props => props.details.id), // L'id du lieu qu'il représente (pour pouvoir récupérer un landmark correspondant à un id spécifique pour l'animation du voyage du joueur dans le composant Map)
     };
 
     return sinks;

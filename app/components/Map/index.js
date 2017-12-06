@@ -3,21 +3,13 @@ import tween from 'xstream/extra/tween'
 import delay from 'xstream/extra/delay'
 import concat from 'xstream/extra/concat'
 import dropRepeats from 'xstream/extra/dropRepeats'
-
-
 import isolate from '@cycle/isolate';
-
-
-
 import { Landmark } from '../Landmark';
 import { LandmarkTooltip } from '../LandmarkTooltip';
 import { Path } from '../Path';
-
-import { makeLocationObject, mixMerge, mixCombine  } from '../../utils';
-
-import * as _ from 'lodash';
-
-import {view} from './view';
+import { makeLocationObject, mixMerge, mixCombine } from '../../utils';
+import _ from 'lodash';
+import { view } from './view';
 import { fail } from 'assert';
 
 /*
@@ -25,25 +17,23 @@ Composant permettant l'affichage d'une carte autorisant le joueur à voyager ver
 */
 
 function intent(DOM) {
-    // Petite magouille pour éviter que les évenements ne "bouillone" (bubble, se propage à leur parent quoi enfin je t'apprends rien). C'est pour s'assurer que l'évenement à bien été déclenché par un clique sur l'évenement lui-même et pas sur un de ses fils qui est ensuite remonté. Parce-que dans ce cas on a certain clique qui ouvre et ferme la carte en même temps et inversement car 2 évenements se déclenchent en même temps dus à la propagation. Je suis pas bien sûr d'être clair. Or il me semble qu'en JS classique il suffit de faire un stopPropagation() mais ici soit on ne peut pas (je sais pas trop) soit c'est juste un effet de bord qui ne devrait pas être utilisé ici. Donc c'est la seule "technique" que j'ai trouvée pour ça (et j'en suis pas fier).
-    return xs.merge(
-        xs.merge(
-            DOM.select('.js-show-map').events('click'),
-            DOM.select('.map').events('click').filter(e => e.target.className === "map")/*,
-            DOM.select('.svgMapTag').events('click').filter(e => e.target.className.baseVal === "svgMapTag")*/
-        ).map(value => ({ type: "showMap" })),
-        DOM.select('.js-hide-infos').events('click').map(value => ({ type: "hideInfos" })),
-        /*DOM.select('.js-travel-to')
-            .events('click')
-            .map(value => canTravel$.map( canTravel => canTravel?{ type: "travelTo" }:{type:"none"}))
-            .flatten().debug('lool')*/
-    );
+    return DOM.select('.js-show-map').events('click').map(value => ({ type: "showMap" }))
 }
 
 // Beaucoup d'entrées et de sorties dans ce modèle là. Je vais essayer d'expliquer ça au mieux.
-function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progression$, path$, windowResize$, datas$, canTravel$) {
+function model(
+        DOM, 
+        action$, 
+        currentLocation$, 
+        currentLocationLinksIds$, 
+        progression$, 
+        path$, 
+        windowResize$, 
+        datas$, 
+        canTravel$
+    ) {
     // Emet un array d'objet contenant les coordonnées associées à chaque lieu en pixel. Le calcul est effectué à partir des coordonnées latitude-longitude de chaque lieu fournies dans le .json ainsi que des coordonnées en pixels de 2 lieux "témoins".
-    const pixelCoordinates$ = datas$.map(datas => {
+    const locations$ = datas$.map(datas => {
         // Ids des 2 lieux témoins
         const baseLandmarkIds = datas.settings.baseLandmarks.map(baseLandmark => baseLandmark.location);
         // Coordonnées latitude-longitude des 2 lieux témoins
@@ -65,7 +55,7 @@ function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progres
 
             // On map chaque objet avec un objet contenant ses infos contenues dans le .json ainsi que ses coordonnées pixels.
             return {
-                location: makeLocationObject(curLocationId, datas),
+                details: makeLocationObject(curLocationId, datas),
                 pixelCoordinates: {
                     x: curX,
                     y: curY,
@@ -75,25 +65,17 @@ function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progres
     });
 
     // Pour chaque lieu on va créer un repère sur la carte (ou "landmark"). Les props de chaque landmark sont : ses coordonnées pixels, si ce landmark représente le lieu où le joueur se trouve ('isCurrentLocation') ou un lieu accessible par le joueur ('isReachableLandmark'). Ces 2 derniers booléens permettent de déterminer l'assets à afficher pour le landmark (un landmark gris, vert ou rouge). De plus on va trier les landmarks selon leur latitude (y) ce qui permettra un affichage sur la carte de haut en bas. Ainsi les landmarks bas se retrouveront par dessus les landmarks hauts.
-    const landmarksProps$ = xs.combine(currentLocation$, currentLocationLinksIds$, pixelCoordinates$)
-        .map(([currentLocation, currentLocationLinksIds, pixelCoordinates]) => {
+    const landmarksProps$ = xs.combine(currentLocation$, currentLocationLinksIds$, locations$)
+        .map(([currentLocation, currentLocationLinksIds, locations]) =>
+            _.chain(locations)
+                .map(curr => ({
+                    ...curr,
+                    isCurrentLocation: curr.details.id === currentLocation.id,
+                    isReachableLandmark: _.includes(currentLocationLinksIds, curr.details.id)
+                }))
+                .sortBy(['isCurrentLocation', 'isReachableLandmark', 'pixelCoordinates.y'])
 
-
-                const landmarks = 
-                    _.chain(pixelCoordinates)
-                    
-                    .map(curr => ({
-                        ...curr,
-                        isCurrentLocation:curr.location.id === currentLocation.id,
-                        isReachableLandmark: _.includes(currentLocationLinksIds, curr.location.id)
-                    }))
-                    .sortBy(['isCurrentLocation','isReachableLandmark','pixelCoordinates.y'])
-                 
-                    .value();
-
-                return landmarks;
-
-            }
+                .value()
         ).remember();
 
     // On créer ensuite ces landmark en fournissant à chacun ses props
@@ -103,34 +85,26 @@ function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progres
         )
     );
 
-    // On utilise ensuite la technique bien stylée de Pierre pour trier les landmarks en fonction de leur latitude qui est émise par chacun des composants Landmark par le sink pixelCoordinates$.
-    ////// Maintenant obsolète car le tri se fait plus haut //////
-    /*
-    const latitudeSortedLandmarks$ = landmarks$.map(landmarks => {
-        const latitudeIdentifiedLandmarks = landmarks.map(landmark =>
-            landmark.pixelCoordinates$.map(pixelCoordinates =>
-                 ({landmark, latitude: pixelCoordinates.y})
-            )
-        );
-
-        return xs.combine(...latitudeIdentifiedLandmarks).map(latitudeIdentifiedLandmarksArray => 
-            _.sortBy(latitudeIdentifiedLandmarksArray, 'latitude').map(latitudeIdentifiedLandmark => latitudeIdentifiedLandmark.landmark)
-        );
-    }).flatten().remember();
-    */
-
     // On créer ici le composant Path qui servira à afficher le chemin parcouru par le joueur
     ///// A VOIR SI CETTE FONCTIONNALITÉ EST INTÉRESSANTE OU NON /////
-    const pathSink = Path({ pixelCoordinates$, progression$, path$, currentLocation$ });
+    const pathSink = Path({ locations$, progression$, path$, currentLocation$ });
 
-    // On va avoir besoin ici d'un proxy pour le flux qui emet lors d'un changement de lieu
-    // Ce flux a été différé le temps que l'animation se déroule (d'où le delayed)
-    const changeLocationDelayedProxy$ = xs.create();
+    // On créer l'élément affichant les informations d'un lieu lors du clique sur le landmark selectionné (tooltip)
+    const landmarkTooltipSink = LandmarkTooltip({ DOM, landmarks$, datas$, canTravel$ });
 
-    // Ce flux emet un booléen qui détermine si la carte doit être affichée ou non
-    const showMap$ = xs.merge(
+    // Le flux émettant à chaque changement de lieu (le joueur change de lieu en cliquant sur le bouton de déplacement sur le tooltip, on récupère donc le sink correspondant du composant tooltip)
+    const changeLocation$ = landmarkTooltipSink.changeLocation$;
+
+    // On diffère ce flux pour laisser le temps à l'animation de s'afficher
+    const changeLocationDelayed$ = datas$.map(datas => 
+        changeLocation$
+        .compose(delay(1000 + datas.settings.travelAnimationDuration * 1000)))
+        .flatten();
+
+     // Ce flux emet un booléen qui détermine si la carte doit être affichée ou non
+     const showMap$ = xs.merge(
         action$.filter(action => action.type === "showMap").mapTo("showMap"),
-        changeLocationDelayedProxy$.mapTo("changeLocation"),
+        changeLocationDelayed$.mapTo("changeLocation")
     ).fold((acc, x) => {
         switch (x) {
             case "showMap": // Dans le cas d'un clique sur le bouton d'affichage de la carte, sur la croix de fermeture de la carte ou encore sur les côtés de la carte
@@ -140,32 +114,12 @@ function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progres
         }
     }, false);
 
-    // Fais exactement la même que au dessus mais est moins explicite
-    /*
-    const showMapOBSOLETE$ = xs.merge(
-        action$.filter(action => action.type === "showMap").mapTo(true),
-        changeLocationDelayedProxy$.mapTo(false),
-    ).fold((acc, x) => x & !acc, false);
-    */
-
-    // On créer l'élément affichant les informations d'un lieu lors du clique sur le landmark selectionné (tooltip)
-    const landmarkTooltipSink = LandmarkTooltip({ DOM, landmarks$, datas$, canTravel$ });
-
-    // Le flux émettant à chaque changement de lieu (le joueur change de lieu en cliquant sur le bouton de déplacement sur le tooltip, on récupère donc le sink correspondant du composant tooltip)
-    const changeLocation$ = landmarkTooltipSink.changeLocation$;
-
-    // On diffère ce flux pour laisser le temps à l'animation de s'afficher
-    const changeLocationDelayed$ = datas$.map(datas => changeLocation$.compose(delay(datas.settings.travelAnimationDuration * 1000))).flatten();
-
-    // On boucle le proxy avec le flux qu'il doit imiter
-    changeLocationDelayedProxy$.imitate(changeLocationDelayed$);
 
     // Technique de Pierre un peu compliqué pour identifier les composants contenus dans l'array emit par un flux par une de leurs sinks (comme pour latitudeSortedLandmarks). Chaque landmark emet l'id du lieu qu'il représente et on veut pouvoir récupérer un landmark en fournissant l'id correspondant. Etant utilisé 2 fois juste après, cette fonction factorise le code et permet une plus grande clartée.
     const getLandmarkById = function (location$) {
         return xs.combine(location$, landmarks$).map(([location, landmarks]) => {
             const identifiedLandmarks = landmarks.map(landmark =>
-                landmark.id$.map(id => { return { id, landmark } }
-                )
+                landmark.id$.map(id => ({ id, landmark }))
             );
 
             return xs.combine(...identifiedLandmarks).map(identifiedLandmarksCombined =>
@@ -183,8 +137,8 @@ function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progres
     // Données relatives à l'animation du voyage du joueur. On y trouve : les coordonnées du lieu de départ, les coordonnées du lieu de destination, l'avancement de l'animation (un chiffre compris entre 0 et 1). Pour avoir une animation fluide on utilise tween de xstream qui permet d'obtenir plusieurs types d'interpolations entre les nombres de notre choix (ici 0 et 1).
     const travelAnimationDatas$ = datas$.map(datas =>
         xs.combine(
-            currentLocationLandmark$.map(currentLocationLandmark => currentLocationLandmark.pixelCoordinates$).flatten(),
-            newLocationLandmark$.map(newLocationLandmark => newLocationLandmark.pixelCoordinates$).flatten(),
+            currentLocationLandmark$.map(currentLocationLandmark => currentLocationLandmark.locations$).flatten(),
+            newLocationLandmark$.map(newLocationLandmark => newLocationLandmark.locations$).flatten(),
             changeLocation$.mapTo(
                 concat(
                     tween({
@@ -212,7 +166,7 @@ function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progres
     // et se desactive quand on joue avec l'ouverture de la carte
     // Et celà jusqu'a la prochaine ville.
     const buzz$ = canTravel$
-        .map( canTravel => 
+        .map(canTravel =>
             showMap$.mapTo(false).drop(1).startWith(true)
         )
         .flatten()
@@ -220,71 +174,82 @@ function model(DOM, action$, currentLocation$, currentLocationLinksIds$, progres
         .startWith(false)
         .remember();
 
-    
+
     const center$ = xs.merge(
-            // centrage de la carte sur la ville courant
-            landmarks$.compose(mixMerge('props$'))
-            .filter( p => p.isCurrentLocation)
-            .map( o => ({
+        // centrage de la carte sur la ville courant
+        landmarks$.compose(mixMerge('props$'))
+            .filter(p => p.isCurrentLocation)
+            .map(o => ({
                 x: o.pixelCoordinates.x,
                 y: o.pixelCoordinates.y,
                 smooth: false
             })),
-            // centrage sur le trajectoire
-            travelAnimationState$.map(({ x1, y1, x2, y2 })=> ({
-                x: x2,
-                y: y2,
-                smooth: true 
-            }))
-        );
+        // centrage sur le trajectoire
+        travelAnimationState$.map(({ x1, y1, x2, y2 }) => ({
+            x: x2,
+            y: y2,
+            smooth: true
+        }))
+    );
 
     // On retourne pas mal de choses mais c'est utile pour après t'inquiète. Après je reconnais que c'est pas super élégant.
-    return { 
+    return {
         showMap$,
-        center$, 
-        landmarks$, 
-        landmarkTooltipSink, 
-        travelAnimationState$, 
-        pathSink, 
-        changeLocationDelayed$, 
-        buzz$ 
+        center$,
+        landmarks$,
+        landmarkTooltipSink,
+        travelAnimationState$,
+        pathSink,
+        changeLocationDelayed$,
+        buzz$
     };
 }
 
 export function Map(sources) {
-    const { DOM, 
-        canTravel$, 
-        windowResize$, 
-        currentLocation$, 
-        currentLocationLinksIds$, 
-        progression$, 
-        path$, 
-        datas$ 
+    const { DOM,
+        canTravel$,
+        windowResize$,
+        currentLocation$,
+        currentLocationLinksIds$,
+        progression$,
+        path$,
+        datas$
     } = sources;
 
     const action$ = intent(DOM);
     const { showMap$,
-        center$, 
-        landmarks$, 
-        landmarkTooltipSink, 
-        travelAnimationState$, 
-        pathSink, 
-        changeLocationDelayed$, 
-        buzz$ 
-    } = model(DOM, action$, currentLocation$, currentLocationLinksIds$, progression$, path$, windowResize$, datas$,canTravel$);
-    
+        center$,
+        landmarks$,
+        landmarkTooltipSink,
+        travelAnimationState$,
+        pathSink,
+        changeLocationDelayed$,
+        buzz$
+    } = model(
+        DOM, 
+        action$, 
+        currentLocation$.debug('curr'), 
+        currentLocationLinksIds$.debug('links'), 
+        progression$.debug('progress'), 
+        path$, 
+        windowResize$, 
+        datas$, 
+        canTravel$
+    );
+
     const vdom$ = view({
         DOM,
         center$,
         windowResize$,
-        showMap$, 
-        landmarks$, 
-        landmarkTooltipSink, 
-        travelAnimationState$, 
-        pathSink, 
+        showMap$,
+        landmarks$,
+        landmarkTooltipSink,
+        travelAnimationState$,
+        pathSink,
         datas$,
         canTravel$,
-        buzz$});
+        buzz$
+    });
 
     const sinks = {
         DOM: vdom$,

@@ -193,7 +193,7 @@ function view(state$, content$) {
     return content$.map(content =>
         state$.map(({ top, left }) =>
             <div className="map-viewer">
-                <div className="map-viewer-content" style={{ top: `${top}px`, left: `${left}px` }}>
+                <div className="map-viewer-content" style={{ transform: `translate(${left}px, ${top}px)` }}>
                     {content}
                 </div>
             </div>

@@ -37,8 +37,8 @@ export function MainGame(sources) {
 	const windowResize$ = sources.windowResize;
 
 	// Création des props
-	const props$ = sources.storage.local.getItem('save').take(1).map(save =>
-		Object.assign(
+	const props$ = sources.storage.local.getItem('save').take(1).map(save => 
+		(
 			// Props par défaut
 			{
 				round: 0,
@@ -48,11 +48,11 @@ export function MainGame(sources) {
 				questionnedWitnesses: {},
 				canTravel: false,
 				successesNumber: 0,
-			},
-			// Props enregistrés localement
-			JSON.parse(save),
-			// Props transférés depuis la page précédente
-			sources.props,
+				// Props enregistrés localement
+				...JSON.parse(save),
+				// Props transférés depuis la page précédente
+				...sources.props
+			}
 		)
 	);
 
@@ -90,7 +90,7 @@ export function MainGame(sources) {
 	// La valeur de base est fournie par les props (0 ou autre si il existe une sauvegarde)
 	const progression$ = props$.map(props =>
 		correctNextChoosenLocationProxy$.fold((acc, x) => acc + 1, props.progression)
-	).flatten().remember();
+	).flatten().remember().debug('progress updated');
 
 	// Ce flux emet le lieu d'où commence le joueur (lieu du départ du scénario ou autre si une sauvegarde est fournie dans les props)
 	const currentLocationInit$ = xs.combine(path$, props$, datas$).map(([path, props, datas]) =>
@@ -175,15 +175,17 @@ export function MainGame(sources) {
 				.value()
 		).compose(dropRepeats());
 
-	// Map les ids des liens récupérés ci-dessus avec les objets de lieu complet contenus dans le .json de données
-	const currentLocationLinks$ = xs.combine(currentLocationLinksIds$, datas$).map(([currentLocationLinksIds, datas]) =>
-		currentLocationLinksIds.map(currentLocationLinkId =>
-			makeLocationObject(currentLocationLinkId, datas)
-		)
-	);
-
 	// Créer le composant représentant la carte
-	const mapSinks = Map({ DOM, canTravel$: canTravelProxy$.startWith(false), windowResize$, currentLocation$, currentLocationLinksIds$, progression$, path$, datas$ });
+	const mapSinks = Map({ 
+		DOM, 
+		canTravel$: canTravelProxy$.startWith(false), 
+		windowResize$, 
+		currentLocation$, 
+		currentLocationLinksIds$, 
+		progression$:progression$, 
+		path$, 
+		datas$ }
+	);
 
 	// Flux émettant l'id du nouveau lieu à chaque changement
 	const changeLocation$ = mapSinks.changeLocation$;
@@ -253,15 +255,6 @@ export function MainGame(sources) {
 		).startWith(props.canTravel).compose(dropRepeats())
 	).flatten();
 	canTravelProxy$.imitate(canTravel$);
-
-	/* DEPRECATED
-	const showDestinationLinks$ = props$.map(props =>
-		xs.merge(
-			questionnedWitnesses$.map(questionnedWitnesses => Object.keys(questionnedWitnesses).length > 0),
-			changeLocation$.mapTo(false),
-		).compose(dropRepeats())
-	).flatten().remember();
-	*/
 
 	// Instancie le composant qui va gérer le temps ingame
 	const timeManagerProps$ = props$.map(props => props ? { elapsedTime: props.elapsedTime } : {});

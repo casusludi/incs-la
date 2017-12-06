@@ -34,7 +34,7 @@ function model(action$, DOM, landmarks$, datas$){
 	// Flux de changement de lieu. Il emet les données correspondant au lieu de destination lorsque le joueur effectue un déplacement (clique sur le bouton de déplacement).
 	const changeLocation$ = landmarksTooltipInfos$.map(landmarksTooltipInfos =>
 		action$.filter(action => action.type === "travelTo")
-		.mapTo(landmarksTooltipInfos.location)
+		.mapTo(landmarksTooltipInfos.details)
 	).flatten();
 
 	// Flux emettant les données effectives affichées par le tooltip. lorsque le tooltip est fermé emet 'null'.
@@ -78,11 +78,11 @@ function view(
 				{tooltipInfos?
 				<div className="landmark-panel-content">
 				<div className="landmark-panel-header">  
-					<h3>{tooltipInfos.location.name}</h3>
+					<h3>{tooltipInfos.details.name}</h3>
 					<i className="js-hide-infos svg-icon icon-close" />
 				</div>
 				
-				<p className="scrollable-panel">{tooltipInfos.location.desc}</p>
+				<p className="scrollable-panel">{tooltipInfos.details.desc}</p>
 				{tooltipInfos.isReachableLandmark ? 
 						<button className={`js-travel-to button ${canTravel?"":" button-disabled"}`} type="button">{canTravel?`S'y rendre `:`Vous devez enquêter !`}</button> 
 					: ""}

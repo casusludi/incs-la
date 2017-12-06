@@ -8,27 +8,27 @@ import { makeShadedLine } from '../utils';
 
 const locationNbOnPath = 4;
 
-function model(pixelCoordinates$, progression$, path$, currentLocation$){
+function model(locations$, progression$, path$, currentLocation$){
     // Keep only correct locations
-    // const pathLocationsV1$ = xs.combine(pixelCoordinates$, progression$, path$, currentLocation$)
+    // const pathLocationsV1$ = xs.combine(locations$, progression$, path$, currentLocation$)
     // .map(([pixelCoordinates, progression, path, currentLocation]) => {
     //     const pathLocationsIds = [...path.slice(0, progression + 1).map(o => o.location), currentLocation.id];
     //     const pathLocations = pathLocationsIds.map(pathLocationId =>
-    //         pixelCoordinates.filter(o => o.location.id === pathLocationId)[0],
+    //         pixelCoordinates.filter(o => o.details.id === pathLocationId)[0],
     //     );
     //     return pathLocations;
     // });
 
     // Keep all visited locations
-    // const pathLocationsV2$ = xs.combine(pixelCoordinates$, currentLocation$)
+    // const pathLocationsV2$ = xs.combine(locations$, currentLocation$)
     // .map(([pixelCoordinates, currentLocation]) => 
-    //     pixelCoordinates.filter(o => o.location.id === currentLocation.id)[0]
+    //     pixelCoordinates.filter(o => o.details.id === currentLocation.id)[0]
     // ).fold((stack, currentLocation) => [...stack, currentLocation], []);
 
     // Keep last visited locations
-    const pathLocationsV3$ = xs.combine(pixelCoordinates$, currentLocation$)
+    const pathLocationsV3$ = xs.combine(locations$, currentLocation$)
     .map(([pixelCoordinates, currentLocation]) => 
-        pixelCoordinates.filter(o => o.location.id === currentLocation.id)[0]
+        pixelCoordinates.filter(o => o.details.id === currentLocation.id)[0]
     ).fold((stack, currentLocation) => [...stack, currentLocation].slice(-locationNbOnPath), [])
     .filter(pathLocations => pathLocations.length !== 0);
 
@@ -74,9 +74,9 @@ function view(state$){
 }
 
 export function Path(sources) {
-    const {pixelCoordinates$, progression$, path$, currentLocation$} = sources;
+    const {locations$, progression$, path$, currentLocation$} = sources;
 
-    const state$ = model(pixelCoordinates$, progression$, path$, currentLocation$);
+    const state$ = model(locations$, progression$, path$, currentLocation$);
     const vdom$ = view(state$);
 
     const sinks = {

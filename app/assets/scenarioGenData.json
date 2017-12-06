@@ -77,7 +77,7 @@
 		"clues":{
 			"witnesses":[
 				{"text": "Il devait se rendre à proximité d'[éoliennes](http://data.loire-atlantique.fr/donnees/detail/localisation-des-projets-eoliens/?tx_icsoddatastore_pi1[page]=6).", "lures": []},
-				{"text": "Je crois qu'il a parlé d'une visite au zoo ou dans un parc [animalier](https://www.google.fr/webhp?sourceid=chrome-instant&ion=1&espv=2&ie=UTF-8#q=parc+animalier+loire+atlantique).", "lures": []}
+				{"text": "Je crois qu'il a parlé d'une visite au zoo ou dans un parc [animalier](https://www.google.fr/search?q=parc+animalier+loire+atlantique&cad=h).", "lures": []}
 			],
 			"data":[
 				{"text": "Krrrpppt... Supekkt detek... commune... brrrtfrrr...om composé... ERROR 4508…", "lures": []}
