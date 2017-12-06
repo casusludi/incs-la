@@ -13,12 +13,14 @@ export function view({
     landmarks$,
     landmarkTooltipSink,
     travelAnimationState$,
+    fastTravelButtons$,
     pathSink,
     datas$,
     buzz$
 }) {
 
     // On récupère les VDom des différents composants
+    const fastTravelButtonsVdom$ = fastTravelButtons$.compose(mixCombine('DOM'));
     const landmarksVdom$ = landmarks$.compose(mixCombine('DOM'));
     const tooltipInfosVdom$ = landmarkTooltipSink.DOM;
     const pathVdom$ = pathSink.DOM;
@@ -65,11 +67,13 @@ export function view({
         mapViewer.DOM,
         showMap$,
         tooltipInfosVdom$,
+        fastTravelButtonsVdom$,
         buzz$
     ).map(([
         mapViewerDOM,
         showMap,
         tooltipInfosVdom,
+        fastTravelButtonsVdom,
         buzz
     ]) =>
         <div className={"travel-panel" + (showMap ? " expanded" : "")}>
@@ -78,6 +82,9 @@ export function view({
                 <button className="travel-panel-button-close glue-button glue-button-left js-show-map" type="button" ><i className="svg-icon icon-close" /></button>
                 {mapViewerDOM}
                 {tooltipInfosVdom}
+                <div className="travel-panel-fast">
+                    {fastTravelButtonsVdom}
+                </div>
             </div>
         </div>
         );

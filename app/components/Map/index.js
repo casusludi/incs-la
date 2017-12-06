@@ -6,6 +6,7 @@ import dropRepeats from 'xstream/extra/dropRepeats'
 import isolate from '@cycle/isolate';
 import { Landmark } from '../Landmark';
 import { LandmarkTooltip } from '../LandmarkTooltip';
+import  MapFastTravelButton  from '../MapFastTravelButton';
 import { Path } from '../Path';
 import { makeLocationObject, mixMerge, mixCombine } from '../../utils';
 import _ from 'lodash';
@@ -84,6 +85,13 @@ function model(
             isolate(Landmark, key)({ DOM, datas$, props$: xs.of(landmarkProps) })
         )
     );
+
+    const fastTravelButtons$ = landmarksProps$
+    .map( landmarksProps =>
+        landmarksProps.filter( o => o.isReachableLandmark).map((landmarkProps, key) =>
+            isolate(MapFastTravelButton,key)({DOM,props$:xs.of({location:landmarkProps.details})})
+        )
+    ).startWith([]);
 
     // On créer ici le composant Path qui servira à afficher le chemin parcouru par le joueur
     ///// A VOIR SI CETTE FONCTIONNALITÉ EST INTÉRESSANTE OU NON /////
@@ -192,12 +200,15 @@ function model(
         }))
     );
 
+    
+
     // On retourne pas mal de choses mais c'est utile pour après t'inquiète. Après je reconnais que c'est pas super élégant.
     return {
         showMap$,
         center$,
         landmarks$,
         landmarkTooltipSink,
+        fastTravelButtons$,
         travelAnimationState$,
         pathSink,
         changeLocationDelayed$,
@@ -224,6 +235,7 @@ export function Map(sources) {
         travelAnimationState$,
         pathSink,
         changeLocationDelayed$,
+        fastTravelButtons$,
         buzz$
     } = model(
         DOM, 
@@ -245,6 +257,7 @@ export function Map(sources) {
         landmarks$,
         landmarkTooltipSink,
         travelAnimationState$,
+        fastTravelButtons$,
         pathSink,
         datas$,
         canTravel$,
