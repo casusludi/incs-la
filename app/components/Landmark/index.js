@@ -59,7 +59,7 @@ function model(props, action$) {
 
 function view(state$, datas$) {
     return xs.combine(datas$, state$).map(([datas, state]) => {
-        return svg.g({ attrs: { transform: "translate(" + state.location.pixelCoordinates.x + " " + state.location.pixelCoordinates.y + ")" } }, [
+        return state.location.isReachable || state.location.isCurrentLocation?svg.g({ attrs: { transform: "translate(" + state.location.pixelCoordinates.x + " " + state.location.pixelCoordinates.y + ")" } }, [
             svg.image({
                 attrs: {
                     'xlink:href':
@@ -77,7 +77,7 @@ function view(state$, datas$) {
                     style: `opacity: ${state.location.isCurrentLocation || state.location.isReachable ? 1 : 0.5};`
                 }
             }),
-        ])
+        ]):""
     });
 }
 

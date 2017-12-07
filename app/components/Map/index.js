@@ -92,7 +92,7 @@ function model(
     // On créer ensuite ces landmark en fournissant à chacun ses props
     const landmarks$ = landmarksProps$.map(landmarksProps =>
         landmarksProps
-            .filter(o => o.isReachable || o.isCurrentLocation)
+            //.filter(o => o.isReachable || o.isCurrentLocation)
             .map(landmarkProps =>
                 isolate(Landmark, landmarkProps.details.id)({
                     DOM, datas$, props: {
@@ -228,7 +228,7 @@ function model(
         travelAnimationState$.map(({ x1, y1, x2, y2 }) => ({
             x: x2,
             y: y2,
-            smooth: true
+            smooth: false
         }))
     );
 
