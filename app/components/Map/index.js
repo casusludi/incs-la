@@ -67,16 +67,16 @@ function model(
     });
 
     // Pour chaque lieu on va créer un repère sur la carte (ou "landmark"). Les props de chaque landmark sont : ses coordonnées pixels, si ce landmark représente le lieu où le joueur se trouve ('isCurrentLocation') ou un lieu accessible par le joueur ('isReachable'). Ces 2 derniers booléens permettent de déterminer l'assets à afficher pour le landmark (un landmark gris, vert ou rouge). De plus on va trier les landmarks selon leur latitude (y) ce qui permettra un affichage sur la carte de haut en bas. Ainsi les landmarks bas se retrouveront par dessus les landmarks hauts.
-    const landmarksProps$ = xs.combine(lastLocation$,currentLocation$, currentLocationLinksIds$, locations$)
-        .map(([lastLocation,currentLocation, currentLocationLinksIds, locations]) =>
+    const landmarksProps$ = xs.combine(lastLocation$, currentLocation$, currentLocationLinksIds$, locations$)
+        .map(([lastLocation, currentLocation, currentLocationLinksIds, locations]) =>
             _.chain(locations)
                 .map(curr => ({
                     ...curr,
-                    isLastLocation: lastLocation?curr.details.id === lastLocation.id:false,
+                    isLastLocation: lastLocation ? curr.details.id === lastLocation.id : false,
                     isCurrentLocation: curr.details.id === currentLocation.id,
                     isReachable: _.includes(currentLocationLinksIds, curr.details.id)
                 }))
-                .sortBy(['isCurrentLocation', 'isReachable', 'pixelCoordinates.y'])
+                .sortBy([/*'isCurrentLocation', 'isReachable',*/ 'pixelCoordinates.y'])
                 .value()
         ).remember();
 
@@ -91,15 +91,19 @@ function model(
 
     // On créer ensuite ces landmark en fournissant à chacun ses props
     const landmarks$ = landmarksProps$.map(landmarksProps =>
-        landmarksProps.filter(o => o.isReachable || o.isCurrentLocation).map((landmarkProps, key) =>
-            isolate(Landmark, key)({ DOM, datas$, props: {
-                location$:xs.of(landmarkProps),
-                buzz$:fastAccessButtonAction$.filter( a => a.details.id === landmarkProps.details.id).mapTo(true) 
-            }})
-        )
+        landmarksProps
+            .filter(o => o.isReachable || o.isCurrentLocation)
+            .map(landmarkProps =>
+                isolate(Landmark, landmarkProps.details.id)({
+                    DOM, datas$, props: {
+                        location$: xs.of(landmarkProps),
+                        buzz$: fastAccessButtonAction$.filter(a => a.details.id === landmarkProps.details.id).mapTo(true)
+                    }
+                })
+            )
     );
 
-  
+
 
     // On créer ici le composant Path qui servira à afficher le chemin parcouru par le joueur
     ///// A VOIR SI CETTE FONCTIONNALITÉ EST INTÉRESSANTE OU NON /////
@@ -144,14 +148,19 @@ function model(
     const getLandmarkById = function (location$) {
         return xs.combine(location$, landmarks$).map(([location, landmarks]) => {
             const identifiedLandmarks = landmarks.map(landmark =>
-                landmark.location.map(location => ({ id:location.details.id, landmark }))
+                landmark.location.map(location => ({ id: location.details.id, landmark }))
             );
 
-            return xs.combine(...identifiedLandmarks).map(identifiedLandmarksCombined =>
-                identifiedLandmarksCombined.filter(identifiedLandmark =>
+            return xs.combine(...identifiedLandmarks).map(identifiedLandmarksCombined => {
+                const results = identifiedLandmarksCombined.filter(identifiedLandmark =>
                     identifiedLandmark.id === location.id
-                )[0].landmark
-            );
+                );
+                if (results.length > 0)
+                    return results[0].landmark
+                else
+                    return null;
+            }
+            ).filter(o => !!o);
         }).flatten();
     }
 
