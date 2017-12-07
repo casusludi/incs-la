@@ -39,11 +39,11 @@ function model(props, action$) {
     ).flatten();
 
     const location$ = props.location$;
-    const buzz$ = props.buzz$.debug('buzz').map( buzz => 
+    const buzz$ = props.buzz$.map( buzz => 
         xs.merge(
             xs.of(true),
-            xs.of(false).compose(delay(2500)).endWhen(props.buzz$.debug('end'))
-        ).debug('curr')
+            xs.of(false).compose(delay(2500)).endWhen(props.buzz$)
+        )
     ).flatten()
     .startWith(false);
 

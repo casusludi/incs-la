@@ -12,7 +12,7 @@ Les 2 redirigent vers le composant Redirect mais dans le cas d'une nouvelle part
 
 export function MainMenu(sources) {
 
-	const {DOM} = sources;
+	const {DOM, datas$} = sources;
 	// Récupère la sauvegarde si elle existe pour pouvoir afficher le numéro du round sauvegardé (sinon round null)
 	const props$ = sources.storage.local.getItem('save').take(1).map(save => 
 		Object.assign({
@@ -31,13 +31,22 @@ export function MainMenu(sources) {
 	// Un délai de 1ms est le seul moyen que j'ai trouvé ici pour faire en sorte que le redirection s'effectue après l'écrasement de la sauvegarde. Sans ce délai la redirection se fait systématiquement avant et le joueur reprend la partie sauvegardée qui n'a pas eu le temps d'être réinitialisée.
 	const routerSink$ = action$.map(action => "/redirect").compose(delay(1));
 
-	const DOMSink$ = props$.map(props =>
+	// @TODO remove datas$ paramater : it's just a fix to solve redirect bugs on start.
+	const DOMSink$ = xs.combine(datas$,props$).map(([datas,props]) => 
 		<div className="menu-principal">
 			<h1>Menu Principal</h1>
-			<button className="js-new-game button-3d">NEW GAME</button>
-			{props.round !== null ? <button className="js-resume-game button-3d">RESUME GAME<br/>Round {props.round + 1}</button> : ""}
+			<button className="js-new-game button">NEW GAME</button>
+			{props.round !== null ? <button className="js-resume-game button">RESUME GAME<br/>Round {props.round + 1}</button> : ""}
 		</div>
-	);
+	)
+
+	/*const DOMSink$ = props$.map(props =>
+		<div className="menu-principal">
+			<h1>Menu Principal</h1>
+			<button className="js-new-game button">NEW GAME</button>
+			{props.round !== null ? <button className="js-resume-game button">RESUME GAME<br/>Round {props.round + 1}</button> : ""}
+		</div>
+	);*/
 
     const sinks = {
 		DOM: DOMSink$,
