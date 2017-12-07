@@ -1,4 +1,5 @@
 import xs from 'xstream';
+import delay from 'xstream/extra/delay';
 
 import { svg } from '@cycle/dom';
 
@@ -37,7 +38,17 @@ function model(props, action$) {
             .mapTo(location)
     ).flatten();
 
-    const state$ = props.location$.map( location => ({location}));
+    const location$ = props.location$;
+    const buzz$ = props.buzz$.debug('buzz').map( buzz => 
+        xs.merge(
+            xs.of(true),
+            xs.of(false).compose(delay(2500)).endWhen(props.buzz$.debug('end'))
+        ).debug('curr')
+    ).flatten()
+    .startWith(false);
+
+    const state$ = xs.combine(location$,buzz$)
+        .map(([location,buzz]) => ({location,buzz}))
 
     return {
         state$,
@@ -58,7 +69,7 @@ function view(state$, datas$) {
                             (state.location.isReachable ?
                                 datas.settings.images.reachableLandmark :
                                 datas.settings.images.unreachableLandmark),
-                    class: "js-show-info",
+                    class: `js-show-info landmark ${state.buzz?'buzz':''}`,
                     width: datas.settings.landmarksImageWidth + "px",
                     height: datas.settings.landmarksImageHeight + "px",
                     y: - datas.settings.landmarksImageHeight + "px",
@@ -72,8 +83,11 @@ function view(state$, datas$) {
 
 export function Landmark(sources) {
     const { props, datas$, DOM } = sources;
+    const defaultProps = {location$:xs.of(),buzz$:xs.of()};
+    const currProps = {...defaultProps,...props};
+
     const action$ = intent(DOM);
-    const {state$,value$} = model(props, action$);
+    const {state$,value$} = model(currProps, action$);
     const vdom$ = view(state$, datas$);
 
     const sinks = {

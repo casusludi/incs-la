@@ -78,19 +78,26 @@ function model(
                 .value()
         ).remember();
 
-    // On créer ensuite ces landmark en fournissant à chacun ses props
-    const landmarks$ = landmarksProps$.map(landmarksProps =>
-        landmarksProps.map((landmarkProps, key) =>
-            isolate(Landmark, key)({ DOM, datas$, props: {location$:xs.of(landmarkProps)}})
-        )
-    );
-
     const fastAccessButtons$ = landmarksProps$
         .map(landmarksProps =>
             landmarksProps.filter(o => o.isReachable).map((landmarkProps, key) =>
                 isolate(MapFastAccessButton, key)({ DOM, props$: xs.of({ location: landmarkProps }) })
             )
         ).startWith([]);
+
+    const fastAccessButtonAction$ = fastAccessButtons$.compose(mixMerge('value'))
+
+    // On créer ensuite ces landmark en fournissant à chacun ses props
+    const landmarks$ = landmarksProps$.map(landmarksProps =>
+        landmarksProps.map((landmarkProps, key) =>
+            isolate(Landmark, key)({ DOM, datas$, props: {
+                location$:xs.of(landmarkProps),
+                buzz$:fastAccessButtonAction$.filter( a => a.details.id === landmarkProps.details.id).mapTo(true) 
+            }})
+        )
+    );
+
+  
 
     // On créer ici le composant Path qui servira à afficher le chemin parcouru par le joueur
     ///// A VOIR SI CETTE FONCTIONNALITÉ EST INTÉRESSANTE OU NON /////
@@ -192,15 +199,12 @@ function model(
         .startWith(false)
         .remember();
 
-    const fastAccessButtonAction$ = fastAccessButtons$.compose(mixMerge('value'))
-        .map(o => ({
+    const center$ = xs.merge(
+        fastAccessButtonAction$.map(o => ({
             x: o.pixelCoordinates.x,
             y: o.pixelCoordinates.y,
             smooth: true
-        }));
-
-    const center$ = xs.merge(
-        fastAccessButtonAction$,
+        })),
         // centrage de la carte sur la ville courant
         landmarks$.compose(mixMerge('location'))
             .filter(p => p.isCurrentLocation)
