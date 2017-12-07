@@ -91,7 +91,7 @@ function model(
 
     // On créer ensuite ces landmark en fournissant à chacun ses props
     const landmarks$ = landmarksProps$.map(landmarksProps =>
-        landmarksProps.map((landmarkProps, key) =>
+        landmarksProps.filter(o => o.isReachable || o.isCurrentLocation).map((landmarkProps, key) =>
             isolate(Landmark, key)({ DOM, datas$, props: {
                 location$:xs.of(landmarkProps),
                 buzz$:fastAccessButtonAction$.filter( a => a.details.id === landmarkProps.details.id).mapTo(true) 

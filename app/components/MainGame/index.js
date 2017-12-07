@@ -174,8 +174,10 @@ export function MainGame(sources) {
 	)
 		.map(([currentLocation, lastLocation, nextCorrectLocation, currentCorrectLocation, isCurrentLocationCorrect, linksIds]) =>
 			_.chain([])
+				.concat(isCurrentLocationCorrect ? currentCorrectLocation.lures : [])
+				.concat(linksIds)
+				.take(4)
 				.concat(lastLocation ? [lastLocation.id] : [])
-				.concat(isCurrentLocationCorrect ? currentCorrectLocation.lures : linksIds)
 				.concat(nextCorrectLocation && isCurrentLocationCorrect ? [nextCorrectLocation.id] : [])
 				.uniq()
 				.filter((o) => o !== currentLocation.id)
