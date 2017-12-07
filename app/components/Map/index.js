@@ -102,10 +102,10 @@ function model(
     // On créer l'élément affichant les informations d'un lieu lors du clique sur le landmark selectionné (tooltip)
     const landmarkTooltipSink = LandmarkTooltip({ 
         DOM, 
-        props$:xs.of({
+        props:{
             canTravel$,
             location$:landmarksTooltipInfos$.startWith(null)
-        })
+        }
     });
 
     // Le flux émettant à chaque changement de lieu (le joueur change de lieu en cliquant sur le bouton de déplacement sur le tooltip, on récupère donc le sink correspondant du composant tooltip)

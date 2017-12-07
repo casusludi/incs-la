@@ -21,40 +21,37 @@ function intent(DOM) {
 	);
 }
 
-function model(props$, action$) {
+function model(props, action$) {
 
-	const model$ = props$.debug("props").map(props =>
-		props.location$.debug("location").map(location => {
+	const model$ = props.location$.map(location => {
 
-			const travel$ = props.canTravel$.map(canTravel =>
-				action$.filter(a => a.type == "travelTo")
-					.filter(a => canTravel && location)
-					.map(a => location.details)
-			).flatten();
+		const travel$ = props.canTravel$.map(canTravel =>
+			action$.filter(a => a.type == "travelTo")
+				.filter(a => canTravel && location)
+				.map(a => location.details)
+		).flatten();
 
-			const data$ = 
-				xs.merge(
-					action$.filter(a => a.type == "hideInfos"),
-					travel$
-				)
-				.mapTo({ location, visible: false })
-				.startWith({ visible: !!location, location})
-
-			const state$ = xs.combine(data$,props.canTravel$)
-				.map(([data,canTravel]) => ({
-					...data,
-					canTravel
-				}))
-
-			return {
-				state$,
+		const data$ =
+			xs.merge(
+				action$.filter(a => a.type == "hideInfos"),
 				travel$
-			}
+			)
+				.mapTo({ location, visible: false })
+				.startWith({ visible: !!location, location })
 
-		})
-	)
-		.flatten()
-		.remember()
+		const state$ = xs.combine(data$, props.canTravel$)
+			.map(([data, canTravel]) => ({
+				...data,
+				canTravel
+			}))
+
+		return {
+			state$,
+			travel$
+		}
+
+	})
+	.remember()
 
 	return {
 		state$: model$.map(state => state.state$).flatten().remember(),
@@ -86,10 +83,10 @@ function view(state$) {
 }
 
 export function LandmarkTooltip(sources) {
-	const { DOM, props$ = xs.of({ canTravel$: xs.of(false), location$: xs.of({}) }) } = sources;
+	const { DOM, props = { canTravel$: xs.of(false), location$: xs.of({}) } } = sources;
 
 	const action$ = intent(DOM);
-	const { state$, travel$ } = model(props$, action$);
+	const { state$, travel$ } = model(props, action$);
 	const vdom$ = view(state$);
 
 	const sinks = {
