@@ -81,7 +81,7 @@ function model(
     // On créer ensuite ces landmark en fournissant à chacun ses props
     const landmarks$ = landmarksProps$.map(landmarksProps =>
         landmarksProps.map((landmarkProps, key) =>
-            isolate(Landmark, key)({ DOM, datas$, props$: xs.of(landmarkProps) })
+            isolate(Landmark, key)({ DOM, datas$, props: {location$:xs.of(landmarkProps)}})
         )
     );
 
@@ -97,7 +97,7 @@ function model(
     const pathSink = Path({ locations$, progression$, path$, currentLocation$ });
 
 
-    const landmarksTooltipInfos$ = landmarks$.compose(mixMerge('tooltipInfos$'));
+    const landmarksTooltipInfos$ = landmarks$.compose(mixMerge('focus'));
 
     // On créer l'élément affichant les informations d'un lieu lors du clique sur le landmark selectionné (tooltip)
     const landmarkTooltipSink = LandmarkTooltip({
@@ -135,7 +135,7 @@ function model(
     const getLandmarkById = function (location$) {
         return xs.combine(location$, landmarks$).map(([location, landmarks]) => {
             const identifiedLandmarks = landmarks.map(landmark =>
-                landmark.id$.map(id => ({ id, landmark }))
+                landmark.location.map(location => ({ id:location.details.id, landmark }))
             );
 
             return xs.combine(...identifiedLandmarks).map(identifiedLandmarksCombined =>
@@ -153,8 +153,8 @@ function model(
     // Données relatives à l'animation du voyage du joueur. On y trouve : les coordonnées du lieu de départ, les coordonnées du lieu de destination, l'avancement de l'animation (un chiffre compris entre 0 et 1). Pour avoir une animation fluide on utilise tween de xstream qui permet d'obtenir plusieurs types d'interpolations entre les nombres de notre choix (ici 0 et 1).
     const travelAnimationDatas$ = datas$.map(datas =>
         xs.combine(
-            currentLocationLandmark$.map(currentLocationLandmark => currentLocationLandmark.locations$).flatten(),
-            newLocationLandmark$.map(newLocationLandmark => newLocationLandmark.locations$).flatten(),
+            currentLocationLandmark$.map(currentLocationLandmark => currentLocationLandmark.location).flatten(),
+            newLocationLandmark$.map(newLocationLandmark => newLocationLandmark.location).flatten(),
             changeLocation$.mapTo(
                 concat(
                     tween({
@@ -170,11 +170,13 @@ function model(
     ).flatten();
 
     // Ce flux calcul les coordonnées de l'extremité "mouvante" de l'animation à l'aide des données précédentes
-    const travelAnimationState$ = travelAnimationDatas$.map(([currentLocationPixelCoordinates, newLocationPixelCoordinates, animationState]) => {
-        const x1 = currentLocationPixelCoordinates.x;
-        const y1 = currentLocationPixelCoordinates.y;
-        const x2 = currentLocationPixelCoordinates.x + (newLocationPixelCoordinates.x - currentLocationPixelCoordinates.x) * animationState;
-        const y2 = currentLocationPixelCoordinates.y + (newLocationPixelCoordinates.y - currentLocationPixelCoordinates.y) * animationState;
+    const travelAnimationState$ = travelAnimationDatas$.map(([curr, target, animationState]) => {
+        const from = curr.pixelCoordinates;
+        const to = target.pixelCoordinates;
+        const x1 = from.x;
+        const y1 = from.y;
+        const x2 = from.x + (to.x - from.x) * animationState;
+        const y2 = from.y + (to.y - from.y) * animationState;
         return { x1, y1, x2, y2 };
     });
 
@@ -200,7 +202,7 @@ function model(
     const center$ = xs.merge(
         fastAccessButtonAction$,
         // centrage de la carte sur la ville courant
-        landmarks$.compose(mixMerge('props$'))
+        landmarks$.compose(mixMerge('location'))
             .filter(p => p.isCurrentLocation)
             .map(o => ({
                 x: o.pixelCoordinates.x,
