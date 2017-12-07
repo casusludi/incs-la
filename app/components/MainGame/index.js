@@ -164,7 +164,14 @@ export function MainGame(sources) {
 	// Tableau contenant les ids des lieux vers lesquels le joueur peut se diriger (liens)
 	// Si le joueur se trouve dans la bonne ville alors les villes suggérées sont la prochaine ville correcte ainsi que les leurres contenus dans le scenario
 	// Si le joueur ne se trouve pas dans le bonne ville alors les villes suggérées sont celles d'où il vient ainsi que 3 villes tirées au hasard
-	const currentLocationLinksIds$ = xs.combine(currentLocation$, lastLocation$, nextCorrectLocation$, currentCorrectLocation$, isCurrentLocationCorrect$, linksIds$)
+	const currentLocationLinksIds$ = xs.combine(
+		currentLocation$, 
+		lastLocation$, 
+		nextCorrectLocation$, 
+		currentCorrectLocation$.debug('currentCorrectLocation'), 
+		isCurrentLocationCorrect$, 
+		linksIds$.debug('linksIds')
+	)
 		.map(([currentLocation, lastLocation, nextCorrectLocation, currentCorrectLocation, isCurrentLocationCorrect, linksIds]) =>
 			_.chain([])
 				.concat(lastLocation ? [lastLocation.id] : [])
@@ -180,6 +187,7 @@ export function MainGame(sources) {
 		DOM, 
 		canTravel$: canTravelProxy$.startWith(false), 
 		windowResize$, 
+		lastLocation$,
 		currentLocation$, 
 		currentLocationLinksIds$, 
 		progression$:progression$, 

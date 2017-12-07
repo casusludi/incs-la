@@ -83,7 +83,10 @@ export function view({
                 {mapViewerDOM}
                 {tooltipInfosVdom}
                 <div className="travel-panel-fast">
+                    <div className="travel-panel-fast-label">Choisissez une destination</div>
+                    <div className="travel-panel-fast-content">
                     {fastAccessButtonsVdom}
+                    </div>
                 </div>
             </div>
         </div>

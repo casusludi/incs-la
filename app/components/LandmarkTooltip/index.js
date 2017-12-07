@@ -15,48 +15,42 @@ Ce composant représente la fenêtre qui s'affiche à côté d'un landmark quand
 */
 
 function intent(DOM) {
-	return xs.merge(
-		DOM.select('.js-hide-infos').events('click').map(value => ({ type: "hideInfos" })),
-		DOM.select('.js-travel-to').events('click').mapTo({ type: "travelTo" })
-	);
+	return {
+		hide$: DOM.select('.js-hide-infos').events('click').mapTo(true),
+		travel$: DOM.select('.js-travel-to').events('click').mapTo(true)
+	}
 }
 
-function model(props, action$) {
+function model(props, action) {
 
-	const model$ = props.location$.map(location => {
-
-		const travel$ = props.canTravel$.map(canTravel =>
-			action$.filter(a => a.type == "travelTo")
+	const travel$ = props.location$.map( location => 
+		props.canTravel$.map(canTravel =>
+			action.travel$
 				.filter(a => canTravel && location)
 				.map(a => location.details)
-		).flatten();
+		).flatten()
+	).flatten();
 
-		const data$ =
-			xs.merge(
-				action$.filter(a => a.type == "hideInfos"),
-				travel$
-			)
-				.mapTo({ location, visible: false })
-				.startWith({ visible: !!location, location })
+	const data$ = props.location$.map( location => xs.merge(
+		action.hide$,
+		travel$
+	)
+		.mapTo({ location, visible: false })
+		.startWith({ visible: !!location, location })
+	).flatten()
 
-		const state$ = xs.combine(data$, props.canTravel$)
-			.map(([data, canTravel]) => ({
-				...data,
-				canTravel
-			}))
 
-		return {
-			state$,
-			travel$
-		}
-
-	})
-	.remember()
+	const state$ = xs.combine(data$, props.canTravel$)
+		.map(([data, canTravel]) => ({
+			...data,
+			canTravel
+		})).remember()
 
 	return {
-		state$: model$.map(state => state.state$).flatten().remember(),
-		travel$: model$.map(state => state.travel$).flatten()
+		state$,
+		travel$
 	}
+
 }
 
 function view(state$) {
@@ -85,8 +79,8 @@ function view(state$) {
 export function LandmarkTooltip(sources) {
 	const { DOM, props = { canTravel$: xs.of(false), location$: xs.of({}) } } = sources;
 
-	const action$ = intent(DOM);
-	const { state$, travel$ } = model(props, action$);
+	const action = intent(DOM);
+	const { state$, travel$ } = model(props, action);
 	const vdom$ = view(state$);
 
 	const sinks = {
