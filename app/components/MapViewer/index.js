@@ -105,7 +105,7 @@ function intent(comp, windowResize$) {
     )
 }
 
-function moveTo({ x, y, contentBounds, wrapperBounds }) {
+function moveTo({ x, y, contentBounds, wrapperBounds, smooth }) {
     const left = contentBounds.left - wrapperBounds.left + x;
     const top = contentBounds.top - wrapperBounds.top + y;
 
@@ -122,6 +122,7 @@ function moveTo({ x, y, contentBounds, wrapperBounds }) {
 
     return {
         //top,left
+        smooth,
         top: capValue(top, minTop, maxTop),
         left: capValue(left, minLeft, maxLeft)
     }
@@ -175,9 +176,9 @@ function model(action$, center$, comp) {
                     return tween({
                         from: 0,
                         to: 1,
-                        ease: tween.exponential.easeIn,
+                        ease: tween.power2.easeInOut,
                         duration: 300,
-                    }).map( t => moveTo({
+                    }).map( t => ({
                         top: last.top + (curr.top-last.top)*t,
                         left: last.left + (curr.left-last.left)*t
                     }))

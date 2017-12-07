@@ -13,14 +13,14 @@ export function view({
     landmarks$,
     landmarkTooltipSink,
     travelAnimationState$,
-    fastTravelButtons$,
+    fastAccessButtons$,
     pathSink,
     datas$,
     buzz$
 }) {
 
     // On récupère les VDom des différents composants
-    const fastTravelButtonsVdom$ = fastTravelButtons$.compose(mixCombine('DOM'));
+    const fastAccessButtonsVdom$ = fastAccessButtons$.compose(mixCombine('DOM'));
     const landmarksVdom$ = landmarks$.compose(mixCombine('DOM'));
     const tooltipInfosVdom$ = landmarkTooltipSink.DOM;
     const pathVdom$ = pathSink.DOM;
@@ -67,13 +67,13 @@ export function view({
         mapViewer.DOM,
         showMap$,
         tooltipInfosVdom$,
-        fastTravelButtonsVdom$,
+        fastAccessButtonsVdom$,
         buzz$
     ).map(([
         mapViewerDOM,
         showMap,
         tooltipInfosVdom,
-        fastTravelButtonsVdom,
+        fastAccessButtonsVdom,
         buzz
     ]) =>
         <div className={"travel-panel" + (showMap ? " expanded" : "")}>
@@ -83,7 +83,7 @@ export function view({
                 {mapViewerDOM}
                 {tooltipInfosVdom}
                 <div className="travel-panel-fast">
-                    {fastTravelButtonsVdom}
+                    {fastAccessButtonsVdom}
                 </div>
             </div>
         </div>

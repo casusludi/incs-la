@@ -2,7 +2,7 @@ import xs from 'xstream';
 import { html } from 'snabbdom-jsx';
 
 function intent(DOM){
-    DOM.select('.js-fast-travel').events('click').mapTo(true);
+   return DOM.select('.js-fast-travel').events('click').mapTo(true);
 }
 
 function model(props$,action$){
@@ -15,11 +15,11 @@ function model(props$,action$){
 
 function view(state$){
     return state$.map( state => 
-        <button type="button" className="js-fast-travel button">{state.location.name}</button>
+        <button type="button" className="js-fast-travel button">{state.location.details.name}</button>
     );
 }
 
-export default function MapFastTravelButton(sources){
+export default function MapFastAccessButton(sources){
     const {DOM,props$} = sources;
     const action$ = intent(DOM);
     const value$ = model(props$,action$);

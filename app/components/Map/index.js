@@ -6,7 +6,7 @@ import dropRepeats from 'xstream/extra/dropRepeats'
 import isolate from '@cycle/isolate';
 import { Landmark } from '../Landmark';
 import { LandmarkTooltip } from '../LandmarkTooltip';
-import  MapFastTravelButton  from '../MapFastTravelButton';
+import MapFastAccessButton from '../MapFastAccessButton';
 import { Path } from '../Path';
 import { makeLocationObject, mixMerge, mixCombine } from '../../utils';
 import _ from 'lodash';
@@ -23,16 +23,16 @@ function intent(DOM) {
 
 // Beaucoup d'entrées et de sorties dans ce modèle là. Je vais essayer d'expliquer ça au mieux.
 function model(
-        DOM, 
-        action$, 
-        currentLocation$, 
-        currentLocationLinksIds$, 
-        progression$, 
-        path$, 
-        windowResize$, 
-        datas$, 
-        canTravel$
-    ) {
+    DOM,
+    action$,
+    currentLocation$,
+    currentLocationLinksIds$,
+    progression$,
+    path$,
+    windowResize$,
+    datas$,
+    canTravel$
+) {
     // Emet un array d'objet contenant les coordonnées associées à chaque lieu en pixel. Le calcul est effectué à partir des coordonnées latitude-longitude de chaque lieu fournies dans le .json ainsi que des coordonnées en pixels de 2 lieux "témoins".
     const locations$ = datas$.map(datas => {
         // Ids des 2 lieux témoins
@@ -85,12 +85,12 @@ function model(
         )
     );
 
-    const fastTravelButtons$ = landmarksProps$
-    .map( landmarksProps =>
-        landmarksProps.filter( o => o.isReachable).map((landmarkProps, key) =>
-            isolate(MapFastTravelButton,key)({DOM,props$:xs.of({location:landmarkProps.details})})
-        )
-    ).startWith([]);
+    const fastAccessButtons$ = landmarksProps$
+        .map(landmarksProps =>
+            landmarksProps.filter(o => o.isReachable).map((landmarkProps, key) =>
+                isolate(MapFastAccessButton, key)({ DOM, props$: xs.of({ location: landmarkProps }) })
+            )
+        ).startWith([]);
 
     // On créer ici le composant Path qui servira à afficher le chemin parcouru par le joueur
     ///// A VOIR SI CETTE FONCTIONNALITÉ EST INTÉRESSANTE OU NON /////
@@ -100,11 +100,11 @@ function model(
     const landmarksTooltipInfos$ = landmarks$.compose(mixMerge('tooltipInfos$'));
 
     // On créer l'élément affichant les informations d'un lieu lors du clique sur le landmark selectionné (tooltip)
-    const landmarkTooltipSink = LandmarkTooltip({ 
-        DOM, 
-        props:{
+    const landmarkTooltipSink = LandmarkTooltip({
+        DOM,
+        props: {
             canTravel$,
-            location$:landmarksTooltipInfos$.startWith(null)
+            location$: landmarksTooltipInfos$.startWith(null)
         }
     });
 
@@ -112,13 +112,13 @@ function model(
     const changeLocation$ = landmarkTooltipSink.travel;
 
     // On diffère ce flux pour laisser le temps à l'animation de s'afficher
-    const changeLocationDelayed$ = datas$.map(datas => 
+    const changeLocationDelayed$ = datas$.map(datas =>
         changeLocation$
-        .compose(delay(datas.settings.travelAnimationDuration * 1000)))
+            .compose(delay(datas.settings.travelAnimationDuration * 1000)))
         .flatten();
 
-     // Ce flux emet un booléen qui détermine si la carte doit être affichée ou non
-     const showMap$ = xs.merge(
+    // Ce flux emet un booléen qui détermine si la carte doit être affichée ou non
+    const showMap$ = xs.merge(
         action$.filter(action => action.type === "showMap").mapTo("showMap"),
         changeLocationDelayed$.mapTo("changeLocation")
     ).fold((acc, x) => {
@@ -190,8 +190,15 @@ function model(
         .startWith(false)
         .remember();
 
+    const fastAccessButtonAction$ = fastAccessButtons$.compose(mixMerge('value'))
+        .map(o => ({
+            x: o.pixelCoordinates.x,
+            y: o.pixelCoordinates.y,
+            smooth: true
+        }));
 
     const center$ = xs.merge(
+        fastAccessButtonAction$,
         // centrage de la carte sur la ville courant
         landmarks$.compose(mixMerge('props$'))
             .filter(p => p.isCurrentLocation)
@@ -208,7 +215,7 @@ function model(
         }))
     );
 
-    
+
 
     // On retourne pas mal de choses mais c'est utile pour après t'inquiète. Après je reconnais que c'est pas super élégant.
     return {
@@ -216,7 +223,7 @@ function model(
         center$,
         landmarks$,
         landmarkTooltipSink,
-        fastTravelButtons$,
+        fastAccessButtons$,
         travelAnimationState$,
         pathSink,
         changeLocationDelayed$,
@@ -243,19 +250,19 @@ export function Map(sources) {
         travelAnimationState$,
         pathSink,
         changeLocationDelayed$,
-        fastTravelButtons$,
+        fastAccessButtons$,
         buzz$
     } = model(
-        DOM, 
-        action$, 
-        currentLocation$, 
-        currentLocationLinksIds$, 
-        progression$, 
-        path$, 
-        windowResize$, 
-        datas$, 
-        canTravel$
-    );
+            DOM,
+            action$,
+            currentLocation$,
+            currentLocationLinksIds$,
+            progression$,
+            path$,
+            windowResize$,
+            datas$,
+            canTravel$
+        );
 
     const vdom$ = view({
         DOM,
@@ -265,7 +272,7 @@ export function Map(sources) {
         landmarks$,
         landmarkTooltipSink,
         travelAnimationState$,
-        fastTravelButtons$,
+        fastAccessButtons$,
         pathSink,
         datas$,
         canTravel$,
