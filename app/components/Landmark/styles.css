@@ -1,9 +1,9 @@
 .landmark {
-
+  cursor: pointer;
 }
 
 .landmark.buzz {
-    animation: bounce 1s ease-in infinite;
+  animation: bounce 1s ease-in infinite;
 }
 
 

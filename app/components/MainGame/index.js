@@ -29,19 +29,29 @@ import { mixMerge, mixCombine } from '../../utils';
 
 import { pathPresets$ } from './presets';
 import view from './view';
+import shuffleSeed from 'shuffle-seed';
 
 export function MainGame(sources) {
 	// Récupération des sources
-	const { DOM, HTTP, datas$ } = sources;
+	const { DOM, HTTP, datas$, seed } = sources;
 	const random$ = sources.random;
 	const windowResize$ = sources.windowResize;
 
-	// Création des props
-	const props$ = sources.storage.local.getItem('save').take(1).map(save => 
+
+	const seedRequest$ = xs.of({
+		category:'main'
+	})
+
+	const props$ = xs.combine(
+		seed.select('main').take(1),
+		sources.storage.local.getItem('save').take(1)
+	)
+	.map(([seed,save]) => 
 		(
 			// Props par défaut
 			{
 				round: 0,
+				seed:seed.value,
 				progression: 0,
 				// lastLocation: null,
 				elapsedTime: 0,
@@ -54,7 +64,7 @@ export function MainGame(sources) {
 				...sources.props
 			}
 		)
-	);
+	)
 
 	// Chargement du .json contenant les données permettant de générer le scénario random
 	const scenarioGenDataJsonSinks = JSONReader({ HTTP, jsonPath$: xs.of("/scenarioGenData.json") });
@@ -65,13 +75,16 @@ export function MainGame(sources) {
 	// pathLocationsNumber - nombre de lieux contenus dans le "chemin" généré / longueur du scénario
 	const scenarioProps$ = xs.combine(props$, datas$).map(([props, datas]) => ({
 		pathLocationsNumber: datas.settings.scenarioStucture[props.round].payload.pathLocationsNumber,
+		seed: props.seed
 	})).remember();
 
 	// Création d'un composant ScenarioGenerator dont le but est de transformé le .json contenant les infos en de génération de scénario en un objet représentant le scénario
 	// La source selectedValue$ emet les réponses aux requêtes random (elle peut être remplacée par des réponses fixes en remplaçant le la source random$ par pathPresets$)
-	const scenarioGeneratorSinks = ScenarioGenerator({ props$: scenarioProps$, jsonResponse$: scenarioGenDataJsonResponse$, selectedValue$: /*pathPresets$*/ random$ })
-	// Requêtes envoyées au driver random
-	const scenarioGeneratorRandomRequests$ = scenarioGeneratorSinks.randomRequests$;
+	const scenarioGeneratorSinks = ScenarioGenerator({ 
+		props$: scenarioProps$, 
+		jsonResponse$: scenarioGenDataJsonResponse$
+	});
+
 	// Scénario généré par le composant
 	const generatedPath$ = scenarioGeneratorSinks.generatedPath$;
 
@@ -128,38 +141,11 @@ export function MainGame(sources) {
 		currentCorrectLocation.location === currentLocation.id
 	);
 
-	// Requête permettant de récupérer les index des villes suivantes suggérées au joueur (en plus de celle d'où il arrive) lorsqu'il se trompe et sort du chemin prévu par le scénario
-	const linksIndexesRandomRequest$ = xs.combine(currentLocation$, datas$, lastLocation$).map(([currentLocation, datas, lastLocation]) => {
-		const locations = Object.keys(datas.locations);
-		const locationsNumber = locations.length;
+	const seed$ = props$.map( p => p.seed).compose(dropRepeats());
 
-		const lastLocationIndex = lastLocation ? locations.indexOf(lastLocation.id) : -1;
-		const currentLocationIndex = currentLocation ? locations.indexOf(currentLocation.id) : -1;
-
-		// On veut 3 nombres uniques parmis la liste des index des lieux
-		// On exclue le lieu d'où arrive le joueur car il est automatiquement ajouté plus loin
-		// On exclue bien sûr aussi le lieu où il se trouve
-		const linksIndexesRandomRequest = {
-			id: "linksIndexes",
-			range: {
-				min: 0,
-				max: locationsNumber - 1
-			},
-			exclude: [currentLocationIndex, lastLocationIndex],
-			number: 3,
-			unique: true
-		};
-
-		return linksIndexesRandomRequest;
-	});
-
-	// Réponse à la requête ci-dessus
-	const linksIndexesRandomResponse$ = random$.filter(random => random.id === "linksIndexes").map(selectedValue => selectedValue.val);
-
-	// Remplace les index par les ids des lieux
-	const linksIds$ = xs.combine(datas$, linksIndexesRandomResponse$).map(([datas, linksIndexesRandomResponse]) =>
-		linksIndexesRandomResponse.map(index => Object.keys(datas.locations)[index])
-	);
+	const linksIds$ = xs.combine(datas$,seed$).map( ([datas,seed]) => 
+		shuffleSeed.shuffle(Object.keys(datas.locations),seed)
+	)
 
 	// Tableau contenant les ids des lieux vers lesquels le joueur peut se diriger (liens)
 	// Si le joueur se trouve dans la bonne ville alors les villes suggérées sont la prochaine ville correcte ainsi que les leurres contenus dans le scenario
@@ -168,9 +154,9 @@ export function MainGame(sources) {
 		currentLocation$, 
 		lastLocation$, 
 		nextCorrectLocation$, 
-		currentCorrectLocation$.debug('currentCorrectLocation'), 
+		currentCorrectLocation$, 
 		isCurrentLocationCorrect$, 
-		linksIds$.debug('linksIds')
+		linksIds$
 	)
 		.map(([currentLocation, lastLocation, nextCorrectLocation, currentCorrectLocation, isCurrentLocationCorrect, linksIds]) =>
 			_.chain([])
@@ -347,12 +333,6 @@ export function MainGame(sources) {
 		sideMenu.router,	// Lorsque le joueur veut se rendre au menu
 	);
 
-	// Random requests
-	const randomRequests$ = xs.merge(
-		scenarioGeneratorRandomRequests$,
-		linksIndexesRandomRequest$,
-	);
-
 	// Storage savings
 	const storageSink$ = xs.merge(
 		save$,
@@ -381,8 +361,8 @@ export function MainGame(sources) {
 		DOM: DOMSink$,
 		router: routerSink$,
 		HTTP: scenarioGenDataJsonRequest$,
-		random: randomRequests$,
 		storage: storageSink$,
+		seed:seedRequest$
 	};
 	return sinks;
 }

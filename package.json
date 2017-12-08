@@ -68,8 +68,10 @@
     "cyclic-router": "^4.0.7",
     "lodash": "^4.17.2",
     "normalize.css": "^5.0.0",
+    "shuffle-seed": "^1.1.6",
     "snabbdom-jsx": "^0.3.2",
     "switch-path": "^1.2.0",
+    "uuid": "^3.1.0",
     "xstream": "^10.9.0"
   },
   "devDependencies": {

@@ -6,6 +6,7 @@ import storageDriver from '@cycle/storage';
 import {makeRouterDriver} from 'cyclic-router'
 import {makeWindowResizeDriver} from './drivers/windowResizeDriver';
 import {randomDriver} from './drivers/randomDriver';
+import {seedDriver} from './drivers/seedDriver';
 
 import xs from 'xstream';
 
@@ -61,6 +62,7 @@ function main(sources) {
 		router: getPageSink(page$, 'router'),
 		random: getPageSink(page$, 'random'),
 		storage: getPageSink(page$, 'storage'),
+		seed: getPageSink(page$, 'seed'),
 		HTTP: xs.merge(
 			dataJsonRequest$,
 			getPageSink(page$, 'HTTP'),
@@ -77,6 +79,7 @@ const drivers = {
 	windowResize: makeWindowResizeDriver(),
 	random: randomDriver,
 	storage: storageDriver,
+	seed:seedDriver
 };  
 
 run(main, drivers);

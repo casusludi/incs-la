@@ -1,1 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10.44 14.69"><defs><style>.cls-1{fill:none;stroke-width:3px;}.cls-1,.cls-2{stroke:#f7941d;stroke-miterlimit:10;}.cls-2{fill:#f7941d;}</style></defs><title>map-point</title><g id="Calque_2" data-name="Calque 2"><g id="Page_4" data-name="Page 4"><circle class="cls-1" cx="5.22" cy="5.22" r="3.72"/><polyline class="cls-2" points="1.5 8.07 5.22 13.77 8.88 8.07"/></g></g></svg>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 21.0.2, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Calque_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 10.4 14.7" style="enable-background:new 0 0 10.4 14.7;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#FFFFFF;stroke:#F7941D;stroke-width:3;stroke-miterlimit:10;}
+	.st1{fill:#F7941D;stroke:#F7941D;stroke-miterlimit:10;}
+</style>
+<title>map-point</title>
+<g id="Calque_2">
+	<g id="Page_4">
+		<circle class="st0" cx="5.2" cy="5.2" r="3.7"/>
+		<polyline class="st1" points="1.5,8.1 5.2,13.8 8.9,8.1 		"/>
+	</g>
+</g>
+</svg>
