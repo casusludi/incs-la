@@ -115,13 +115,13 @@ export function MainGame(sources) {
 	const currentLocation$ = xs.merge(
 		currentLocationInit$,
 		changeLocationProxy$
-	).remember();
+	).remember().debug('currentLocation');
 
 	// Emet le lieu précédent (null si le joueur est dans le premier lieu)
 	// L'opérateur pairwise mémorise les 2 valeurs émisent par un flux, il suffit de récupérer la plus ancienne des 2
 	const lastLocation$ = xs.combine(props$, datas$).map(([props, datas]) =>
 		currentLocation$.startWith(props.lastLocation ? makeLocationObject(props.lastLocation, datas) : null).compose(pairwise).map(item => item[0])
-	).flatten().remember();
+	).flatten().remember().debug('lastLocation');
 
 	// Emet le lieu suivant correct vers lequel le joueur doit aller pour progresser (null si le joueur se trouve dans le dernier lieu du scénario)
 	// Il emet lorsque le joueur arrive dans un nouveau lieu correct, le lien correct suivant est alors émis
@@ -155,11 +155,11 @@ export function MainGame(sources) {
 		lastLocation$, 
 		nextCorrectLocation$, 
 		currentCorrectLocation$, 
-		isCurrentLocationCorrect$, 
 		linksIds$
 	)
-		.map(([currentLocation, lastLocation, nextCorrectLocation, currentCorrectLocation, isCurrentLocationCorrect, linksIds]) =>
-			_.chain([])
+		.map(([currentLocation, lastLocation, nextCorrectLocation, currentCorrectLocation, linksIds]) => {
+			const isCurrentLocationCorrect = currentCorrectLocation.location === currentLocation.id;
+			return _.chain([])
 				.concat(isCurrentLocationCorrect ? currentCorrectLocation.lures : [])
 				.concat(linksIds)
 				.take(4)
@@ -168,7 +168,7 @@ export function MainGame(sources) {
 				.uniq()
 				.filter((o) => o !== currentLocation.id)
 				.value()
-		).compose(dropRepeats());
+		}).compose(dropRepeats()).debug('locations');
 
 	// Créer le composant représentant la carte
 	const mapSinks = Map({ 
