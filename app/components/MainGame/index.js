@@ -39,32 +39,32 @@ export function MainGame(sources) {
 
 
 	const seedRequest$ = xs.of({
-		category:'main'
+		category: 'main'
 	})
 
 	const props$ = xs.combine(
 		seed.select('main').take(1),
 		sources.storage.local.getItem('save').take(1)
 	)
-	.map(([seed,save]) => 
-		(
-			// Props par défaut
-			{
-				round: 0,
-				seed:seed.value,
-				progression: 0,
-				// lastLocation: null,
-				elapsedTime: 0,
-				questionnedWitnesses: {},
-				canTravel: false,
-				successesNumber: 0,
-				// Props enregistrés localement
-				...JSON.parse(save),
-				// Props transférés depuis la page précédente
-				...sources.props
-			}
+		.map(([seed, save]) =>
+			(
+				// Props par défaut
+				{
+					round: 0,
+					seed: seed.value,
+					progression: 0,
+					// lastLocation: null,
+					elapsedTime: 0,
+					questionnedWitnesses: {},
+					canTravel: false,
+					successesNumber: 0,
+					// Props enregistrés localement
+					...JSON.parse(save),
+					// Props transférés depuis la page précédente
+					...sources.props
+				}
+			)
 		)
-	)
 
 	// Chargement du .json contenant les données permettant de générer le scénario random
 	const scenarioGenDataJsonSinks = JSONReader({ HTTP, jsonPath$: xs.of("/scenarioGenData.json") });
@@ -80,107 +80,103 @@ export function MainGame(sources) {
 
 	// Création d'un composant ScenarioGenerator dont le but est de transformé le .json contenant les infos en de génération de scénario en un objet représentant le scénario
 	// La source selectedValue$ emet les réponses aux requêtes random (elle peut être remplacée par des réponses fixes en remplaçant le la source random$ par pathPresets$)
-	const scenarioGeneratorSinks = ScenarioGenerator({ 
-		props$: scenarioProps$, 
+	const scenarioGeneratorSinks = ScenarioGenerator({
+		props$: scenarioProps$,
 		jsonResponse$: scenarioGenDataJsonResponse$
 	});
 
 	// Scénario généré par le composant
-	const generatedPath$ = scenarioGeneratorSinks.generatedPath$;
-
-	// Choix du chemin à utiliser.
-	// Si un chemin est fourni dans les sources alors on l'utilise, sinon on utilise le scénario généré.
-	const path$ = xs.combine(generatedPath$, props$).map(([generatedPath, props]) =>
-		props.path ? props.path : generatedPath
-	);
+	const path$ = scenarioGeneratorSinks.generatedPath$.remember();
 
 	// Création des proxys pour certains flux (causé par l'interdépendance des streams - a = f(b) et b = f(a))
 	const changeLocationProxy$ = xs.create();
 	const canTravelProxy$ = xs.create();
-	const correctNextChoosenLocationProxy$ = xs.create();
+	const isNextLocationCorrectProxy$ = xs.create();
 
-	// Ce flux emet un entier correspondant au nombre de villes correctes parcourues par le joueur
-	// La valeur de base est fournie par les props (0 ou autre si il existe une sauvegarde)
-	const progression$ = props$.map(props =>
-		correctNextChoosenLocationProxy$.fold((acc, x) => acc + 1, props.progression)
-	).flatten().remember().debug('progress updated');
+	const state$ = xs.combine(props$, datas$, path$).map(
+		([props, datas, path]) => {
 
-	// Ce flux emet le lieu d'où commence le joueur (lieu du départ du scénario ou autre si une sauvegarde est fournie dans les props)
-	const currentLocationInit$ = xs.combine(path$, props$, datas$).map(([path, props, datas]) =>
-		makeLocationObject(props.currentLocation ? props.currentLocation : path[0].location, datas)
-	);
+			const changeLocationInitialized$ = changeLocationProxy$
+				
+				// add current location
+				.startWith(makeLocationObject(props.currentLocation ? props.currentLocation : path[0].location, datas))
+				// add last location
+				.startWith(props.lastLocation ? makeLocationObject(props.lastLocation, datas) : null)
+				.compose(pairwise);
 
-	// Ce flux est un flux mémorisé contenant le lieu actuel où se trouve le joueur
-	// Il est composé de la position de départ du joueur 'currentLocationInit$' ainsi que des éventuels changement de lieu émits par 'changeLocationProxy$'
-	const currentLocation$ = xs.merge(
-		currentLocationInit$,
-		changeLocationProxy$
-	).remember().debug('currentLocation');
 
-	// Emet le lieu précédent (null si le joueur est dans le premier lieu)
-	// L'opérateur pairwise mémorise les 2 valeurs émisent par un flux, il suffit de récupérer la plus ancienne des 2
-	const lastLocation$ = xs.combine(props$, datas$).map(([props, datas]) =>
-		currentLocation$.startWith(props.lastLocation ? makeLocationObject(props.lastLocation, datas) : null).compose(pairwise).map(item => item[0])
-	).flatten().remember().debug('lastLocation');
+			const progression$ = isNextLocationCorrectProxy$
+				.fold((acc, x) => acc + 1, props.progression)
+				.remember()
+				.debug(' [state] progress updated');
 
-	// Emet le lieu suivant correct vers lequel le joueur doit aller pour progresser (null si le joueur se trouve dans le dernier lieu du scénario)
-	// Il emet lorsque le joueur arrive dans un nouveau lieu correct, le lien correct suivant est alors émis
-	const nextCorrectLocation$ = xs.combine(progression$, path$, datas$).map(([progression, path, datas]) =>
-		progression + 1 < path.length ?
-			makeLocationObject(path[progression + 1].location, datas) :
-			null
-	).remember();
+			return xs.combine(
+				changeLocationInitialized$,
+				progression$
+			)
+				.map(([[lastLocation, currentLocation],progression]) => {
+					console.log('[state] progression in map', progression)
+					const currentCorrectLocation = path[progression];
+					const nextCorrectLocation = progression + 1 < path.length ? path[progression + 1] : null;
 
-	// Emet le lieu dans lequel le joueur est censé se trouver pour pouvoir progresser (le lieu qui va lui donner les indices pour parvenir au lieu suivant)
-	const currentCorrectLocation$ = xs.combine(path$, progression$).map(([path, progression]) =>
-		path[progression]
-	);
+					return{
+						path,
+						currentLocation,
+						lastLocation,
+						progression,
+						currentCorrectLocation,
+						nextCorrectLocation,
+						isCurrentLocationCorrect: currentCorrectLocation.location === currentLocation.id,
+						isNextLocationCorrect: nextCorrectLocation && currentLocation.id === nextCorrectLocation.location
+					}
 
-	// Emet un boolean égal à true si le joueur se trouve dans le lieu actuel correct (false sinon)
-	const isCurrentLocationCorrect$ = xs.combine(currentCorrectLocation$, currentLocation$).map(([currentCorrectLocation, currentLocation]) =>
-		currentCorrectLocation.location === currentLocation.id
-	);
+				})
+		})
+		.flatten()
+		.debug('state')
+		.remember();
 
-	const seed$ = props$.map( p => p.seed).compose(dropRepeats());
+	const isNextLocationCorrect$ = state$
+		.filter( state => state.isNextLocationCorrect)
+		.mapTo(true)
 
-	const linksIds$ = xs.combine(datas$,seed$).map( ([datas,seed]) => 
-		shuffleSeed.shuffle(Object.keys(datas.locations),seed)
+	isNextLocationCorrectProxy$.imitate(isNextLocationCorrect$);
+
+	const seed$ = props$.map(p => p.seed).compose(dropRepeats());
+
+	const linksIds$ = xs.combine(datas$, seed$).map(([datas, seed]) =>
+		shuffleSeed.shuffle(Object.keys(datas.locations), seed)
 	)
 
 	// Tableau contenant les ids des lieux vers lesquels le joueur peut se diriger (liens)
 	// Si le joueur se trouve dans la bonne ville alors les villes suggérées sont la prochaine ville correcte ainsi que les leurres contenus dans le scenario
 	// Si le joueur ne se trouve pas dans le bonne ville alors les villes suggérées sont celles d'où il vient ainsi que 3 villes tirées au hasard
 	const currentLocationLinksIds$ = xs.combine(
-		currentLocation$, 
-		lastLocation$, 
-		nextCorrectLocation$, 
-		currentCorrectLocation$, 
+		state$,
 		linksIds$
 	)
-		.map(([currentLocation, lastLocation, nextCorrectLocation, currentCorrectLocation, linksIds]) => {
+		.map(([{currentLocation, lastLocation, nextCorrectLocation, currentCorrectLocation}, linksIds]) => {
 			const isCurrentLocationCorrect = currentCorrectLocation.location === currentLocation.id;
 			return _.chain([])
 				.concat(isCurrentLocationCorrect ? currentCorrectLocation.lures : [])
 				.concat(linksIds)
 				.take(4)
 				.concat(lastLocation ? [lastLocation.id] : [])
-				.concat(nextCorrectLocation && isCurrentLocationCorrect ? [nextCorrectLocation.id] : [])
+				.concat(nextCorrectLocation && isCurrentLocationCorrect ? [nextCorrectLocation.location] : [])
 				.uniq()
 				.filter((o) => o !== currentLocation.id)
 				.value()
 		}).compose(dropRepeats()).debug('locations');
 
 	// Créer le composant représentant la carte
-	const mapSinks = Map({ 
-		DOM, 
-		canTravel$: canTravelProxy$.startWith(false), 
-		windowResize$, 
-		lastLocation$,
-		currentLocation$, 
-		currentLocationLinksIds$, 
-		progression$:progression$, 
-		path$, 
-		datas$ }
+	const mapSinks = Map({
+		DOM,
+		canTravel$: canTravelProxy$.startWith(false),
+		windowResize$,
+		props$:state$,
+		currentLocationLinksIds$,
+		datas$
+	}
 	);
 
 	// Flux émettant l'id du nouveau lieu à chaque changement
@@ -188,15 +184,6 @@ export function MainGame(sources) {
 
 	// Défini la valeur du proxy défini initialement
 	changeLocationProxy$.imitate(mapSinks.changeLocation$);
-
-	// Emet true si le lieu choisi par le joueur est correct (le suivant dans le scénario)
-	const correctNextChoosenLocation$ = xs.combine(changeLocation$, nextCorrectLocation$)
-		.filter(([changeLocation, nextCorrectLocation]) =>
-			nextCorrectLocation && changeLocation.id === nextCorrectLocation.id
-		).mapTo(true);
-
-	// Défini la valeur du proxy défini initialement
-	correctNextChoosenLocationProxy$.imitate(correctNextChoosenLocation$);
 
 	// Props pour les témoins
 	// Contient initialement la valeur de départ des témoins (déjà interrogé ou non) si une sauvegarde était fournie
@@ -207,8 +194,8 @@ export function MainGame(sources) {
 	);
 
 	// Créer les composants représentant les témoins
-	const witnesses$ = xs.combine(currentLocation$, progression$, path$, isCurrentLocationCorrect$, witnessesProps$)
-		.map(([currentLocation, progression, path, isCurrentLocationCorrect, witnessesProps]) =>
+	const witnesses$ = xs.combine(state$, witnessesProps$).debug('wit')
+		.map(([{currentLocation, progression, path, isCurrentLocationCorrect}, witnessesProps]) =>
 			Object.keys(currentLocation.places).map((key, value) =>
 				isolate(Witness, key)({
 					DOM: sources.DOM,
@@ -257,8 +244,8 @@ export function MainGame(sources) {
 	const timeManagerSinks = TimeManager({ DOM, props$: timeManagerProps$, datas$, changeLocation$, questionnedWitness$ });
 
 	// Emet lorsque le joueur atteint le dernier lieu du chemin
-	const lastLocationReached$ = xs.combine(path$, progression$)
-		.filter(([path, progression]) =>
+	const lastLocationReached$ = state$
+		.filter(({path, progression}) =>
 			progression === (path.length - 1)
 		).mapTo({ type: "lastLocationReached" });
 
@@ -296,8 +283,8 @@ export function MainGame(sources) {
 	// Emet un nouvel objet de sauvegarde chaque fois que des données à sauvegarder sont modifiées
 	// Le driver de stockage local fonctionne sous la forme de clé-valeur c'est pourquoi on converti l'objet de sauvegarde en string à l'aide de JSON.stringify
 	// On utilise la clé 'save'
-	const save$ = xs.combine(props$, path$, currentLocation$, lastLocation$, progression$, timeManagerSinks.timeDatas$, questionnedWitnesses$, canTravel$)
-		.map(([props, path, currentLocation, lastLocation, progression, timeDatas, questionnedWitnesses, canTravel]) =>
+	const save$ = xs.combine(props$, state$, timeManagerSinks.timeDatas$, questionnedWitnesses$, canTravel$)
+		.map(([props, {path, currentLocation, lastLocation, progression}, timeDatas, questionnedWitnesses, canTravel]) =>
 			({
 				key: 'save',
 				value: JSON.stringify(
@@ -310,7 +297,6 @@ export function MainGame(sources) {
 							elapsedTime: timeDatas.elapsedTime.raw,				// Le temps écoulé
 							questionnedWitnesses,								// Les témoins déjà interrogés
 							canTravel,											// Si le joueur peut se déplacer (au moins un témoin a déjà été interrogé)
-							path,												// Le scénario (chemin) de la partie en cours
 						},
 						lastLocation ? { lastLocation: lastLocation.id } : {},	// Le lieu précédent si il existe
 					)
@@ -322,7 +308,7 @@ export function MainGame(sources) {
 	const sideMenu = isolate(MainGameSideMenu, 'main-game')({
 		DOM,
 		props$: xs.of({
-			location$: currentLocation$,
+			location$: state$.map( state => state.currentLocation),
 			datas$
 		})
 	});
@@ -339,15 +325,13 @@ export function MainGame(sources) {
 		resetSave$,
 	);
 
-
-
 	// Vues nécessaires à la génération du vdom
 	const witnessesVDom$ = witnesses$.compose(mixCombine('DOM'));
 	const timeManagerVDom$ = timeManagerSinks.DOM;
 	const mapVDom$ = mapSinks.DOM;
 
 	const DOMSink$ = view({
-		currentLocation$,
+		currentLocation$:state$.map( state => state.currentLocation),
 		witnessesVDom$,
 		timeManagerVDom$,
 		mapVDom$,
@@ -362,7 +346,7 @@ export function MainGame(sources) {
 		router: routerSink$,
 		HTTP: scenarioGenDataJsonRequest$,
 		storage: storageSink$,
-		seed:seedRequest$
+		seed: seedRequest$
 	};
 	return sinks;
 }

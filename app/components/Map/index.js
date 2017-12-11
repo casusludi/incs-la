@@ -25,11 +25,8 @@ function intent(DOM) {
 function model(
     DOM,
     action$,
-    lastLocation$,
-    currentLocation$,
+    props$,
     currentLocationLinksIds$,
-    progression$,
-    path$,
     windowResize$,
     datas$,
     canTravel$
@@ -67,8 +64,8 @@ function model(
     });
 
     // Pour chaque lieu on va créer un repère sur la carte (ou "landmark"). Les props de chaque landmark sont : ses coordonnées pixels, si ce landmark représente le lieu où le joueur se trouve ('isCurrentLocation') ou un lieu accessible par le joueur ('isReachable'). Ces 2 derniers booléens permettent de déterminer l'assets à afficher pour le landmark (un landmark gris, vert ou rouge). De plus on va trier les landmarks selon leur latitude (y) ce qui permettra un affichage sur la carte de haut en bas. Ainsi les landmarks bas se retrouveront par dessus les landmarks hauts.
-    const landmarksProps$ = xs.combine(lastLocation$, currentLocation$, currentLocationLinksIds$, locations$)
-        .map(([lastLocation, currentLocation, currentLocationLinksIds, locations]) =>
+    const landmarksProps$ = xs.combine(props$, currentLocationLinksIds$, locations$)
+        .map(([{lastLocation, currentLocation}, currentLocationLinksIds, locations]) =>
             _.chain(locations)
                 .map(curr => ({
                     ...curr,
@@ -107,7 +104,12 @@ function model(
 
     // On créer ici le composant Path qui servira à afficher le chemin parcouru par le joueur
     ///// A VOIR SI CETTE FONCTIONNALITÉ EST INTÉRESSANTE OU NON /////
-    const pathSink = Path({ locations$, progression$, path$, currentLocation$ });
+    const pathSink = Path({ 
+        locations$, 
+        progression$:props$.map( props => props.progression ), 
+        path$:props$.map( props => props.path ), 
+        currentLocation$:props$.map( props => props.currentLocation )
+    });
 
 
     const landmarksTooltipInfos$ = landmarks$.compose(mixMerge('focus'));
@@ -165,7 +167,7 @@ function model(
     }
 
     // On récupère les landmarks correspondant au lieu actuel et au lieu de destination grâce à la fonction ci-dessus
-    const currentLocationLandmark$ = getLandmarkById(currentLocation$);
+    const currentLocationLandmark$ = getLandmarkById(props$.map( state => state.currentLocation));
     const newLocationLandmark$ = getLandmarkById(changeLocation$);
 
     // Données relatives à l'animation du voyage du joueur. On y trouve : les coordonnées du lieu de départ, les coordonnées du lieu de destination, l'avancement de l'animation (un chiffre compris entre 0 et 1). Pour avoir une animation fluide on utilise tween de xstream qui permet d'obtenir plusieurs types d'interpolations entre les nombres de notre choix (ici 0 et 1).
@@ -252,11 +254,8 @@ export function Map(sources) {
     const { DOM,
         canTravel$,
         windowResize$,
-        lastLocation$,
-        currentLocation$,
         currentLocationLinksIds$,
-        progression$,
-        path$,
+        props$,
         datas$
     } = sources;
 
@@ -273,11 +272,8 @@ export function Map(sources) {
     } = model(
             DOM,
             action$,
-            lastLocation$,
-            currentLocation$,
+            props$,
             currentLocationLinksIds$,
-            progression$,
-            path$,
             windowResize$,
             datas$,
             canTravel$
