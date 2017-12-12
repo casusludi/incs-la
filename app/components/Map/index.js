@@ -80,7 +80,9 @@ function model(
     const fastAccessButtons$ = landmarksProps$
         .map(landmarksProps =>
             landmarksProps.filter(o => o.isReachable).map((landmarkProps, key) =>
-                isolate(MapFastAccessButton, key)({ DOM, props$: xs.of({ location: landmarkProps }) })
+                // use isolate without scope fix bugs with dom interraction
+                // But it's not cool
+                isolate(MapFastAccessButton)({ DOM, props$: xs.of({ location: landmarkProps }) })
             )
         ).startWith([]);
 
@@ -89,9 +91,12 @@ function model(
     // On créer ensuite ces landmark en fournissant à chacun ses props
     const landmarks$ = landmarksProps$.map(landmarksProps =>
         landmarksProps
-            //.filter(o => o.isReachable || o.isCurrentLocation)
-            .map(landmarkProps =>
-                isolate(Landmark, landmarkProps.details.id)({
+            .filter(o => o.isReachable || o.isCurrentLocation)
+            .map((landmarkProps,key) =>
+            
+                // use isolate without scope fix bugs with dom interraction
+                // But it's not cool
+                isolate(Landmark)({
                     DOM, datas$, props: {
                         location$: xs.of(landmarkProps),
                         buzz$: fastAccessButtonAction$.filter(a => a.details.id === landmarkProps.details.id).mapTo(true)

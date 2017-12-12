@@ -2,4 +2,4 @@
 - finir menu latéral
 - améliorer les infos/tutos
 - améliorer les cutscenes
-- corriger bug derniere ville sur la carte non cliquable.
+√ corriger bug derniere ville sur la carte non cliquable.
