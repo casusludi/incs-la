@@ -1,3 +1,5 @@
+import styles from './styles/init.css';
+
 import {run} from '@cycle/run';
 
 import {makeDOMDriver} from '@cycle/dom';
