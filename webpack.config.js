@@ -3,10 +3,18 @@ const path = require('path');
 //const extractCSS = new ExtractTextPlugin({ filename: 'bundle.css', allChunks: true });
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const indexHtml = new HtmlWebpackPlugin({
     template: 'app/assets/index.html',
     filename: 'index.html'
+})
+
+const globalAssets = new CopyWebpackPlugin([
+    // Copy directory contents to {output}/
+    { from: 'assets' }
+], {
+
 })
 
 module.exports = {
@@ -85,6 +93,7 @@ module.exports = {
     },
     plugins: [
         indexHtml,
+        globalAssets,
         new webpack.NamedModulesPlugin(),
         new webpack.HotModuleReplacementPlugin()
 	]
