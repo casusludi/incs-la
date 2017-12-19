@@ -1,3 +1,5 @@
+import styles from './styles.css';
+
 import xs from 'xstream';
 import delay from 'xstream/extra/delay';
 

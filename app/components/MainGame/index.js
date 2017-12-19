@@ -6,7 +6,7 @@ Dans la documentation certains mots peuvent prêter à confusion. Voilà le lexi
 	- chemin / scénario : Ensemble des villes ordonnées que le joueur doit parcourir pour achever une étape du jeu
 */
 
-import styles from './index.css';
+import styles from './styles.css';
 
 import isolate from '@cycle/isolate';
 

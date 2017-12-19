@@ -1,6 +1,5 @@
-@import '_variables';
+@import 'app/styles/_variables';
 
-html, body {overflow:hidden; }
 
 .city{
     width: 100vw;
@@ -110,5 +109,55 @@ html, body {overflow:hidden; }
 
     .city-more {
         display: none;
+    }
+}
+
+
+.city-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background-color: rgba(255,255,255,0.7);
+    color: var(--orange-dark);
+    padding: 0.5rem 4rem 0.5rem 0.5rem;
+    min-height: 4rem;
+    & h1{
+        font-size: 2rem;
+    }
+
+}
+
+.city-more {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2rem 10%;
+}
+
+.city-desc {
+    margin-bottom: 2rem;
+    
+}
+
+.investigate-info {
+    text-align: center;
+    margin: 0.5rem;
+    box-sizing: border-box;
+     max-height: 100vh;
+}
+
+
+.investigate-info.hide {
+    transition: opacity 0.3s ease-in, min-height 0.3s ease-in;
+    opacity: 0;
+    max-height: 0;
+
+  /*  animation: fade-out 0.2s ease-in forwards;*/
+  /*  transform: translateX(-10000px);*/
+}
+
+@media screen and (max-width: 600px) {
+    .city-header h1 {
+        font-size: 1rem;
     }
 }

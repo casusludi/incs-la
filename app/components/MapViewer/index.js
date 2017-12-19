@@ -1,3 +1,4 @@
+import styles from './styles.css';
 import xs from 'xstream';
 import tween from 'xstream/extra/tween';
 import pairwise from 'xstream/extra/pairwise';

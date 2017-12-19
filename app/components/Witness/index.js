@@ -1,3 +1,4 @@
+import styles from './styles.css';
 import {view} from './view';
 
 /*

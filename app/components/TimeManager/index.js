@@ -1,3 +1,4 @@
+import styles from './styles.css';
 import xs from 'xstream';
 
 import { html } from 'snabbdom-jsx';
