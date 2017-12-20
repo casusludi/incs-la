@@ -34,13 +34,13 @@
 		],
 		"cutscenes": {
 			"intro": {
-				"path": "images/cutscenes/intro",
+				"path": "data/images/cutscenes/intro",
 				"message": "INCS : Loire-Atlantique",
 				"button": "Commencer l'enquête",
 				"length": 10
 			},
 			"test": {
-				"path": "images/cutscenes/test",
+				"path": "data/images/cutscenes/test",
 				"message": "Ceci est un super test",
 				"button": "Clique ici on t'a dit !",
 				"length": 2
@@ -48,23 +48,23 @@
 		},
 		"images": {
 			"intro": [
-				"images/intro/slide1.jpg",
-				"images/intro/slide2.jpg",
-				"images/intro/slide3.jpg",
-				"images/intro/slide4.jpg",
-				"images/intro/slide5.jpg",
-				"images/intro/slide6.jpg",
-				"images/intro/slide7.jpg",
-				"images/intro/slide8.jpg",
-				"images/intro/slide9.jpg",
-				"images/intro/slide10.jpg"
+				"data/images/intro/slide1.jpg",
+				"data/images/intro/slide2.jpg",
+				"data/images/intro/slide3.jpg",
+				"data/images/intro/slide4.jpg",
+				"data/images/intro/slide5.jpg",
+				"data/images/intro/slide6.jpg",
+				"data/images/intro/slide7.jpg",
+				"data/images/intro/slide8.jpg",
+				"data/images/intro/slide9.jpg",
+				"data/images/intro/slide10.jpg"
 			],
-			"endLose": "images/Nantes-sanstour.jpg",
-			"endWin": "images/Nantes-tour.jpg",
-			"map": "images/carte/carte.png",
-			"currentLocationLandmark": "images/carte/current-location-landmark.svg",
-			"reachableLandmark": "images/carte/reachable-landmark.svg",
-			"unreachableLandmark": "images/carte/unreachable-landmark.svg"
+			"endLose": "data/images/Nantes-sanstour.jpg",
+			"endWin": "data/images/Nantes-tour.jpg",
+			"map": "data/images/carte/carte.png",
+			"currentLocationLandmark": "data/images/carte/current-location-landmark.svg",
+			"reachableLandmark": "data/images/carte/reachable-landmark.svg",
+			"unreachableLandmark": "data/images/carte/unreachable-landmark.svg"
 		},
 		"travelAnimationDuration": 1
 	},
@@ -80,22 +80,22 @@
 	"locations":{
 		"nantes":{
 			"name":"Nantes",
-			"image":"images/Nantes.jpg",
+			"image":"data/images/Nantes.jpg",
 			"desc": "Nantes, sixième commune la plus peuplée de France avec près de trois cent mille habitants, est le chef lieu du département de Loire-Atlantique. La ville a été la cité des ducs de Bretagne ainsi que la ville natale de Jules Verne.",
 			"places":{
 				"temoin-1":{
 					"name":"Interroger un touriste",
-					"image":"images/personnages/zoom/Fetard.png",
+					"image":"data/images/personnages/zoom/Fetard.png",
 					"dialogs":["Je ne sais pas de quoi vous parlez.","Vous avez vu cet éléphant ? Il est incroyable !"]
 				},
 				"temoin-2":{
 					"name":"Enquêter dans le centre-ville",
-					"image":"images/personnages/zoom/Business-man.png",
+					"image":"data/images/personnages/zoom/Business-man.png",
 					"dialogs":["Bonjour, pouvez-vous m'indiquer la place du Commerce ?"]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/zoom/data.png",
+					"image":"data/images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -106,22 +106,22 @@
 		},
 		"chateaubriant":{
 			"name":"Châteaubriant",
-			"image":"images/Chateaubriant.jpg",
+			"image":"data/images/Chateaubriant.jpg",
 			"desc": "Châteaubriant s'est développée autour de son château qui fut le théâtre de combats liés à l'affrontement entre la Bretagne et la France. La commune tient son nom de Brient, le seigneur qui a fondé le château. La foire de Béré, créée en 1050, est l'une des plus vieilles foires de France et encore aujourd'hui un grand événement pour la région.",
 			"places":{
 				"temoin-1":{
 					"name":"Interroger un commerçant",
-					"image":"images/personnages/zoom/Commissaire.png",
+					"image":"data/images/personnages/zoom/Commissaire.png",
 					"dialogs":["Je ne sais pas de quoi vous parlez."]
 				},
 				"temoin-2":{
 					"name":"Enquêter auprès des habitants",
-					"image":"images/personnages/zoom/Mamie.png",
+					"image":"data/images/personnages/zoom/Mamie.png",
 					"dialogs":["Désolée, je n'ai pas vu de sentient au comportement étrange."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/zoom/data.png",
+					"image":"data/images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -132,22 +132,22 @@
 		},
 		"guerande":{
 			"name":"Guérande",
-			"image":"images/Guerande.jpg",
+			"image":"data/images/Guerande.jpg",
 			"desc": "Guérande est une commune de Loire-Atlantique dont la partie urbaine occupe le sommet d'un coteau qui domine un territoire presque entièrement entouré d'eau, salée ou douce, la presqu'île guérandaise. L'histoire de la commune elle-même est fortement marquée par la présence de marais salants qui ont fait sa richesse.",
 			"places":{
 				"temoin-1":{
 					"name":"Interroger un touriste",
-					"image":"images/personnages/zoom/Sportif.png",
+					"image":"data/images/personnages/zoom/Sportif.png",
 					"dialogs":["Je ne sais pas de quoi vous parlez."]
 				},
 				"temoin-2":{
 					"name":"Enquêter dans les marais salants",
-					"image":"images/personnages/zoom/Agriculteur.png",
+					"image":"data/images/personnages/zoom/Agriculteur.png",
 					"dialogs":["Je ne sais pas de quoi vous parlez."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/zoom/data.png",
+					"image":"data/images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -158,22 +158,22 @@
 		},
 		"guemene":{
 			"name":"Guéméné Penfao",
-			"image":"images/multi7.jpg",
+			"image":"data/images/multi7.jpg",
 			"desc": "Guémené-Penfao est la deuxième commune la plus étendue du département. La ville est traversée par le Don au centre et la Vilaine au Nord. Son nom est une graphie francisée d'un toponyme vieux breton qui signifie « mont blanc, montagne blanche ».",
 			"places":{
 				"temoin-1":{
 					"name":"Enquêter auprès d'agriculteurs",
-					"image":"images/personnages/zoom/Agricultrice.png",
+					"image":"data/images/personnages/zoom/Agricultrice.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Chercher des indices en ville",
-					"image":"images/personnages/zoom/Nerd.png",
+					"image":"data/images/personnages/zoom/Nerd.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/zoom/data.png",
+					"image":"data/images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -184,22 +184,22 @@
 		},
 		"ancenis":{
 			"name":"Ancenis",
-			"image":"images/multi1.jpg",
+			"image":"data/images/multi1.jpg",
 			"desc": "Ancenis a été bâtie en 984 sur une île dont on peut encore distinguer les contours. Les quais démontrent l'importance passée du trafic sur la Loire et l'importance du port d'Ancenis. La cité fait partie des Marches de Bretagne.",
 			"places":{
 				"temoin-1":{
 					"name":"Interroger un élu",
-					"image":"images/personnages/zoom/Elu.png",
+					"image":"data/images/personnages/zoom/Elu.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Enquêter auprès des habitants",
-					"image":"images/personnages/zoom/Hippie.png",
+					"image":"data/images/personnages/zoom/Hippie.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/zoom/data.png",
+					"image":"data/images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -210,22 +210,22 @@
 		},
 		"coueron":{
 			"name":"Couëron",
-			"image":"images/multi2.jpg",
+			"image":"data/images/multi2.jpg",
 			"desc": "Couëron est situé sur la rive nord de la Loire, à 16 km à l'ouest de Nantes. La ville est proche d'une zone humide naturelle s'étendant sur 2 000 hectares et qui tire son nom du naturaliste Jean-Jacques Audubon, qui grandit à Couëron et travailla dans ce marais.",
 			"places":{
 				"temoin-1":{
 					"name":"Interroger un commerçant",
-					"image":"images/personnages/zoom/Liseuse.png",
+					"image":"data/images/personnages/zoom/Liseuse.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Parler à la police",
-					"image":"images/personnages/zoom/Policiere.png",
+					"image":"data/images/personnages/zoom/Policiere.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/zoom/data.png",
+					"image":"data/images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -236,22 +236,22 @@
 		},
 		"la-boissiere-du-dore":{
 			"name":"La Boissière-du-Doré",
-			"image":"images/multi3.jpg",
+			"image":"data/images/multi3.jpg",
 			"desc": "La Boissière-du-Doré, bien qu'étant une petite commune en bordure du vignoble nantais, est très connue dans la région en raison de la présence d'un zoo. Ce dernier est notamment réputé pour son groupe d'ourangs-outangs, aujourd'hui le plus important d'Europe.",
 			"places":{
 				"temoin-1":{
 					"name":"Se renseigner au zoo",
-					"image":"images/personnages/zoom/Zoo.png",
+					"image":"data/images/personnages/zoom/Zoo.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Interroger les habitants",
-					"image":"images/personnages/zoom/Sportif.png",
+					"image":"data/images/personnages/zoom/Sportif.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/zoom/data.png",
+					"image":"data/images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -262,22 +262,22 @@
 		},
 		"saint-nazaire":{
 			"name":"Saint-Nazaire",
-			"image":"images/Saint-Nazaire.jpg",
+			"image":"data/images/Saint-Nazaire.jpg",
 			"desc": "Saint-Nazaire est le chef-lieu d'arrondissement du département de la Loire-Atlantique. La ville constitue avec Nantes un pôle économique important, notamment grâce aux infrastructures portuaires et aux industries de construction aéronautique et navale.",
 			"places":{
 				"temoin-1":{
 					"name":"Enquêter aux chantiers navals",
-					"image":"images/personnages/zoom/Ouvrier.png",
+					"image":"data/images/personnages/zoom/Ouvrier.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Chercher des indices en ville",
-					"image":"images/personnages/zoom/Hippie.png",
+					"image":"data/images/personnages/zoom/Hippie.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/zoom/data.png",
+					"image":"data/images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -288,22 +288,22 @@
 		},
 		"saint-jean-de-boiseau":{
 			"name":"Saint-Jean-de-Boiseau",
-			"image":"images/multi4.jpg",
+			"image":"data/images/multi4.jpg",
 			"desc": "Saint-Jean-de-Boiseau est située sur la rive sud de Loire, à 13 km à l'ouest de Nantes. C'est sur la commune que se trouve la [chapelle de Bethléem](https://goo.gl/ePaI94) (xve siècle), un monument historique dont les pinacles recèlent des surprises.",
 			"places":{
 				"temoin-1":{
 					"name":"Interroger les habitants",
-					"image":"images/personnages/zoom/Mamie.png",
+					"image":"data/images/personnages/zoom/Mamie.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Enquêter auprès d'agriculteurs",
-					"image":"images/personnages/zoom/Agriculteur.png",
+					"image":"data/images/personnages/zoom/Agriculteur.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/zoom/data.png",
+					"image":"data/images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -314,22 +314,22 @@
 		},
 		"vallet":{
 			"name":"Vallet",
-			"image":"images/multi5.jpg",
+			"image":"data/images/multi5.jpg",
 			"desc": "Vallet fait partie de la Bretagne historique et du pays traditionnel du vignoble nantais. Les châteaux et domaines de Vallet ont tous été rasés durant la Révolution. Leurs remplaçants datent du XIXe siècle.",
 			"places":{
 				"temoin-1":{
 					"name":"Chercher dans le vignoble",
-					"image":"images/personnages/zoom/Agricultrice.png",
+					"image":"data/images/personnages/zoom/Agricultrice.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Interroger un commerçant",
-					"image":"images/personnages/zoom/Sportif.png",
+					"image":"data/images/personnages/zoom/Sportif.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/zoom/data.png",
+					"image":"data/images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -340,22 +340,22 @@
 		},
 		"clisson":{
 			"name":"Clisson",
-			"image":"images/Clisson.jpg",
+			"image":"data/images/Clisson.jpg",
 			"desc": "Clisson fait partie de la Bretagne historique, et était la clé de voûte de la défense des Marches de Bretagne face au Poitou et à l'Anjou avec son château. La ville est aussi connue comme Clisson l'Italienne en raison de son architecture de style italianisant inspirée du modèle toscan.",
 			"places":{
 				"temoin-1":{
 					"name":"Enquêter auprès des habitants",
-					"image":"images/personnages/zoom/Commissaire.png",
+					"image":"data/images/personnages/zoom/Commissaire.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Interroger un touriste",
-					"image":"images/personnages/zoom/Liseuse.png",
+					"image":"data/images/personnages/zoom/Liseuse.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/zoom/data.png",
+					"image":"data/images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -366,22 +366,22 @@
 		},
 		"la-baule":{
 			"name":"La Baule",
-			"image":"images/multi6.jpg",
+			"image":"data/images/multi6.jpg",
 			"desc": "La Baule doit son essor au développement du tourisme à la fin du XIXe siècle. Bénéficiant d'une forêt de pins plantée dès 1840 pour enrayer l'avancée des dunes, la ville voit d'abord s'implanter des familles aisées qui font construire de belles villas le long de la plage.",
 			"places":{
 				"temoin-1":{
 					"name":"Parler à la police",
-					"image":"images/personnages/zoom/Policiere.png",
+					"image":"data/images/personnages/zoom/Policiere.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Chercher des indices en ville",
-					"image":"images/personnages/zoom/Nerd.png",
+					"image":"data/images/personnages/zoom/Nerd.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/zoom/data.png",
+					"image":"data/images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -392,22 +392,22 @@
 		},
 		"haute-goulaine":{
 			"name":"Haute-Goulaine",
-			"image":"images/multi7.jpg",
+			"image":"data/images/multi7.jpg",
 			"desc": "La commune de Haute-Goulaine est aussi étroitement liée à l'histoire de la radio-télévision dans la région nantaise. C'est sur son territoire, à La Louée, que la RTF a décidé de s'implanter en mars 1957 avec la mise en service d'un petit émetteur TV.",
 			"places":{
 				"temoin-1":{
 					"name":"Interroger un touriste",
-					"image":"images/personnages/zoom/Fetard.png",
+					"image":"data/images/personnages/zoom/Fetard.png",
 					"dialogs":["Je n'ai rien vu, desolé !"]
 				},
 				"temoin-2":{
 					"name":"Enquêter auprès des habitants",
-					"image":"images/personnages/zoom/Business-man.png",
+					"image":"data/images/personnages/zoom/Business-man.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/zoom/data.png",
+					"image":"data/images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -418,22 +418,22 @@
 		},
 		"la-montagne":{
 			"name":"La Montagne",
-			"image":"images/multi1.jpg",
+			"image":"data/images/multi1.jpg",
 			"desc": "Le nom de La Montagne a pour origine la villa éponyme construit entre 1839 et 1841, par Aristide Demangeat, fils cadet de l’ex-directeur de l’Arsenal d’Indret, qui se trouvait sur une hauteur de la future commune. Cette habitation abrite désormais la mairie.",
 			"places":{
 				"temoin-1":{
 					"name":"Interroger un commerçant",
-					"image":"images/personnages/zoom/Commissaire.png",
+					"image":"data/images/personnages/zoom/Commissaire.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Enquêter auprès des habitants",
-					"image":"images/personnages/zoom/Mamie.png",
+					"image":"data/images/personnages/zoom/Mamie.png",
 					"dialogs":["Je cherche mon chat, l'avez-vous vu ? "]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/zoom/data.png",
+					"image":"data/images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -444,22 +444,22 @@
 		},
 		"saint-sebastien":{
 			"name":"Saint-Sébastien-sur-Loire",
-			"image":"images/multi2.jpg",
+			"image":"data/images/multi2.jpg",
 			"desc": "Saint-Sébastien est située sur la rive sud de la Loire, à proximité immédiate de Nantes. Après la Deuxième Guerre mondiale, Saint-Sébastien connaît un processus d'urbanisation assez rapide, qui fait disparaître l'activité agricole.",
 			"places":{
 				"temoin-1":{
 					"name":"Interroger un touriste",
-					"image":"images/personnages/zoom/Liseuse.png",
+					"image":"data/images/personnages/zoom/Liseuse.png",
 					"dialogs":["J'étais plongée dans ma lecture, je n'ai rien vu."]
 				},
 				"temoin-2":{
 					"name":"Enquêter sur les bords de Loire",
-					"image":"images/personnages/zoom/Sportif.png",
+					"image":"data/images/personnages/zoom/Sportif.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/zoom/data.png",
+					"image":"data/images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -470,22 +470,22 @@
 		},
 		"nozay":{
 			"name":"Nozay",
-			"image":"images/multi3.jpg",
+			"image":"data/images/multi3.jpg",
 			"desc": "Nozay apparait la première fois en 1123, sous le nom de Noziacum. La paroisse fait alors partie des biens des évêques de Nantes depuis au moins 986.",
 			"places":{
 				"temoin-1":{
 					"name":"Enquêter auprès d'agriculteurs",
-					"image":"images/personnages/zoom/Agricultrice.png",
+					"image":"data/images/personnages/zoom/Agricultrice.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Chercher des indices en ville",
-					"image":"images/personnages/zoom/Nerd.png",
+					"image":"data/images/personnages/zoom/Nerd.png",
 					"dialogs":["Je me suis perdu"]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/zoom/data.png",
+					"image":"data/images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -496,22 +496,22 @@
 		},
 		"port-saint-pere":{
 			"name":"Port-Saint-Père",
-			"image":"images/multi4.jpg",
+			"image":"data/images/multi4.jpg",
 			"desc": "Port-Saint-Père, situé à proximité du lac de Grand-Lieu, accueille notamment le parc animalier Planète sauvage qui a entièrement recréé le cadre d'une savane africaine et d'une steppe mongole.",
 			"places":{
 				"temoin-1":{
 					"name":"Interroger un élu",
-					"image":"images/personnages/zoom/Business-man.png",
+					"image":"data/images/personnages/zoom/Business-man.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Enquêter auprès des habitants",
-					"image":"images/personnages/zoom/Hippie.png",
+					"image":"data/images/personnages/zoom/Hippie.png",
 					"dialogs":["Quelle est la route pour rejoindre le lac de Grand-Lieu ?"]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/zoom/data.png",
+					"image":"data/images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -522,22 +522,22 @@
 		},
 		"la-chapelle-sur-erdre":{
 			"name":"La Chapelle-sur-Erdre",
-			"image":"images/multi5.jpg",
+			"image":"data/images/multi5.jpg",
 			"desc": "C'est à La Chapelle-sur-Erdre qu'est basé le FC Nantes. Les différentes infrastructures du club (Siège administratif, Centre d'entraînement de l'équipe professionnelle et Centre de formation) sont regroupées au sein du Centre sportif José-Arribas.",
 			"places":{
 				"temoin-1":{
 					"name":"Interroger un commerçant",
-					"image":"images/personnages/zoom/Liseuse.png",
+					"image":"data/images/personnages/zoom/Liseuse.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Parler à la police",
-					"image":"images/personnages/zoom/Policiere.png",
+					"image":"data/images/personnages/zoom/Policiere.png",
 					"dialogs":["Pouvez-vous m'indiquer le centre ville ?"]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/zoom/data.png",
+					"image":"data/images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -548,22 +548,22 @@
 		},
 		"gorges":{
 			"name":"Gorges",
-			"image":"images/multi6.jpg",
+			"image":"data/images/multi6.jpg",
 			"desc": "Gorges faisait partie des Marches de Bretagne et de la seigneurie de Clisson. Son origine remonte à l’Âge de la pierre et l’implantation gauloise est prouvée. De même, on trouve des vestiges de la présence romaine.",
 			"places":{
 				"temoin-1":{
 					"name":"Chercher dans le vignoble",
-					"image":"images/personnages/zoom/Agricultrice.png",
+					"image":"data/images/personnages/zoom/Agricultrice.png",
 					"dialogs":["Je ne peux pas vous aider."]
 				},
 				"temoin-2":{
 					"name":"Interroger les habitants",
-					"image":"images/personnages/zoom/Sportif.png",
+					"image":"data/images/personnages/zoom/Sportif.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/zoom/data.png",
+					"image":"data/images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -574,22 +574,22 @@
 		},
 		"indre":{
 			"name":"Indre",
-			"image":"images/multi7.jpg",
+			"image":"data/images/multi7.jpg",
 			"desc": "La spécialité gastronomique de la commune est la civelle, alevin de l'anguille, qui aujourd'hui ne se pêche plus sur la commune. Jadis Basse-Indre était le premier port civellier de France.",
 			"places":{
 				"temoin-1":{
 					"name":"Enquêter aux chantiers navals",
-					"image":"images/personnages/zoom/Ouvrier.png",
+					"image":"data/images/personnages/zoom/Ouvrier.png",
 					"dialogs":["Mes excuses, je n'ai vu personne t."]
 				},
 				"temoin-2":{
 					"name":"Chercher des indices en ville",
-					"image":"images/personnages/zoom/Hippie.png",
+					"image":"data/images/personnages/zoom/Hippie.png",
 					"dialogs":["Je n'ai croisé personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/zoom/data.png",
+					"image":"data/images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -600,22 +600,22 @@
 		},
 		"pornic":{
 			"name":"Pornic",
-			"image":"images/multi7.jpg",
+			"image":"data/images/multi7.jpg",
 			"desc": "Située au bord de l'océan Atlantique, la ville de Pornic est connue pour son château et son vieux port. Ses principales ressources sont, au début du XXIe siècle, le tourisme et les produits de la mer.",
 			"places":{
 				"temoin-1":{
 					"name":"Interroger les habitants",
-					"image":"images/personnages/zoom/Mamie.png",
+					"image":"data/images/personnages/zoom/Mamie.png",
 					"dialogs":["Pourriez-vous m'indiquer la direction du vieux port ?"]
 				},
 				"temoin-2":{
 					"name":"Enquêter auprès d'agriculteurs",
-					"image":"images/personnages/zoom/Agriculteur.png",
+					"image":"data/images/personnages/zoom/Agriculteur.png",
 					"dialogs":["Je ne suis au courant de rien"]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/zoom/data.png",
+					"image":"data/images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -626,22 +626,22 @@
 		},
 		"la-chapelle-des-marais":{
 			"name":"La Chapelle-des-Marais",
-			"image":"images/multi6.jpg",
+			"image":"data/images/multi6.jpg",
 			"desc": "La Chapelle-des-Marais est située au nord des marais de la Brière, à 25 km au nord de Saint-Nazaire. En breton, la commune s'appelle Chapel-ar-Geuniou, ses habitants sont appelés les Marais-Chapelains.",
 			"places":{
 				"temoin-1":{
 					"name":"Interroger les habitants",
-					"image":"images/personnages/zoom/Nerd.png",
+					"image":"data/images/personnages/zoom/Nerd.png",
 					"dialogs":["Je suis desolé, je n'ai pas fait attention."]
 				},
 				"temoin-2":{
 					"name":"Interroger un commerçant",
-					"image":"images/personnages/zoom/Sportif.png",
+					"image":"data/images/personnages/zoom/Sportif.png",
 					"dialogs":["Rien de spécial à signaler !"]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/zoom/data.png",
+					"image":"data/images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -652,22 +652,22 @@
 		},
 		"la-roche-blanche":{
 			"name":"La Roche-Blanche",
-			"image":"images/multi5.jpg",
+			"image":"data/images/multi5.jpg",
 			"desc": "La Roche-Blanche est une commune rurale de la Loire-Atlantique. Ses habitants s'appellent les Roche-blanchaises et les Roche-blanchais.",
 			"places":{
 				"temoin-1":{
 					"name":"Enquêter auprès des habitants",
-					"image":"images/personnages/zoom/Commissaire.png",
+					"image":"data/images/personnages/zoom/Commissaire.png",
 					"dialogs":["Je n'ai rien vu, mais j'ouvre l'oeil."]
 				},
 				"temoin-2":{
 					"name":"Interroger un touriste",
-					"image":"images/personnages/zoom/Liseuse.png",
+					"image":"data/images/personnages/zoom/Liseuse.png",
 					"dialogs":["Je n'ai rien vu de particulier."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/zoom/data.png",
+					"image":"data/images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -678,22 +678,22 @@
 		},
 		"prefailles":{
 			"name":"Préfailles",
-			"image":"images/multi4.jpg",
+			"image":"data/images/multi4.jpg",
 			"desc": "La première maison estivale apparaît à Préfailles en 1743. En 1788, on découvre une source ferrugineuse et dès 1812 des centaines de curistes viennent bénéficier de ses bienfaits.",
 			"places":{
 				"temoin-1":{
 					"name":"Interroger les habitants",
-					"image":"images/personnages/zoom/Mamie.png",
+					"image":"data/images/personnages/zoom/Mamie.png",
 					"dialogs":["Auriez- vous vu mon chien ?"]
 				},
 				"temoin-2":{
 					"name":"Interroger un touriste",
-					"image":"images/personnages/zoom/Fetard.png",
+					"image":"data/images/personnages/zoom/Fetard.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/zoom/data.png",
+					"image":"data/images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},
@@ -704,22 +704,22 @@
 		},
 		"la-chapelle-basse-mer":{
 			"name":"La Chapelle-Basse-Mer",
-			"image":"images/multi2.jpg",
+			"image":"data/images/multi2.jpg",
 			"desc": "La Chapelle-Basse-Mer bénéficie d'une situation privilégiée entre Loire et vignoble. Elle est traversée par la Route Touristique du Vignoble Nantais, offrant ainsi aux visiteurs l'occasion de découvrir son fleurissement, son patrimoine, sa gastronomie mais aussi, tout proches, le marais de Goulaine et son château.",
 			"places":{
 				"temoin-1":{
 					"name":"Interroger les habitants",
-					"image":"images/personnages/zoom/Sportif.png",
+					"image":"data/images/personnages/zoom/Sportif.png",
 					"dialogs":["J'espère que vous aurez le temps de visiter notre belle ville !"]
 				},
 				"temoin-2":{
 					"name":"Enquêter auprès d'agriculteurs",
-					"image":"images/personnages/zoom/Agriculteur.png",
+					"image":"data/images/personnages/zoom/Agriculteur.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/zoom/data.png",
+					"image":"data/images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... ERROR."]
 				}
 			},
@@ -730,22 +730,22 @@
 		},
 		"saint-brevin":{
 			"name":"Saint-Brévin",
-			"image":"images/multi3.jpg",
+			"image":"data/images/multi3.jpg",
 			"desc": "La commune se situe à l'embouchure de la Loire, sur la rive opposée de Saint-Nazaire, ville dont le développement de Saint-Brevin dépend. Son littoral est composé de plages de sable.",
 			"places":{
 				"temoin-1":{
 					"name":"Interroger un commerçant",
-					"image":"images/personnages/zoom/Elu.png",
+					"image":"data/images/personnages/zoom/Elu.png",
 					"dialogs":["Mes excuses, je n'ai vu personne de suspect."]
 				},
 				"temoin-2":{
 					"name":"Interroger un touriste",
-					"image":"images/personnages/zoom/Hippie.png",
+					"image":"data/images/personnages/zoom/Hippie.png",
 					"dialogs":["J'adore cet endroit, c'est vraiment reposant ."]
 				},
 				"data":{
 					"name":"Consulter D.A.T.A.",
-					"image":"images/personnages/zoom/data.png",
+					"image":"data/images/personnages/zoom/data.png",
 					"dialogs":["Krrr krrr bzzzzz blip... données introuvables."]
 				}
 			},

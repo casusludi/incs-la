@@ -30,7 +30,7 @@ function main(sources) {
 	const HTTP = sources.HTTP;
 
 	// Lit le .json de données pour l'envoyer aux différent(e)s composants/pages
-	const dataJsonSinks = JSONReader({HTTP, jsonPath$: xs.of("/data.json")});
+	const dataJsonSinks = JSONReader({HTTP, jsonPath$: xs.of("/data/data.json")});
 	const dataJsonRequest$ = dataJsonSinks.request;
 	const dataJsonResponse$ = dataJsonSinks.JSON;
 	

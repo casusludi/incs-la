@@ -15,13 +15,13 @@
 }
 
 .icon-map:after {
-    background-image: url(/images/ui/icons/icon-map.svg);
+    background-image: url(../images/ui/icons/icon-map.svg);
 }
 
 .icon-info:after {
-    background-image: url(/images/ui/icons/icon-info.svg);
+    background-image: url(../images/ui/icons/icon-info.svg);
 }
 
 .icon-close:after {
-    background-image: url(/images/ui/icons/icon-close.svg);
+    background-image: url(../images/ui/icons/icon-close.svg);
 }

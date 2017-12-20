@@ -69,7 +69,7 @@ export function MainGame(sources) {
 		)
 
 	// Chargement du .json contenant les données permettant de générer le scénario random
-	const scenarioGenDataJsonSinks = JSONReader({ HTTP, jsonPath$: xs.of("/scenarioGenData.json") });
+	const scenarioGenDataJsonSinks = JSONReader({ HTTP, jsonPath$: xs.of("/data/scenarioGenData.json") });
 	const scenarioGenDataJsonRequest$ = scenarioGenDataJsonSinks.request;
 	const scenarioGenDataJsonResponse$ = scenarioGenDataJsonSinks.JSON;
 

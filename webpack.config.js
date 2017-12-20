@@ -6,7 +6,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const indexHtml = new HtmlWebpackPlugin({
-    template: 'app/assets/index.html',
+    template: 'app/index.html',
     filename: 'index.html'
 })
 
