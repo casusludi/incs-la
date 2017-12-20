@@ -1,0 +1,5 @@
+= INCS - LA
+
+A "Carmen Sandiego like" game with open data.
+
+Developement in progress.
